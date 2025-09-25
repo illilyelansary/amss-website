@@ -1,12 +1,30 @@
+import React, { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Calendar, Users, Globe, Award, Target, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import logoAmss from '../assets/LogoAMSSFHD.png'
 
 const AboutPage = () => {
+  // ⚙️ Scroll automatique vers la section si l'URL contient un hash
+  const { hash } = useLocation()
+  useEffect(() => {
+    if (hash) {
+      const el = document.getElementById(hash.slice(1))
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        // Accessibilité : permettre le focus sur la section ciblée
+        el.setAttribute('tabindex', '-1')
+        el.focus({ preventScroll: true })
+      }
+    } else {
+      window.scrollTo({ top: 0 })
+    }
+  }, [hash])
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-primary/10 to-accent/10">
+      <section id="top" className="py-20 bg-gradient-to-br from-primary/10 to-accent/10 outline-none">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <img src={logoAmss} alt="Logo AMSS" className="h-24 w-24 mx-auto mb-6" />
@@ -22,7 +40,7 @@ const AboutPage = () => {
       </section>
 
       {/* Histoire */}
-      <section className="py-16">
+      <section id="historique" className="py-16 outline-none">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -99,12 +117,23 @@ const AboutPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Sommaire interne (liens ancres) */}
+            <nav aria-label="Sommaire à propos" className="mt-10">
+              <ul className="flex flex-wrap gap-3 text-sm">
+                <li><a className="underline hover:no-underline" href="#historique">Historique</a></li>
+                <li><a className="underline hover:no-underline" href="#mission">Mission & Vision</a></li>
+                <li><a className="underline hover:no-underline" href="#equipe">Équipe</a></li>
+                <li><a className="underline hover:no-underline" href="#accord-cadre">Accord cadre</a></li>
+                <li><a className="underline hover:no-underline" href="#rejoindre">Rejoindre la mission</a></li>
+              </ul>
+            </nav>
           </div>
         </div>
       </section>
 
       {/* Mission, Vision, Valeurs */}
-      <section className="py-16 bg-muted/30">
+      <section id="mission" className="py-16 bg-muted/30 outline-none">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -145,7 +174,7 @@ const AboutPage = () => {
       </section>
 
       {/* Équipe de Direction */}
-      <section className="py-16">
+      <section id="equipe" className="py-16 outline-none">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
@@ -189,7 +218,7 @@ const AboutPage = () => {
       </section>
 
       {/* Accord cadre */}
-      <section className="py-16 bg-gradient-to-br from-primary/5 to-accent/5">
+      <section id="accord-cadre" className="py-16 bg-gradient-to-br from-primary/5 to-accent/5 outline-none">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-foreground mb-6">
@@ -215,7 +244,7 @@ const AboutPage = () => {
       </section>
 
       {/* Call to action */}
-      <section className="py-16">
+      <section id="rejoindre" className="py-16 outline-none">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-foreground mb-6">
@@ -240,4 +269,3 @@ const AboutPage = () => {
 }
 
 export default AboutPage
-
