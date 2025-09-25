@@ -2,21 +2,18 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './App.css'
 import Header from './components/Header'
 import Footer from './components/Footer'
-
-// Pages principales
 import HomePage from './pages/HomePage'
 import AboutPage from './pages/AboutPage'
-import ContactPage from './pages/ContactPage'
-
-// Domaines & sous-domaines
 import EducationPage from './pages/EducationPage'
 import SantePage from './pages/SantePage'
-import SecuriteAlimentairePage from './pages/SecuriteAlimentairePage'
 import WashPage from './pages/WashPage'
 import ProtectionPage from './pages/ProtectionPage'
+import SecuriteAlimentairePage from './pages/SecuriteAlimentairePage'
 import GouvernancePage from './pages/GouvernancePage'
-
-// Autres pages
+import ProjetsEnCoursPage from './pages/ProjetsEnCoursPage'
+import ProjetsTerminesPage from './pages/ProjetsTerminesPage'
+import RapportsPage from './pages/RapportsPage'
+import ContactPage from './pages/ContactPage'
 import DomainesPage from './pages/DomainesPage'
 import ProjetsPage from './pages/ProjetsPage'
 import ZonesPage from './pages/ZonesPage'
@@ -30,38 +27,31 @@ function App() {
         <Header />
         <main>
           <Routes>
-            {/* Pages principales */}
             <Route path="/" element={<HomePage />} />
             <Route path="/a-propos" element={<AboutPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-
-            {/* Nos Domaines et sous-domaines */}
+            
+            {/* Pages des domaines d'intervention */}
             <Route path="/domaines" element={<DomainesPage />} />
             <Route path="/education" element={<EducationPage />} />
             <Route path="/sante" element={<SantePage />} />
-            <Route path="/securite-alimentaire" element={<SecuriteAlimentairePage />} />
             <Route path="/wash" element={<WashPage />} />
             <Route path="/protection" element={<ProtectionPage />} />
+            <Route path="/securite-alimentaire" element={<SecuriteAlimentairePage />} />
             <Route path="/gouvernance" element={<GouvernancePage />} />
-
-            {/* Autres pages */}
+            
+            {/* Pages des projets */}
             <Route path="/projets" element={<ProjetsPage />} />
+            <Route path="/projets-en-cours" element={<ProjetsEnCoursPage />} />
+            <Route path="/projets-termines" element={<ProjetsTerminesPage />} />
+            <Route path="/rapports" element={<RapportsPage />} />
+            
+            <Route path="/contact" element={<ContactPage />} />
+            
+            {/* Routes temporaires pour les autres pages */}
             <Route path="/zones" element={<ZonesPage />} />
+            <Route path="/zones/:id" element={<ZonesPage />} /> {/* Route pour les pages de zones spécifiques */}
             <Route path="/partenaires" element={<PartenairesPage />} />
             <Route path="/actualites" element={<ActualitesPage />} />
-
-            {/* Page 404 */}
-            <Route
-              path="*"
-              element={
-                <div className="py-20 text-center">
-                  <h1 className="text-2xl font-semibold">Page introuvable</h1>
-                  <p className="text-sm text-gray-600 mt-2">
-                    La page que vous cherchez n’existe pas. Retour à l’accueil.
-                  </p>
-                </div>
-              }
-            />
           </Routes>
         </main>
         <Footer />
@@ -71,3 +61,4 @@ function App() {
 }
 
 export default App
+

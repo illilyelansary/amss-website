@@ -21,8 +21,8 @@ const Header = () => {
         { name: 'Qui sommes-nous', href: '/a-propos#top' },
         { name: 'Notre Histoire', href: '/a-propos#historique' },
         { name: 'Vision et Mission', href: '/a-propos#mission' },
-        { name: 'Équipe', href: '/a-propos#equipe' },
-      ],
+        { name: 'Équipe', href: '/a-propos#equipe' }
+      ]
     },
     {
       name: 'Nos Domaines',
@@ -33,8 +33,8 @@ const Header = () => {
         { name: 'Sécurité Alimentaire', href: '/securite-alimentaire' },
         { name: 'WASH', href: '/wash' },
         { name: 'Protection et VBG', href: '/protection' },
-        { name: 'Gouvernance et Paix', href: '/gouvernance' },
-      ],
+        { name: 'Gouvernance et Paix', href: '/gouvernance' }
+      ]
     },
     {
       name: 'Nos Projets',
@@ -42,11 +42,11 @@ const Header = () => {
       dropdown: [
         { name: 'Projets en Cours', href: '/projets#cours' },
         { name: 'Projets Terminés', href: '/projets#termines' },
-        { name: 'Rapports', href: '/projets#rapports' },
-      ],
+        { name: 'Rapports', href: '/projets#rapports' }
+      ]
     },
     {
-      name: "Zones d'Intervention",
+      name: 'Zones d\'Intervention',
       href: '/zones',
       dropdown: [
         { name: 'Tombouctou', href: '/zones/tombouctou' },
@@ -54,12 +54,12 @@ const Header = () => {
         { name: 'Ménaka', href: '/zones/menaka' },
         { name: 'Mopti', href: '/zones/mopti' },
         { name: 'Ségou', href: '/zones/segou' },
-        { name: 'Sikasso', href: '/zones/sikasso' },
-      ],
+        { name: 'Sikasso', href: '/zones/sikasso' }
+      ]
     },
     { name: 'Partenaires', href: '/partenaires' },
     { name: 'Actualités', href: '/actualites' },
-    { name: 'Contact', href: '/contact' },
+    { name: 'Contact', href: '/contact' }
   ]
 
   const isActive = (href) => {
@@ -93,9 +93,7 @@ const Header = () => {
             <img src={logoAmss} alt="Logo AMSS" className="h-16 w-16" />
             <div>
               <h1 className="text-xl font-bold text-primary">AMSS</h1>
-              <p className="text-sm text-muted-foreground">
-                Association Malienne pour la Survie au Sahel
-              </p>
+              <p className="text-sm text-muted-foreground">Association Malienne pour la Survie au Sahel</p>
             </div>
           </Link>
 
@@ -119,7 +117,7 @@ const Header = () => {
                   {item.name}
                   {item.dropdown && <ChevronDown className="ml-1 h-4 w-4" />}
                 </Link>
-
+                
                 {/* Dropdown Menu */}
                 {item.dropdown && activeDropdown === index && (
                   <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-border rounded-md shadow-lg py-2 z-50">
@@ -196,3 +194,4 @@ const Header = () => {
 }
 
 export default Header
+

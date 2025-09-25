@@ -1,96 +1,196 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
+import { GraduationCap, Heart, Droplets, Shield, Users, Wheat } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
-const domaines = [
-  {
-    title: 'Éducation',
-    intro:
-      "Accès, maintien et réussite scolaire des filles et garçons, y compris en contextes d'urgence.",
-    items: [
-      'Appui aux écoles (kits scolaires, mobiliers, réhabilitation légère)',
-      'Classes de rattrapage et de transition pour enfants déscolarisés',
-      'Formation des enseignants et comités de gestion scolaire (CGS)',
-      "Sensibilisation sur l'importance de l'éducation des filles",
-    ],
-  },
-  {
-    title: 'Santé & Nutrition',
-    intro:
-      "Renforcement de l'offre de soins essentiels et prévention de la malnutrition aiguë.",
-    items: [
-      'Dépistage communautaire de la malnutrition (MUAC)',
-      'Référencement des cas vers les CSCom/CSRef',
-      'Promotion des pratiques familiales essentielles',
-      'Soutien logistique aux structures de santé en zones difficiles',
-    ],
-  },
-  {
-    title: "Sécurité alimentaire & Moyens d’existence",
-    intro: 'Soutien aux ménages vulnérables et relance économique locale.',
-    items: [
-      'Transferts monétaires et coupons alimentaires selon la saisonnalité',
-      'Kits maraîchers et appui aux coopératives (semences, outils)',
-      'Appui aux revenus des femmes (IGA, alphabétisation fonctionnelle)',
-      'Relance de l’élevage familial (vaccination, aliments bétail)',
-    ],
-  },
-  {
-    title: 'WASH (Eau, Hygiène et Assainissement)',
-    intro:
-      "Améliorer l’accès à l’eau potable et aux services d’hygiène dans les communautés et écoles.",
-    items: [
-      'Réhabilitation de points d’eau et latrines scolaires',
-      'Distribution de kits d’hygiène (dignité, ménage)',
-      'Promotion de l’hygiène (CHP, ANJE, lavage des mains)',
-      'Gestion communautaire et maintenance des ouvrages',
-    ],
-  },
-  {
-    title: 'Protection & Cohésion sociale',
-    intro:
-      'Prévention/prise en charge des violences basées sur le genre, protection de l’enfance, cohésion.',
-    items: [
-      'Espaces amis des enfants et activités psychosociales',
-      'Accompagnement des survivantes VBG (orientation, écoute, MHPSS)',
-      'Médiation communautaire et mécanismes de règlement des conflits',
-      'Appui aux comités de protection communautaire',
-    ],
-  },
-  {
-    title: 'Gouvernance locale & Redevabilité',
-    intro:
-      'Renforcement des autorités locales, participation citoyenne et mécanismes de redevabilité.',
-    items: [
-      'Budgets participatifs communaux et cadres de concertation',
-      'Comités de gestion et feedback communautaire (CFM)',
-      'Renforcement des OSC locales (formation, gouvernance)',
-      'Approche sensible au conflit et au genre',
-    ],
-  },
-]
+const DomainesPage = () => {
+  const domaines = [
+    {
+      id: 'education',
+      title: 'Éducation et Formation',
+      icon: GraduationCap,
+      description: 'Programmes d\'alphabétisation, scolarisation accélérée et formation professionnelle pour tous.',
+      link: '/education',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      stats: '15,000+ bénéficiaires'
+    },
+    {
+      id: 'sante',
+      title: 'Santé et Nutrition',
+      icon: Heart,
+      description: 'Amélioration de l\'accès aux soins de santé et promotion de la nutrition communautaire.',
+      link: '/sante',
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+      stats: '25,000+ bénéficiaires'
+    },
+    {
+      id: 'wash',
+      title: 'Eau, Assainissement et Hygiène',
+      icon: Droplets,
+      description: 'Accès à l\'eau potable, assainissement et promotion de l\'hygiène dans les communautés.',
+      link: '/wash',
+      color: 'text-cyan-600',
+      bgColor: 'bg-cyan-50',
+      stats: '50,000+ bénéficiaires'
+    },
+    {
+      id: 'protection',
+      title: 'Protection et VBG',
+      icon: Shield,
+      description: 'Protection des populations vulnérables et lutte contre les violences basées sur le genre.',
+      link: '/protection',
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      stats: '8,000+ bénéficiaires'
+    },
+    {
+      id: 'gouvernance',
+      title: 'Gouvernance et Paix',
+      icon: Users,
+      description: 'Renforcement de la gouvernance locale et promotion de la cohésion sociale.',
+      link: '/gouvernance',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      stats: '12,000+ bénéficiaires'
+    },
+    {
+      id: 'securite-alimentaire',
+      title: 'Sécurité Alimentaire',
+      icon: Wheat,
+      description: 'Assistance alimentaire d\'urgence et programmes de résilience agricole.',
+      link: '/securite-alimentaire',
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      stats: '30,000+ bénéficiaires'
+    }
+  ]
 
-export default function DomainesPage() {
   return (
-    <section className="max-w-6xl mx-auto px-4 py-10">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold">Nos domaines d’intervention</h1>
-        <p className="text-muted-foreground mt-2">
-          L’Association Malienne pour la Survie au Sahel (AMSS) agit pour la résilience des
-          communautés à travers des programmes intégrés et centrés sur les besoins.
-        </p>
-      </header>
-      <div className="grid md:grid-cols-2 gap-6">
-        {domaines.map((d) => (
-          <article key={d.title} className="rounded-2xl border p-6 shadow-sm bg-white">
-            <h2 className="text-xl font-semibold">{d.title}</h2>
-            <p className="mt-2 text-sm text-gray-600">{d.intro}</p>
-            <ul className="mt-4 list-disc pl-5 space-y-1 text-sm">
-              {d.items.map((li, i) => (
-                <li key={i}>{li}</li>
-              ))}
-            </ul>
-          </article>
-        ))}
-      </div>
-    </section>
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <section className="py-20 bg-gradient-to-br from-primary/10 to-accent/10">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+              Nos Domaines d'Intervention
+            </h1>
+            <p className="text-xl text-muted-foreground leading-relaxed">
+              L'AMSS intervient dans 6 domaines stratégiques pour répondre aux besoins 
+              essentiels des populations vulnérables du Mali.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Domaines Grid */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {domaines.map((domaine) => {
+                const IconComponent = domaine.icon
+                return (
+                  <div key={domaine.id} className="bg-white rounded-xl p-8 shadow-sm border border-border hover:shadow-lg transition-shadow">
+                    <div className={`w-16 h-16 ${domaine.bgColor} rounded-lg flex items-center justify-center mb-6`}>
+                      <IconComponent className={`h-8 w-8 ${domaine.color}`} />
+                    </div>
+                    
+                    <h3 className="text-xl font-semibold text-foreground mb-4">
+                      {domaine.title}
+                    </h3>
+                    
+                    <p className="text-muted-foreground mb-4 leading-relaxed">
+                      {domaine.description}
+                    </p>
+                    
+                    <div className="mb-6">
+                      <span className={`text-sm font-medium ${domaine.color}`}>
+                        {domaine.stats}
+                      </span>
+                    </div>
+                    
+                    <Link to={domaine.link}>
+                      <Button variant="outline" className="w-full">
+                        En savoir plus
+                      </Button>
+                    </Link>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Approche Transversale */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-foreground mb-6">
+              Une Approche Transversale
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+              Tous nos programmes intègrent une approche transversale de la gouvernance 
+              et de la construction de la paix, garantissant une intervention holistique 
+              et durable.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-border">
+                <h3 className="font-semibold text-foreground mb-2">Participation Communautaire</h3>
+                <p className="text-sm text-muted-foreground">
+                  Implication active des communautés dans la conception et la mise en œuvre des projets.
+                </p>
+              </div>
+              
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-border">
+                <h3 className="font-semibold text-foreground mb-2">Équité et Inclusion</h3>
+                <p className="text-sm text-muted-foreground">
+                  Attention particulière aux groupes vulnérables : femmes, jeunes, personnes handicapées.
+                </p>
+              </div>
+              
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-border">
+                <h3 className="font-semibold text-foreground mb-2">Durabilité</h3>
+                <p className="text-sm text-muted-foreground">
+                  Solutions pérennes qui renforcent les capacités locales et l'autonomie des communautés.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-foreground mb-6">
+              Découvrez Nos Actions
+            </h2>
+            <p className="text-xl text-muted-foreground mb-8">
+              Explorez nos projets concrets et leur impact sur les communautés
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/projets">
+                <Button size="lg" className="text-lg px-8 py-3">
+                  Voir Nos Projets
+                </Button>
+              </Link>
+              <Link to="/zones">
+                <Button variant="outline" size="lg" className="text-lg px-8 py-3">
+                  Zones d'Intervention
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   )
 }
+
+export default DomainesPage
+

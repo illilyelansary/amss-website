@@ -117,23 +117,12 @@ const AboutPage = () => {
                 </div>
               </div>
             </div>
-
-            {/* Sommaire interne (liens ancres) */}
-            <nav aria-label="Sommaire à propos" className="mt-10">
-              <ul className="flex flex-wrap gap-3 text-sm">
-                <li><a className="underline hover:no-underline" href="#historique">Historique</a></li>
-                <li><a className="underline hover:no-underline" href="#mission">Mission & Vision</a></li>
-                <li><a className="underline hover:no-underline" href="#equipe">Équipe</a></li>
-                <li><a className="underline hover:no-underline" href="#accord-cadre">Accord cadre</a></li>
-                <li><a className="underline hover:no-underline" href="#rejoindre">Rejoindre la mission</a></li>
-              </ul>
-            </nav>
           </div>
         </div>
       </section>
 
       {/* Mission, Vision, Valeurs */}
-      <section id="mission" className="py-16 bg-muted/30 outline-none">
+      <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -174,7 +163,7 @@ const AboutPage = () => {
       </section>
 
       {/* Équipe de Direction */}
-      <section id="equipe" className="py-16 outline-none">
+      <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
@@ -218,7 +207,7 @@ const AboutPage = () => {
       </section>
 
       {/* Accord cadre */}
-      <section id="accord-cadre" className="py-16 bg-gradient-to-br from-primary/5 to-accent/5 outline-none">
+      <section className="py-16 bg-gradient-to-br from-primary/5 to-accent/5">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-foreground mb-6">
@@ -244,7 +233,7 @@ const AboutPage = () => {
       </section>
 
       {/* Call to action */}
-      <section id="rejoindre" className="py-16 outline-none">
+      <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-foreground mb-6">
@@ -269,3 +258,4 @@ const AboutPage = () => {
 }
 
 export default AboutPage
+

@@ -17,11 +17,10 @@ collections:
       - {label: "Image principale", name: "image", widget: "image", required: false}
       - {label: "Résumé", name: "excerpt", widget: "text"}
       - {label: "Contenu", name: "body", widget: "markdown"}
-      - {label: "Catégorie", name: "category", widget: "select", options: ["Éducation", "Santé", "WASH", "Protection", "Gouvernance", "Environnement", "Microfinance", "Général"]}
+      - {label: "Catégorie", name: "category", widget: "select", options: ["Éducation", "Santé", "WASH", "Protection", "Gouvernance", "Environnement", "Microfinance", "Sécurité Alimentaire", "Général"]}
+      - {label: "Tags", name: "tags", widget: "list", required: false}
       - {label: "Région", name: "region", widget: "select", options: ["Tombouctou", "Gao", "Ménaka", "Mopti", "Ségou", "Sikasso", "Bamako", "Taoudénit", "National"], required: false}
-      - {label: "Publié", name: "published", widget: "boolean", default: true}
-
-  - name: "projets"
+      - {label: "Publié", name: "published", widget: "boolean", default: true}  - name: "projets"
     label: "Projets"
     folder: "content/projets"
     create: true
@@ -31,15 +30,18 @@ collections:
       - {label: "Date de début", name: "start_date", widget: "datetime"}
       - {label: "Date de fin", name: "end_date", widget: "datetime", required: false}
       - {label: "Statut", name: "status", widget: "select", options: ["En cours", "Terminé", "Planifié"]}
-      - {label: "Budget", name: "budget", widget: "string", required: false}
       - {label: "Bailleur", name: "donor", widget: "string"}
       - {label: "Image principale", name: "image", widget: "image", required: false}
       - {label: "Description courte", name: "excerpt", widget: "text"}
       - {label: "Description complète", name: "body", widget: "markdown"}
-      - {label: "Domaine d'intervention", name: "domain", widget: "select", options: ["Éducation", "Santé", "WASH", "Protection", "Gouvernance", "Environnement", "Microfinance", "Sécurité Alimentaire"]}
-      - {label: "Région", name: "region", widget: "select", options: ["Tombouctou", "Gao", "Ménaka", "Mopti", "Ségou", "Sikasso", "Bamako", "Taoudénit"]}
+      - {label: "Domaine d\'intervention", name: "domain", widget: "select", options: ["Éducation", "Santé", "WASH", "Protection", "Gouvernance", "Environnement", "Microfinance", "Sécurité Alimentaire"]}
+      - {label: "Région", name: "region", widget: "select", options: ["Tombouctou", "Gao", "Ménaka", "Mopti", "Ségou", "Sikasso", "Bamako", "Taoudénit", "National"]}
       - {label: "Bénéficiaires", name: "beneficiaries", widget: "number", required: false}
-      - {label: "Galerie d'images", name: "gallery", widget: "list", field: {label: "Image", name: "image", widget: "image"}, required: false}
+      - {label: "Budget", name: "budget", widget: "string", required: false}
+      - {label: "Galerie d\'images", name: "gallery", widget: "list", field: {label: "Image", name: "image", widget: "image"}, required: false}
+      - {label: "Lien externe", name: "external_link", widget: "string", required: false}
+      - {label: "Publié", name: "published", widget: "boolean", default: true}
+
 
   - name: "partenaires"
     label: "Partenaires"
@@ -78,7 +80,8 @@ collections:
       - {label: "Titre du rapport", name: "title", widget: "string"}
       - {label: "Année", name: "year", widget: "number"}
       - {label: "Type", name: "type", widget: "select", options: ["Rapport annuel", "Rapport d'activité", "Rapport financier", "Rapport d'audit", "Rapport de projet"]}
-      - {label: "Fichier PDF", name: "file", widget: "file"}
+      - {label: "Fichier PDF", name: "file", widget: "file", required: false}
+      - {label: "Lien externe", name: "external_link", widget: "string", required: false}
       - {label: "Image de couverture", name: "cover", widget: "image", required: false}
       - {label: "Résumé", name: "excerpt", widget: "text"}
       - {label: "Description", name: "body", widget: "markdown"}
@@ -126,4 +129,23 @@ collections:
             ]}
 
 locale: 'fr'
+
+
+
+  - name: "zones_intervention"
+    label: "Zones d'Intervention"
+    folder: "content/zones"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - {label: "Nom de la zone", name: "title", widget: "string"}
+      - {label: "Image de la zone", name: "image", widget: "image", required: false}
+      - {label: "Description courte", name: "excerpt", widget: "text"}
+      - {label: "Description complète", name: "body", widget: "markdown"}
+      - {label: "Statut", name: "status", widget: "select", options: ["Siège Principal", "Bureau Régional", "Zone d'Intervention"], required: false}
+      - {label: "Nombre de projets", name: "num_projects", widget: "number", required: false}
+      - {label: "Nombre de bénéficiaires", name: "num_beneficiaries", widget: "number", required: false}
+      - {label: "Spécificités", name: "specificities", widget: "list", field: {label: "Spécificité", name: "specificity", widget: "string"}, required: false}
+      - {label: "Projets phares", name: "featured_projects", widget: "list", field: {label: "Projet", name: "project", widget: "string"}, required: false}
+      - {label: "Publié", name: "published", widget: "boolean", default: true}
 
