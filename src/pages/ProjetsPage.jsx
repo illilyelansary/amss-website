@@ -1,10 +1,24 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { Clock, CheckCircle, FileText, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { projetsEnCours, projetsTermines, rapports } from '../data/projetsData'
+
+// --- Helpers for counters ---
+const parseMoneyToUSD = (val) => {
+  if (!val) return 0
+  if (typeof val === 'number') return val
+  const s = String(val)
+  const isUSD = /usd/i.test(s) || /\$/.test(s)
+  const num = Number(s.replace(/[^0-9.]/g, ''))
+  if (!num) return 0
+  // Heuristic: FCFA -> USD using ~600 FCFA = 1 USD
+  return isUSD ? num : Math.round(num / 600)
+}
+
+const sum = (arr) => arr.reduce((a,b)=>a+b,0)
 
 const ProjetsPage = () => {
-  // ⚙️ Scroll automatique vers la section si l'URL contient un hash
   const { hash } = useLocation()
   useEffect(() => {
     if (hash) {
@@ -19,89 +33,63 @@ const ProjetsPage = () => {
     }
   }, [hash])
 
-  const projetsEnCours = [
-    {
-      title: 'Green Jobs - Tables-Bancs Plastique',
-      region: 'Tombouctou',
-      bailleur: 'Fondation Stromme',
-      beneficiaires: '260 écoles',
-      description: 'Production de mobilier scolaire à partir de plastique recyclé'
-    },
-    {
-      title: 'Programme SSA/P - Scolarisation Accélérée',
-      region: 'National',
-      bailleur: 'Fondation Stromme',
-      beneficiaires: '15,000 enfants',
-      description: 'Éducation alternative pour enfants non scolarisés'
-    },
-    {
-      title: 'Programme WASH d\'Urgence',
-      region: 'National',
-      bailleur: 'UNICEF Mali',
-      beneficiaires: '50,000 personnes',
-      description: 'Accès à l\'eau potable et assainissement d\'urgence'
-    }
-  ]
+  const subset = (arr, n=6) => arr.slice(0, Math.min(arr.length, n))
 
-  const projetsTermines = [
-    {
-      title: 'Programme SSA2 - Éducation Alternative',
-      region: 'Nord Mali',
-      annee: '2020-2023',
-      beneficiaires: '12,000 enfants',
-      description: 'Programme d\'éducation alternative achevé avec succès'
-    },
-    {
-      title: 'Projet UNMAS - Protection des Civils',
-      region: 'Gao, Ménaka',
-      annee: '2019-2022',
-      beneficiaires: '25,000 personnes',
-      description: 'Localisation et protection des populations civiles'
-    },
-    {
-      title: 'Programme S3A - Scolarisation Accélérée',
-      region: 'Tombouctou',
-      annee: '2018-2021',
-      beneficiaires: '8,000 enfants',
-      description: 'Scolarisation accélérée dans les zones post-conflit'
-    }
-  ]
+  // --- Dynamic counters from data ---
+  const counters = useMemo(() => {
+    const enCours = projetsEnCours || []
+    const termines = projetsTermines || []
+    const all = [...enCours, ...termines]
 
-  const rapports = [
-    {
-      title: 'Rapport Gouvernemental 2024',
-      type: 'Rapport annuel',
-      annee: 2024,
-      description: 'Rapport complet des activités 2024 soumis au gouvernement malien'
-    },
-    {
-      title: 'Rapport d\'Audit Consolidé 2022',
-      type: 'Rapport financier',
-      annee: 2022,
-      description: 'Audit financier consolidé de toutes les activités AMSS'
-    },
-    {
-      title: 'Rapport Narratif 2022',
-      type: 'Rapport d\'activité',
-      annee: 2022,
-      description: 'Rapport narratif détaillé des programmes et projets'
+    const totalBenef = sum(all.map(p => Number(p.beneficiaries || 0)))
+    const totalBudgetUSD = sum(all.map(p => parseMoneyToUSD(p.budget)))
+    const nbEnCours = enCours.filter(p => String(p.status||'').toLowerCase().includes('en cours')).length
+    const nbSuspendusUSAID = enCours.filter(p => p.usaidNote === true).length
+
+    const formatUSD = (n) => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'USD', maximumFractionDigits: 0 }).format(n)
+
+    return {
+      totalBenef: new Intl.NumberFormat('fr-FR').format(totalBenef),
+      totalBudget: formatUSD(totalBudgetUSD),
+      nbEnCours,
+      nbSuspendusUSAID
     }
-  ]
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-primary/10 to-accent/10">
+      <section className="py-14 md:py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+          <div className="max-w-5xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 md:mb-6">
               Nos Projets et Réalisations
             </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed">
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
               Découvrez nos projets en cours, nos réalisations passées et nos rapports d'activités
             </p>
-            
-            {/* Navigation interne */}
+
+            {/* Dynamic Counters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-8">
+              <div className="rounded-2xl bg-white p-5 shadow-sm border">
+                <div className="text-sm text-muted-foreground">Bénéficiaires (tous projets)</div>
+                <div className="text-3xl font-semibold mt-1">{counters.totalBenef}</div>
+              </div>
+              <div className="rounded-2xl bg-white p-5 shadow-sm border">
+                <div className="text-sm text-muted-foreground">Budget agrégé (≈ USD)</div>
+                <div className="text-3xl font-semibold mt-1">{counters.totalBudget}</div>
+                <div className="text-xs text-muted-foreground mt-1">Conversion indicative 600 FCFA ≈ 1 USD</div>
+              </div>
+              <div className="rounded-2xl bg-white p-5 shadow-sm border">
+                <div className="text-sm text-muted-foreground">Projets en cours</div>
+                <div className="text-3xl font-semibold mt-1">{counters.nbEnCours}</div>
+              </div>
+              <div className="rounded-2xl bg-white p-5 shadow-sm border">
+                <div className="text-sm text-muted-foreground">USAID en suspension</div>
+                <div className="text-3xl font-semibold mt-1">{counters.nbSuspendusUSAID}</div>
+              </div>
+            </div>
+
             <nav className="mt-8 flex flex-wrap justify-center gap-4">
               <a href="#cours" className="bg-white px-6 py-3 rounded-lg shadow-sm border border-border hover:bg-muted transition-colors">
                 Projets en Cours
@@ -127,11 +115,13 @@ const ProjetsPage = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {projetsEnCours.map((projet, index) => (
+              {subset(projetsEnCours).map((projet, index) => (
                 <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
                   <div className="flex items-center mb-4">
-                    <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                    <span className="text-sm font-medium text-green-600">En cours</span>
+                    <div className={`w-3 h-3 rounded-full mr-2 ${projet.usaidNote ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                    <span className={`text-sm font-medium ${projet.usaidNote ? 'text-red-600' : 'text-green-600'}`}>
+                      {projet.status}
+                    </span>
                   </div>
                   
                   <h3 className="text-lg font-semibold text-foreground mb-3">
@@ -139,7 +129,7 @@ const ProjetsPage = () => {
                   </h3>
                   
                   <p className="text-muted-foreground text-sm mb-4">
-                    {projet.description}
+                    {projet.excerpt}
                   </p>
                   
                   <div className="space-y-2 text-sm">
@@ -149,11 +139,11 @@ const ProjetsPage = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Bailleur:</span>
-                      <span className="font-medium">{projet.bailleur}</span>
+                      <span className="font-medium">{projet.donor}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Bénéficiaires:</span>
-                      <span className="font-medium">{projet.beneficiaires}</span>
+                      <span className="text-muted-foreground">Domaine:</span>
+                      <span className="font-medium">{projet.domain}</span>
                     </div>
                   </div>
                 </div>
@@ -182,7 +172,7 @@ const ProjetsPage = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {projetsTermines.map((projet, index) => (
+              {subset(projetsTermines).map((projet, index) => (
                 <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
                   <div className="flex items-center mb-4">
                     <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
@@ -194,7 +184,7 @@ const ProjetsPage = () => {
                   </h3>
                   
                   <p className="text-muted-foreground text-sm mb-4">
-                    {projet.description}
+                    {projet.excerpt}
                   </p>
                   
                   <div className="space-y-2 text-sm">
@@ -204,11 +194,11 @@ const ProjetsPage = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Période:</span>
-                      <span className="font-medium">{projet.annee}</span>
+                      <span className="font-medium">{new Date(projet.startDate).getFullYear()}–{new Date(projet.endDate).getFullYear()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Bénéficiaires:</span>
-                      <span className="font-medium">{projet.beneficiaires}</span>
+                      <span className="font-medium">{projet.beneficiaries?.toLocaleString('fr-FR') || 'N/D'}</span>
                     </div>
                   </div>
                 </div>
@@ -253,7 +243,7 @@ const ProjetsPage = () => {
                   </p>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Année: {rapport.annee}</span>
+                    <span className="text-sm text-muted-foreground">Année: {rapport.year}</span>
                     <Button variant="outline" size="sm">
                       Télécharger
                     </Button>
@@ -274,7 +264,7 @@ const ProjetsPage = () => {
         </div>
       </section>
 
-      {/* Call to Action */}
+      {/* CTA */}
       <section className="py-16 bg-gradient-to-br from-primary/5 to-accent/5">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
@@ -304,4 +294,3 @@ const ProjetsPage = () => {
 }
 
 export default ProjetsPage
-

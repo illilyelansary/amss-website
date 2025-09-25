@@ -130,6 +130,15 @@ const ProjetsEnCoursPage = () => {
                         <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
                           {projet.region}
                         </span>
+
+                      {projet.usaidNote && (
+                        <div className="mb-3">
+                          <span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+                            Suspendu suite aux décisions du Gouvernement américain (USAID)
+                          </span>
+                        </div>
+                      )}
+
                       </div>
 
                       <h3 className="text-2xl font-bold text-foreground mb-3">
@@ -177,6 +186,13 @@ const ProjetsEnCoursPage = () => {
                           </div>
                         </div>
                       </div>
+
+
+                      {projet.sources && (
+                        <div className="text-xs text-muted-foreground mb-4">
+                          Sources: {projet.sources.join(', ')}
+                        </div>
+                      )}
 
                       <div className="flex flex-col sm:flex-row gap-3">
                         <Button className="flex-1">
