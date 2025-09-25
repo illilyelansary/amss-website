@@ -1,0 +1,129 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "public/images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: "actualites"
+    label: "Actualités"
+    folder: "content/actualites"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Titre", name: "title", widget: "string"}
+      - {label: "Date de publication", name: "date", widget: "datetime"}
+      - {label: "Image principale", name: "image", widget: "image", required: false}
+      - {label: "Résumé", name: "excerpt", widget: "text"}
+      - {label: "Contenu", name: "body", widget: "markdown"}
+      - {label: "Catégorie", name: "category", widget: "select", options: ["Éducation", "Santé", "WASH", "Protection", "Gouvernance", "Environnement", "Microfinance", "Général"]}
+      - {label: "Région", name: "region", widget: "select", options: ["Tombouctou", "Gao", "Ménaka", "Mopti", "Ségou", "Sikasso", "Bamako", "Taoudénit", "National"], required: false}
+      - {label: "Publié", name: "published", widget: "boolean", default: true}
+
+  - name: "projets"
+    label: "Projets"
+    folder: "content/projets"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - {label: "Nom du projet", name: "title", widget: "string"}
+      - {label: "Date de début", name: "start_date", widget: "datetime"}
+      - {label: "Date de fin", name: "end_date", widget: "datetime", required: false}
+      - {label: "Statut", name: "status", widget: "select", options: ["En cours", "Terminé", "Planifié"]}
+      - {label: "Budget", name: "budget", widget: "string", required: false}
+      - {label: "Bailleur", name: "donor", widget: "string"}
+      - {label: "Image principale", name: "image", widget: "image", required: false}
+      - {label: "Description courte", name: "excerpt", widget: "text"}
+      - {label: "Description complète", name: "body", widget: "markdown"}
+      - {label: "Domaine d'intervention", name: "domain", widget: "select", options: ["Éducation", "Santé", "WASH", "Protection", "Gouvernance", "Environnement", "Microfinance", "Sécurité Alimentaire"]}
+      - {label: "Région", name: "region", widget: "select", options: ["Tombouctou", "Gao", "Ménaka", "Mopti", "Ségou", "Sikasso", "Bamako", "Taoudénit"]}
+      - {label: "Bénéficiaires", name: "beneficiaries", widget: "number", required: false}
+      - {label: "Galerie d'images", name: "gallery", widget: "list", field: {label: "Image", name: "image", widget: "image"}, required: false}
+
+  - name: "partenaires"
+    label: "Partenaires"
+    folder: "content/partenaires"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - {label: "Nom du partenaire", name: "title", widget: "string"}
+      - {label: "Type", name: "type", widget: "select", options: ["Bailleur", "Partenaire technique", "Partenaire local", "Organisation internationale", "Gouvernement"]}
+      - {label: "Logo", name: "logo", widget: "image", required: false}
+      - {label: "Site web", name: "website", widget: "string", required: false}
+      - {label: "Description", name: "body", widget: "markdown"}
+      - {label: "Projets communs", name: "projects", widget: "list", field: {label: "Projet", name: "project", widget: "string"}, required: false}
+      - {label: "Actif", name: "active", widget: "boolean", default: true}
+
+  - name: "equipe"
+    label: "Équipe"
+    folder: "content/equipe"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - {label: "Nom complet", name: "title", widget: "string"}
+      - {label: "Poste", name: "position", widget: "string"}
+      - {label: "Photo", name: "photo", widget: "image", required: false}
+      - {label: "Biographie", name: "body", widget: "markdown"}
+      - {label: "Email", name: "email", widget: "string", required: false}
+      - {label: "Bureau", name: "office", widget: "select", options: ["Tombouctou", "Gao", "Ménaka", "Mopti", "Ségou", "Sikasso", "Bamako", "Taoudénit"]}
+      - {label: "Ordre d'affichage", name: "order", widget: "number", default: 1}
+
+  - name: "rapports"
+    label: "Rapports"
+    folder: "content/rapports"
+    create: true
+    slug: "{{year}}-{{slug}}"
+    fields:
+      - {label: "Titre du rapport", name: "title", widget: "string"}
+      - {label: "Année", name: "year", widget: "number"}
+      - {label: "Type", name: "type", widget: "select", options: ["Rapport annuel", "Rapport d'activité", "Rapport financier", "Rapport d'audit", "Rapport de projet"]}
+      - {label: "Fichier PDF", name: "file", widget: "file"}
+      - {label: "Image de couverture", name: "cover", widget: "image", required: false}
+      - {label: "Résumé", name: "excerpt", widget: "text"}
+      - {label: "Description", name: "body", widget: "markdown"}
+      - {label: "Publié", name: "published", widget: "boolean", default: true}
+
+  - name: "pages"
+    label: "Pages"
+    files:
+      - file: "content/pages/about.md"
+        label: "À Propos"
+        name: "about"
+        fields:
+          - {label: "Titre", name: "title", widget: "string"}
+          - {label: "Contenu", name: "body", widget: "markdown"}
+          - {label: "Image principale", name: "image", widget: "image", required: false}
+      
+      - file: "content/pages/contact.md"
+        label: "Contact"
+        name: "contact"
+        fields:
+          - {label: "Titre", name: "title", widget: "string"}
+          - {label: "Contenu", name: "body", widget: "markdown"}
+          - {label: "Adresse Bamako", name: "address_bamako", widget: "string"}
+          - {label: "Adresse Tombouctou", name: "address_tombouctou", widget: "string"}
+          - {label: "Téléphone principal", name: "phone_main", widget: "string"}
+          - {label: "Email principal", name: "email_main", widget: "string"}
+
+  - name: "settings"
+    label: "Paramètres"
+    files:
+      - file: "content/settings/general.md"
+        label: "Paramètres généraux"
+        name: "general"
+        fields:
+          - {label: "Nom du site", name: "site_name", widget: "string"}
+          - {label: "Description", name: "site_description", widget: "text"}
+          - {label: "Logo", name: "logo", widget: "image"}
+          - {label: "Email principal", name: "main_email", widget: "string"}
+          - {label: "Téléphone principal", name: "main_phone", widget: "string"}
+          - {label: "Adresse", name: "address", widget: "text"}
+          - {label: "Réseaux sociaux", name: "social_media", widget: "object", fields: [
+              {label: "Facebook", name: "facebook", widget: "string", required: false},
+              {label: "Twitter", name: "twitter", widget: "string", required: false},
+              {label: "LinkedIn", name: "linkedin", widget: "string", required: false}
+            ]}
+
+locale: 'fr'
+
