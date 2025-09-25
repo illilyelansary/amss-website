@@ -7,6 +7,13 @@ import AboutPage from './pages/AboutPage'
 import EducationPage from './pages/EducationPage'
 import ContactPage from './pages/ContactPage'
 
+// ✅ Nouvelles pages
+import DomainesPage from './pages/DomainesPage'
+import ProjetsPage from './pages/ProjetsPage'
+import ZonesPage from './pages/ZonesPage'
+import PartenairesPage from './pages/PartenairesPage'
+import ActualitesPage from './pages/ActualitesPage'
+
 function App() {
   return (
     <Router>
@@ -14,16 +21,31 @@ function App() {
         <Header />
         <main>
           <Routes>
+            {/* Pages principales */}
             <Route path="/" element={<HomePage />} />
             <Route path="/a-propos" element={<AboutPage />} />
             <Route path="/education" element={<EducationPage />} />
             <Route path="/contact" element={<ContactPage />} />
-            {/* Routes temporaires pour les autres pages */}
-            <Route path="/domaines" element={<div className="py-20 text-center"><h1>Nos Domaines - En construction</h1></div>} />
-            <Route path="/projets" element={<div className="py-20 text-center"><h1>Nos Projets - En construction</h1></div>} />
-            <Route path="/zones" element={<div className="py-20 text-center"><h1>Zones d'Intervention - En construction</h1></div>} />
-            <Route path="/partenaires" element={<div className="py-20 text-center"><h1>Partenaires - En construction</h1></div>} />
-            <Route path="/actualites" element={<div className="py-20 text-center"><h1>Actualités - En construction</h1></div>} />
+
+            {/* ✅ Nouvelles pages AMSS */}
+            <Route path="/domaines" element={<DomainesPage />} />
+            <Route path="/projets" element={<ProjetsPage />} />
+            <Route path="/zones" element={<ZonesPage />} />
+            <Route path="/partenaires" element={<PartenairesPage />} />
+            <Route path="/actualites" element={<ActualitesPage />} />
+
+            {/* Page 404 simple */}
+            <Route
+              path="*"
+              element={
+                <div className="py-20 text-center">
+                  <h1 className="text-2xl font-semibold">Page introuvable</h1>
+                  <p className="text-sm text-gray-600 mt-2">
+                    La page que vous cherchez n'existe pas. Retour à l'accueil.
+                  </p>
+                </div>
+              }
+            />
           </Routes>
         </main>
         <Footer />
