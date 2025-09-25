@@ -20,9 +20,15 @@ import ZonesPage from './pages/ZonesPage'
 import PartenairesPage from './pages/PartenairesPage'
 import ActualitesPage from './pages/ActualitesPage'
 
+// 👉 ajoutez ce composant (fichier: src/components/ScrollToTop.jsx)
+import ScrollToTop from './components/ScrollToTop'
+
 function App() {
   return (
     <Router>
+      {/* Remonter automatiquement en haut à chaque navigation */}
+      <ScrollToTop />
+
       <div className="min-h-screen bg-background">
         <Header />
         <main>
@@ -61,4 +67,3 @@ function App() {
 }
 
 export default App
-
