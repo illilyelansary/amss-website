@@ -22,4 +22,25 @@
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    [[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin/"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/.netlify/identity"
+  to = "/.netlify/identity/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/.netlify/git/github"
+  to = "/.netlify/git/github/index.html"
+  status = 200
+
+    
 
