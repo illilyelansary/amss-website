@@ -16,6 +16,9 @@ const ProjetsEnCoursPage = () => {
     return regionMatch && domaineMatch
   })
 
+  // Mettre les projets USAID suspendus en tête de liste
+  projetsFiltres.sort((a,b) => (b.usaidNote === true) - (a.usaidNote === true))
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       year: 'numeric',

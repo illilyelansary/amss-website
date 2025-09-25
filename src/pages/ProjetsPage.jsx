@@ -38,12 +38,11 @@ const ProjetsPage = () => {
   // --- Dynamic counters from data ---
   const counters = useMemo(() => {
     const enCours = projetsEnCours || []
-    const termines = projetsTermines || []
-    const all = [...enCours, ...termines]
+    const enCoursStrict = enCours.filter(p => String(p.status||'').toLowerCase().includes('en cours'))
 
-    const totalBenef = sum(all.map(p => Number(p.beneficiaries || 0)))
-    const totalBudgetUSD = sum(all.map(p => parseMoneyToUSD(p.budget)))
-    const nbEnCours = enCours.filter(p => String(p.status||'').toLowerCase().includes('en cours')).length
+    const totalBenef = sum(enCoursStrict.map(p => Number(p.beneficiaries || 0)))
+    const totalBudgetUSD = sum(enCoursStrict.map(p => parseMoneyToUSD(p.budget)))
+    const nbEnCours = enCoursStrict.length
     const nbSuspendusUSAID = enCours.filter(p => p.usaidNote === true).length
 
     const formatUSD = (n) => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'USD', maximumFractionDigits: 0 }).format(n)
@@ -115,7 +114,7 @@ const ProjetsPage = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {subset(projetsEnCours).map((projet, index) => (
+              {projetsEnCours.map((projet, index) => (
                 <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
                   <div className="flex items-center mb-4">
                     <div className={`w-3 h-3 rounded-full mr-2 ${projet.usaidNote ? 'bg-red-500' : 'bg-green-500'}`}></div>
