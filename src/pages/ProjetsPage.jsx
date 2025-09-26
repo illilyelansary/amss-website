@@ -1,18 +1,14 @@
 // src/pages/ProjetsPage.jsx
 import React, { useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { Clock, CheckCircle, FileText, ArrowRight } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import { Clock, CheckCircle, FileText, ArrowRight, Handshake } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { projetsEnCours, projetsTermines, rapports } from '../data/projetsData'
 
 // --- Helpers ---
-const sum = (arr) => arr.reduce((a,b)=>a+b,0)
+const sum = (arr) => arr.reduce((a, b) => a + b, 0)
 
-// Essaie d’estimer les communes à partir du champ `region` (très hétérogène).
-// 1) Si on trouve "35 communes", on prend 35 (indice numérique).
-// 2) Sinon, on regarde les noms listés entre parenthèses (ex: "Ségou (Pelengana, Sébougou, Ségou urbaine)").
-// 3) À défaut, on tente un split basique (virgules, &, /). -> approximation.
-// NB: Ce calcul reste approximatif. Pour un résultat 100% fiable, ajoutez à chaque projet un champ `communesCount` ou `communes: []`.
+// Essaie d’estimer les communes à partir du champ `region` (approximatif).
 const extractCommunes = (regionStr) => {
   if (!regionStr) return { names: [], countHint: 0 }
   const s = String(regionStr)
@@ -21,24 +17,23 @@ const extractCommunes = (regionStr) => {
   const mCount = s.match(/(\d+)\s*commune/i)
   const countHint = mCount ? Number(mCount[1]) : 0
 
-  // 2) Contenu entre parenthèses : souvent une liste de communes
+  // 2) Liste entre parenthèses
   const inside = (s.match(/\(([^)]+)\)/)?.[1]) || ''
   const listFromParentheses = inside
     ? inside.split(/[,&/;]| et /i).map(t => t.trim()).filter(Boolean)
     : []
 
-  // 3) Split de secours sur la chaîne entière si pas de parenthèses explicites
+  // 3) Fallback split sur toute la chaîne si pas de parenthèses
   const fallbackList = !listFromParentheses.length
     ? s.split(/[,&/;]| et /i).map(t => t.trim()).filter(Boolean)
     : []
 
-  // On filtre des mots génériques/régions connues pour éviter les faux positifs
   const ignoreRe = /(région|national|nord|centre|sahel|mali|cercle|commune|vill(e|age)|arrondissement|département)/i
   const knownRegionsRe = /(tombouctou|gao|ménaka|kidal|mopti|ségou|koulikoro|bamako|diré|goundam|niafunké|gourma[- ]rharous|ansongo)/i
 
-  const keep = (t) => t &&
+  const keep = (t) =>
+    t &&
     !ignoreRe.test(t) &&
-    // on garde les noms composés de >2 lettres et contenant une majuscule (pour écarter des mots communs)
     /[A-ZÀ-ÖØ-Ý]/.test(t[0]) &&
     t.length > 2
 
@@ -48,18 +43,31 @@ const extractCommunes = (regionStr) => {
       .map(v => v.replace(/^\d+\s*communes?$/i, ''))
       .map(v => v.trim())
       .filter(keep)
-      // si le token est juste une grande région (Tombouctou / Gao...) on l’ignore
       .filter(v => !knownRegionsRe.test(v.toLowerCase()))
   )
 
   return { names: Array.from(names), countHint }
 }
 
-const ProjetsPage = () => {
+export default function ProjetsPage() {
+  const { hash } = useLocation()
+
+  // Scroll initial + au changement de hash (depuis le menu Header)
   useEffect(() => {
-    // À l’arrivée sur la page, on remonte en haut (au cas où)
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-  }, [])
+    const scrollToHash = () => {
+      if (!hash) {
+        window.scrollTo({ top: 0, behavior: 'instant' })
+        return
+      }
+      const id = hash.replace('#', '')
+      const el = document.getElementById(id)
+      if (el) {
+        // léger délai pour laisser le DOM peindre
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+      }
+    }
+    scrollToHash()
+  }, [hash])
 
   // --- Compteurs dynamiques (UNIQUEMENT projets EN COURS) ---
   const counters = useMemo(() => {
@@ -68,10 +76,9 @@ const ProjetsPage = () => {
       String(p.status || '').toLowerCase().includes('en cours')
     )
 
-    // Bénéficiaires (somme simple)
     const totalBenef = sum(enCoursStrict.map(p => Number(p.beneficiaries || 0)))
 
-    // Communes couvertes (≈) : union des noms + sommes des indices numériques "X communes"
+    // Communes couvertes (≈)
     const communesSet = new Set()
     let communesNumeric = 0
     enCoursStrict.forEach(p => {
@@ -92,9 +99,31 @@ const ProjetsPage = () => {
     }
   }, [])
 
+  // ====== Données PARTENAIRES (synthèse) ======
+  const partenairesInstitutionnels = [
+    'Gouvernement du Mali (ministères, collectivités territoriales)',
+    'UNHCR (HCR)',
+    'UNICEF',
+    'UNFPA',
+    'OCHA'
+  ]
+
+  const partenairesInternationaux = [
+    'USAID', 'FHI 360', 'Save the Children', 'World Vision', 'Fondation Stromme',
+    'EUMC (WUSC)', 'DDC (Coopération Suisse)', 'WHH', 'CRS', 'Union Européenne',
+    'Ambassade des Pays-Bas', 'PNUD', 'PAM', 'FBA', 'Oxfam', 'HI',
+    'Action Contre la Faim', 'CARE', 'DRC', 'IRC', 'MSF', 'Fonds Humanitaire Mali'
+  ]
+
+  const partenairesNationaux = [
+    "PONAH", "CAEB", "FONGIM", "EDUCO", "ADEFIM",
+    "THINK PEACE", "FEMAPH", "ARGA"
+  ]
+  // ===========================================
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
+      {/* Hero */}
       <section className="py-14 md:py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto text-center">
@@ -102,7 +131,7 @@ const ProjetsPage = () => {
               Nos Projets et Réalisations
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-              Découvrez nos projets en cours, nos réalisations passées et nos rapports d'activités
+              Découvrez nos projets en cours, nos réalisations passées, nos rapports et nos partenaires.
             </p>
 
             {/* Compteurs dynamiques */}
@@ -115,7 +144,7 @@ const ProjetsPage = () => {
                 <div className="text-sm text-muted-foreground">Communes couvertes (≈)</div>
                 <div className="text-3xl font-semibold mt-1">{counters.totalCommunes}</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Estimation basée sur les données “region” des projets
+                  Estimation basée sur les champs “région” des projets
                 </div>
               </div>
               <div className="rounded-2xl bg-white p-5 shadow-sm border">
@@ -128,16 +157,19 @@ const ProjetsPage = () => {
               </div>
             </div>
 
-            {/* Menu local (facultatif) */}
+            {/* Navigation locale */}
             <nav className="mt-8 flex flex-wrap justify-center gap-4">
-              <a href="#top" onClick={(e)=>{e.preventDefault(); window.scrollTo({top:0, behavior:'smooth'})}} className="bg-white px-6 py-3 rounded-lg shadow-sm border border-border hover:bg-muted transition-colors">
+              <a href="#cours" className="bg-white px-6 py-3 rounded-lg shadow-sm border border-border hover:bg-muted transition-colors">
                 Projets en Cours
               </a>
-              <a href="#top" onClick={(e)=>{e.preventDefault(); window.scrollTo({top:0, behavior:'smooth'})}} className="bg-white px-6 py-3 rounded-lg shadow-sm border border-border hover:bg-muted transition-colors">
+              <a href="#termines" className="bg-white px-6 py-3 rounded-lg shadow-sm border border-border hover:bg-muted transition-colors">
                 Projets Terminés
               </a>
-              <a href="#top" onClick={(e)=>{e.preventDefault(); window.scrollTo({top:0, behavior:'smooth'})}} className="bg-white px-6 py-3 rounded-lg shadow-sm border border-border hover:bg-muted transition-colors">
+              <a href="#rapports" className="bg-white px-6 py-3 rounded-lg shadow-sm border border-border hover:bg-muted transition-colors">
                 Rapports
+              </a>
+              <a href="#partenaires" className="bg-white px-6 py-3 rounded-lg shadow-sm border border-border hover:bg-muted transition-colors">
+                Partenaires
               </a>
             </nav>
           </div>
@@ -145,7 +177,7 @@ const ProjetsPage = () => {
       </section>
 
       {/* Projets en Cours */}
-      <section className="py-16 outline-none">
+      <section id="cours" className="py-16 outline-none scroll-mt-24">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center mb-8">
@@ -159,8 +191,13 @@ const ProjetsPage = () => {
                   <div className="flex items-center mb-4">
                     <div className={`w-3 h-3 rounded-full mr-2 ${projet.usaidNote ? 'bg-red-500' : 'bg-green-500'}`}></div>
                     <span className={`text-sm font-medium ${projet.usaidNote ? 'text-red-600' : 'text-green-600'}`}>
-                      {projet.status}
+                      {projet.status || 'En cours'}
                     </span>
+                    {projet.usaidNote && (
+                      <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 border border-red-200">
+                        Suspendu (USAID)
+                      </span>
+                    )}
                   </div>
 
                   <h3 className="text-lg font-semibold text-foreground mb-3">
@@ -173,16 +210,16 @@ const ProjetsPage = () => {
 
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Région:</span>
-                      <span className="font-medium">{projet.region}</span>
+                      <span className="text-muted-foreground">Région :</span>
+                      <span className="font-medium text-right">{projet.region}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Bailleur:</span>
-                      <span className="font-medium">{projet.donor}</span>
+                      <span className="text-muted-foreground">Bailleur :</span>
+                      <span className="font-medium text-right">{projet.donor}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Domaine:</span>
-                      <span className="font-medium">{projet.domain}</span>
+                      <span className="text-muted-foreground">Domaine :</span>
+                      <span className="font-medium text-right">{projet.domain}</span>
                     </div>
                   </div>
                 </div>
@@ -202,7 +239,7 @@ const ProjetsPage = () => {
       </section>
 
       {/* Projets Terminés */}
-      <section className="py-16 bg-muted/30 outline-none">
+      <section id="termines" className="py-16 bg-muted/30 outline-none scroll-mt-24">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center mb-8">
@@ -228,18 +265,18 @@ const ProjetsPage = () => {
 
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Région:</span>
-                      <span className="font-medium">{projet.region}</span>
+                      <span className="text-muted-foreground">Région :</span>
+                      <span className="font-medium text-right">{projet.region}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Période:</span>
-                      <span className="font-medium">
+                      <span className="text-muted-foreground">Période :</span>
+                      <span className="font-medium text-right">
                         {new Date(projet.startDate).getFullYear()}–{new Date(projet.endDate).getFullYear()}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Bénéficiaires:</span>
-                      <span className="font-medium">
+                      <span className="text-muted-foreground">Bénéficiaires :</span>
+                      <span className="font-medium text-right">
                         {projet.beneficiaries?.toLocaleString('fr-FR') || 'N/D'}
                       </span>
                     </div>
@@ -261,7 +298,7 @@ const ProjetsPage = () => {
       </section>
 
       {/* Rapports */}
-      <section className="py-16 outline-none">
+      <section id="rapports" className="py-16 outline-none scroll-mt-24">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center mb-8">
@@ -285,12 +322,11 @@ const ProjetsPage = () => {
                     {rapport.description}
                   </p>
 
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Année: {rapport.year}</span>
-                    <Button variant="outline" size="sm">
-                      Télécharger
-                    </Button>
-                  </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Année : {rapport.year}</span>
+                      {/* Remplacez par un lien réel si disponible : rapport.file */}
+                      <Button variant="outline" size="sm">Télécharger</Button>
+                    </div>
                 </div>
               ))}
             </div>
@@ -307,6 +343,53 @@ const ProjetsPage = () => {
         </div>
       </section>
 
+      {/* Partenaires */}
+      <section id="partenaires" className="py-16 bg-white outline-none scroll-mt-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center mb-8">
+              <Handshake className="h-8 w-8 text-primary mr-3" />
+              <h2 className="text-3xl font-bold text-foreground">Partenaires</h2>
+            </div>
+
+            <p className="text-muted-foreground mb-8">
+              Nos partenaires institutionnels, financiers et techniques soutiennent la mise en œuvre de nos programmes
+              dans tout le Mali.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white border border-border rounded-xl p-6 shadow-sm">
+                <h3 className="text-lg font-semibold mb-3">Institutionnels & Techniques</h3>
+                <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                  {partenairesInstitutionnels.map((p, i) => <li key={i}>{p}</li>)}
+                </ul>
+              </div>
+
+              <div className="bg-white border border-border rounded-xl p-6 shadow-sm">
+                <h3 className="text-lg font-semibold mb-3">Financiers & Internationaux</h3>
+                <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                  {partenairesInternationaux.map((p, i) => <li key={i}>{p}</li>)}
+                </ul>
+              </div>
+
+              <div className="bg-white border border-border rounded-xl p-6 shadow-sm">
+                <h3 className="text-lg font-semibold mb-3">Nationaux & ONG Locales</h3>
+                <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                  {partenairesNationaux.map((p, i) => <li key={i}>{p}</li>)}
+                </ul>
+              </div>
+            </div>
+
+            {/* Lien vers page dédiée si vous la gardez */}
+            <div className="mt-6">
+              <Link to="/partenaires" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="inline-flex items-center text-primary font-medium hover:underline">
+                Voir la page Partenaires <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-16 bg-gradient-to-br from-primary/5 to-accent/5">
         <div className="container mx-auto px-4">
@@ -315,14 +398,13 @@ const ProjetsPage = () => {
               Collaborer avec l'AMSS
             </h2>
             <p className="text-xl text-muted-foreground mb-8">
-              Rejoignez-nous dans notre mission pour un développement durable au Sahel
+              Rejoignez-nous dans notre mission pour un développement durable au Sahel.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/partenaires" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-                <Button size="lg" className="text-lg px-8 py-3">
-                  Devenir Partenaire
-                </Button>
-              </Link>
+              {/* Vers la section partenaires interne */}
+              <a href="#partenaires" className="inline-flex">
+                <Button size="lg" className="text-lg px-8 py-3">Devenir Partenaire</Button>
+              </a>
               <Link to="/contact" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                 <Button variant="outline" size="lg" className="text-lg px-8 py-3">
                   Nous Contacter
@@ -335,5 +417,3 @@ const ProjetsPage = () => {
     </div>
   )
 }
-
-export default ProjetsPage
