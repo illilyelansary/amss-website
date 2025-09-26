@@ -1,5 +1,5 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route, useParams, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import './App.css'
 
 // Layout
@@ -23,16 +23,15 @@ import ContactPage from './pages/ContactPage'
 import DomainesPage from './pages/DomainesPage'
 import ProjetsPage from './pages/ProjetsPage'
 import ZonesPage from './pages/ZonesPage'
-import PartenairesPage from './pages/PartenairesPage'
+import PartenairesPage from './pages/PartenairesPage.jsx'  // ✅ import unique
 import ActualitesPage from './pages/ActualitesPage'
 import ActualiteDetailPage from './pages/ActualiteDetailPage'
-import RecrutementPage from './pages/RecrutementPage'
-import PartenairesPage from './pages/PartenairesPage.jsx'
+import RecrutementPage from './pages/RecrutementPage.jsx'  // ✅ extension explicite
 
 // Données (pour redirection legacy id -> slug)
 import { actualites } from './data/actualitesData'
 
-// Redirection rétro-compatibilité: /actualites/:id -> /actualites/:slug
+// Redirige /actualites/:id numérique vers /actualites/:slug
 function RedirectActuById() {
   const { id } = useParams()
   const item = actualites.find(a => String(a.id) === String(id))
@@ -50,6 +49,7 @@ function App() {
         <Header />
         <main>
           <Routes>
+            {/* Accueil & À propos */}
             <Route path="/" element={<HomePage />} />
             <Route path="/a-propos" element={<AboutPage />} />
 
@@ -63,34 +63,27 @@ function App() {
             <Route path="/gouvernance" element={<GouvernancePage />} />
 
             {/* Actualités */}
-            {/* La route numérique d'abord pour capter /actualites/123 et rediriger */}
-            <Route path="/actualites/:id(\\d+)" element={<RedirectActuById />} />
             <Route path="/actualites" element={<ActualitesPage />} />
             <Route path="/actualites/:slug" element={<ActualiteDetailPage />} />
-
-            
+            <Route path="/actualites/:id(\d+)" element={<RedirectActuById />} />
 
             {/* Projets */}
             <Route path="/projets" element={<ProjetsPage />} />
             <Route path="/projets-en-cours" element={<ProjetsEnCoursPage />} />
             <Route path="/projets-termines" element={<ProjetsTerminesPage />} />
-
-            {/* Rapports */}
             <Route path="/rapports" element={<RapportsPage />} />
-            <Route path="/partenaires" element={<PartenairesPage />} />
+            <Route path="/partenaires" element={<PartenairesPage />} /> {/* ✅ page dédiée */}
 
-            {/* Recrutement */}
-            <Route path="/recrutement" element={<RecrutementPage />} />
-
-            {/* Contact */}
-            <Route path="/contact" element={<ContactPage />} />
-
-            {/* Zones */}
+            {/* Zones d'intervention */}
             <Route path="/zones" element={<ZonesPage />} />
             <Route path="/zones/:id" element={<ZonesPage />} />
 
-            {/* Partenaires (toujours accessible, maintenant aussi dans le sous-menu "Nos Projets") */}
-            <Route path="/partenaires" element={<PartenairesPage />} />
+            {/* Recrutement & Contact */}
+            <Route path="/recrutement" element={<RecrutementPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
         <Footer />
