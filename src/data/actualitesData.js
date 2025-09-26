@@ -1,5 +1,5 @@
 // src/data/actualitesData.js
-// Toutes les images sont importées depuis le dossier du site (ajuste les chemins si besoin)
+// Images locales (adaptez les chemins si besoin)
 import imgTerrainSahel from '../assets/actualites/terrain-sahel-activites.jpg'
 import imgKitsScolaires from '../assets/actualites/kits-scolaires-tombouctou.jpg'
 import imgMeresAgricoles from '../assets/actualites/meres-agricoles-gao.jpg'
@@ -10,11 +10,21 @@ import imgExtension8Regions from '../assets/actualites/extension-8-regions.jpg'
 import imgDroitsFemmes from '../assets/actualites/droits-femmes-leadership.jpg'
 import imgFormationAnimateurs from '../assets/actualites/formation-animateurs-pedagogiques.jpg'
 
-export const actualites = [
+// Normalisation pour slug (supprime accents, espaces → -, minuscule, chars sûrs)
+const slugify = (s) => s
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9\s-]/g, '')
+  .trim()
+  .replace(/\s+/g, '-')
+  .replace(/-+/g, '-')
+
+const base = [
   {
     id: 1,
     titre: "Une semaine sur le terrain avec l'AMSS : Récits de Résilience, de Protection et d'Espoir au cœur du Sahel",
     date: '25 août 2025',
+    dateISO: '2025-08-25',
     categorie: 'Humanitaire',
     image: imgTerrainSahel,
     excerpt: "L'AMSS renforce l'aide humanitaire au Mali à travers des activités de sensibilisation, de soutien psychosocial, de distribution de cash et de protection.",
@@ -28,6 +38,7 @@ export const actualites = [
     id: 2,
     titre: "Remise de 12 000 kits scolaires aux enfants déplacés à Tombouctou",
     date: '16 septembre 2025',
+    dateISO: '2025-09-16',
     categorie: 'Éducation',
     image: imgKitsScolaires,
     excerpt: "La cérémonie de remise s'est tenue ce mardi 16 septembre à Tombouctou, en présence des autorités locales et des partenaires.",
@@ -40,6 +51,7 @@ export const actualites = [
     id: 3,
     titre: '400 mères vulnérables reçoivent des intrants agricoles grâce au projet GFFO',
     date: '5 juin 2025',
+    dateISO: '2025-06-05',
     categorie: 'Sécurité Alimentaire',
     image: imgMeresAgricoles,
     excerpt: 'Grâce au projet GFFO mis en œuvre par notre partenaire, 400 mères vulnérables des cercles de Gao et Ansongo ont reçu des intrants agricoles.',
@@ -52,6 +64,7 @@ export const actualites = [
     id: 4,
     titre: "L'UNESCO et l'ONG AMSS procèdent à la mise en place des Comités Locaux de Protection Civile",
     date: '20 mai 2025',
+    dateISO: '2025-05-20',
     categorie: 'Protection',
     image: imgComitesProtection,
     excerpt: "L'UNESCO et l'ONG AMSS procèdent à la mise en place de Comités Locaux de Protection Civile à Goundam, Tonka et Alafia.",
@@ -64,6 +77,7 @@ export const actualites = [
     id: 5,
     titre: "L'USAID et l'AMSS lancent un programme d'assistance humanitaire au profit de 60 000 personnes",
     date: '18 décembre 2024',
+    dateISO: '2024-12-18',
     categorie: 'Humanitaire',
     image: imgUsaidWash,
     excerpt: "Le lancement de ce programme de protection, d'assainissement d'urgence, d'hygiène et des services WASH NFI a lieu le lundi 16 décembre.",
@@ -76,6 +90,7 @@ export const actualites = [
     id: 6,
     titre: 'Formation de 460 employés pour renforcer les capacités institutionnelles',
     date: '15 novembre 2024',
+    dateISO: '2024-11-15',
     categorie: 'Formation',
     image: imgFormationEmployes,
     excerpt: 'Renforcement des capacités de notre équipe pour mieux servir les communautés vulnérables du Mali.',
@@ -87,6 +102,7 @@ export const actualites = [
     id: 7,
     titre: "Extension de l'AMSS vers 8 régions pour une couverture nationale",
     date: '1er octobre 2024',
+    dateISO: '2024-10-01',
     categorie: 'Développement',
     image: imgExtension8Regions,
     excerpt: "L'AMSS étend sa couverture géographique pour atteindre plus de populations vulnérables à travers le Mali.",
@@ -98,6 +114,7 @@ export const actualites = [
     id: 8,
     titre: 'Promotion des droits des femmes et leadership féminin dans les communautés',
     date: '8 mars 2024',
+    dateISO: '2024-03-08',
     categorie: 'Autonomisation',
     image: imgDroitsFemmes,
     excerpt: "Une belle dynamique pour promouvoir les droits des femmes et soutenir leur rôle moteur dans le développement local.",
@@ -109,6 +126,7 @@ export const actualites = [
     id: 9,
     titre: "Atelier de formation pour améliorer l'accompagnement pédagogique des enfants",
     date: '15 février 2024',
+    dateISO: '2024-02-15',
     categorie: 'Éducation',
     image: imgFormationAnimateurs,
     excerpt: "Cet atelier vise à outiller davantage les animatrices et animateurs afin d'améliorer la qualité de l'accompagnement pédagogique offert aux enfants.",
@@ -117,3 +135,9 @@ export const actualites = [
     lieux: ['Ségou']
   }
 ]
+
+// Export final avec slug
+export const actualites = base.map(a => ({
+  ...a,
+  slug: `${a.dateISO}-${slugify(a.titre)}`
+}))
