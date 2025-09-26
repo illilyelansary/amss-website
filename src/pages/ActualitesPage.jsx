@@ -17,7 +17,7 @@ const ActualitesPage = () => {
 
   const categories = useMemo(
     () => ['Toutes', ...Array.from(new Set(actualites.map(a => a.categorie)))],
-    []
+    [actualites]
   )
 
   const filteredActualites = useMemo(() => {

@@ -1,3 +1,4 @@
+// src/pages/ActualiteDetailPage.jsx
 import React, { useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Calendar, Tag, MapPin, Share2, ChevronLeft } from 'lucide-react'
