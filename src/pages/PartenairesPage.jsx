@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { Handshake, Globe, MapPin, ArrowRight, Clock, CheckCircle, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-// Données locales (on conserve ton style et tes partenaires saisis ici)
+// Données locales (on garde ton style et tes partenaires saisis ici)
 const partenairesData = [
   {
     id: 1,
@@ -56,11 +56,10 @@ const partenairesData = [
   }
 ]
 
-// Données projets & partenaires (fichier de référence)
+// Données projets (on n’importe plus "partenaires" ici)
 import {
   projetsEnCours,
-  projetsTermines,
-  partenaires as partenairesRef // optionnel : infos supplémentaires (ex. mots-clés)
+  projetsTermines
 } from '../data/projetsData'
 
 // Utils
@@ -80,7 +79,7 @@ const slugify = (s) =>
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
 
-// Matching partenaire ↔ projet (donor, alias, mots-clés)
+// Matching partenaire ↔ projet (donor + alias + fallback sur le titre)
 const aliasGroups = [
   ['unicef mali', 'unicef'],
   ['hcr', 'unhcr'],
@@ -90,25 +89,24 @@ const aliasGroups = [
   ['usaid', 'us aid']
 ]
 
-function matchPartnerProject(partner, project, partnerRef) {
+function matchPartnerProject(partner, project) {
   const pName = norm(partner.name)
   const donor = norm(project.donor)
+  const title = norm(project.title)
+
+  // 1) bailleur ↔ nom partenaire
   if (donor && pName && (donor.includes(pName) || pName.includes(donor))) return true
 
+  // 2) alias fréquents
   for (const group of aliasGroups) {
     if (group.some(a => pName.includes(a))) {
       if (group.some(a => donor.includes(a))) return true
     }
   }
 
-  // mots-clés éventuels via partenairesRef.projets (ex. "SSA/P")
-  if (partnerRef && Array.isArray(partnerRef.projets)) {
-    const title = norm(project.title)
-    for (const kw of partnerRef.projets) {
-      const token = norm(kw).split(' ')[0]
-      if (token && title.includes(token)) return true
-    }
-  }
+  // 3) fallback: le nom du partenaire apparaît dans le titre du projet
+  if (title && pName && title.includes(pName.split(' ')[0])) return true
+
   return false
 }
 
@@ -123,17 +121,14 @@ export default function PartenairesPage() {
     return [...encours, ...termines]
   }, [])
 
-  // fusion légère entre partenairesData (style + logos) et partenairesRef (infos projet)
   const partners = useMemo(() => {
-    const refByName = new Map(
-      (partenairesRef || []).map(p => [norm(p.name), p])
-    )
-    return partenairesData.map(p => {
-      const ref = refByName.get(norm(p.name))
-      const withSlug = { ...p, slug: slugify(p.name), ref }
-      const projects = allProjects.filter(pr => matchPartnerProject(withSlug, pr, ref))
-      return { ...withSlug, _projects: projects }
-    }).sort((a, b) => b._projects.length - a._projects.length || a.name.localeCompare(b.name))
+    return partenairesData
+      .map(p => {
+        const slug = slugify(p.name)
+        const projects = allProjects.filter(pr => matchPartnerProject(p, pr))
+        return { ...p, slug, _projects: projects }
+      })
+      .sort((a, b) => b._projects.length - a._projects.length || a.name.localeCompare(b.name))
   }, [allProjects])
 
   return (
@@ -153,7 +148,7 @@ export default function PartenairesPage() {
         </div>
       </section>
 
-      {/* Grille des partenaires */}
+      {/* Grille */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
@@ -164,7 +159,6 @@ export default function PartenairesPage() {
                   id={partenaire.slug}
                   className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow"
                 >
-                  {/* Logo */}
                   {partenaire.logo && (
                     <img
                       src={partenaire.logo}
@@ -177,7 +171,6 @@ export default function PartenairesPage() {
                     />
                   )}
 
-                  {/* En-tête partenaire */}
                   <div className="text-center">
                     <h3 className="text-xl font-semibold text-foreground">{partenaire.name}</h3>
                     <p className="text-primary font-medium mt-1">{partenaire.type || 'Partenaire'}</p>
@@ -189,7 +182,6 @@ export default function PartenairesPage() {
                     </p>
                   )}
 
-                  {/* Lien site */}
                   {partenaire.website && (
                     <div className="text-center mt-3">
                       <a
@@ -209,16 +201,13 @@ export default function PartenairesPage() {
                       <span className="text-sm font-semibold text-foreground">
                         Projets liés ({partenaire._projects.length})
                       </span>
-                      {/* Lien vers page projets globale */}
                       <Link to="/projets" className="text-xs text-primary hover:underline">
                         Tous les projets
                       </Link>
                     </div>
 
                     {partenaire._projects.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
-                        Aucun projet associé trouvé pour le moment.
-                      </p>
+                      <p className="text-sm text-muted-foreground">Aucun projet associé trouvé.</p>
                     ) : (
                       <div className="space-y-3">
                         {partenaire._projects.map((pr, idx) => (
@@ -249,7 +238,6 @@ export default function PartenairesPage() {
                                 </span>
                               ) : null}
                             </div>
-
                             <div className="font-medium">{pr.title}</div>
                             {pr.excerpt && (
                               <div className="text-sm text-muted-foreground mt-1">{pr.excerpt}</div>
@@ -263,7 +251,6 @@ export default function PartenairesPage() {
               ))}
             </div>
 
-            {/* CTA secondaire en bas de page */}
             <div className="text-center mt-12">
               <Link to="/projets" className="inline-flex items-center text-primary font-medium hover:underline">
                 Parcourir les projets <ArrowRight className="ml-1 h-4 w-4" />
@@ -273,7 +260,7 @@ export default function PartenairesPage() {
         </div>
       </section>
 
-      {/* Call to Action */}
+      {/* CTA */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
