@@ -1,0 +1,6 @@
+<img
+  src={a.image}
+  alt={a.titre}
+  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/assets/actualites/placeholder.jpg' }}
+  className="w-full h-48 object-cover rounded-lg mb-4"
+/>
