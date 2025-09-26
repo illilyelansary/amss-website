@@ -5,6 +5,7 @@ import './App.css'
 // Layout
 import Header from './components/Header'
 import Footer from './components/Footer'
+import ScrollToTop from './components/ScrollToTop'
 
 // Pages
 import HomePage from './pages/HomePage'
@@ -23,14 +24,12 @@ import DomainesPage from './pages/DomainesPage'
 import ProjetsPage from './pages/ProjetsPage'
 import ZonesPage from './pages/ZonesPage'
 import PartenairesPage from './pages/PartenairesPage'
-import ActualitesPage from './pages/ActualitesPage'          // ✅ une seule fois
+import ActualitesPage from './pages/ActualitesPage'
 import ActualiteDetailPage from './pages/ActualiteDetailPage'
+import RecrutementPage from './pages/RecrutementPage'
 
-// Données (pour redirection legacy)
+// Données (pour redirection legacy id -> slug)
 import { actualites } from './data/actualitesData'
-
-// Remonter en haut à chaque navigation
-import ScrollToTop from './components/ScrollToTop'
 
 // Redirection rétro-compatibilité: /actualites/:id -> /actualites/:slug
 function RedirectActuById() {
@@ -63,7 +62,7 @@ function App() {
             <Route path="/gouvernance" element={<GouvernancePage />} />
 
             {/* Actualités */}
-            {/* ⚠️ La route numérique en premier, pour capter /actualites/123 et rediriger */}
+            {/* La route numérique d'abord pour capter /actualites/123 et rediriger */}
             <Route path="/actualites/:id(\\d+)" element={<RedirectActuById />} />
             <Route path="/actualites" element={<ActualitesPage />} />
             <Route path="/actualites/:slug" element={<ActualiteDetailPage />} />
@@ -73,13 +72,20 @@ function App() {
             <Route path="/projets-en-cours" element={<ProjetsEnCoursPage />} />
             <Route path="/projets-termines" element={<ProjetsTerminesPage />} />
 
-            {/* Rapports & Contact */}
+            {/* Rapports */}
             <Route path="/rapports" element={<RapportsPage />} />
+
+            {/* Recrutement */}
+            <Route path="/recrutement" element={<RecrutementPage />} />
+
+            {/* Contact */}
             <Route path="/contact" element={<ContactPage />} />
 
-            {/* Autres */}
+            {/* Zones */}
             <Route path="/zones" element={<ZonesPage />} />
             <Route path="/zones/:id" element={<ZonesPage />} />
+
+            {/* Partenaires (toujours accessible, maintenant aussi dans le sous-menu "Nos Projets") */}
             <Route path="/partenaires" element={<PartenairesPage />} />
           </Routes>
         </main>
