@@ -19,9 +19,20 @@ import ProjetsPage from './pages/ProjetsPage'
 import ZonesPage from './pages/ZonesPage'
 import PartenairesPage from './pages/PartenairesPage'
 import ActualitesPage from './pages/ActualitesPage'
+import ActualitesPage from './pages/ActualitesPage'
+import ActualiteDetailPage from './pages/ActualiteDetailPage'
+import { actualites } from './data/actualitesData'
+import { useParams, Navigate } from 'react-router-dom'
 
 // 👉 ajoutez ce composant (fichier: src/components/ScrollToTop.jsx)
 import ScrollToTop from './components/ScrollToTop'
+
+function RedirectActuById() {
+  const { id } = useParams()
+  const item = actualites.find(a => String(a.id) === String(id))
+  if (!item) return <Navigate to="/actualites" replace />
+  return <Navigate to={`/actualites/${item.slug}`} replace />
+}
 
 function App() {
   return (
@@ -44,6 +55,10 @@ function App() {
             <Route path="/protection" element={<ProtectionPage />} />
             <Route path="/securite-alimentaire" element={<SecuriteAlimentairePage />} />
             <Route path="/gouvernance" element={<GouvernancePage />} />
+
+            <Route path="/actualites" element={<ActualitesPage />} />
+<Route path="/actualites/:slug" element={<ActualiteDetailPage />} />
+<Route path="/actualites/:id(\d+)" element={<RedirectActuById />} />
             
             {/* Pages des projets */}
             <Route path="/projets" element={<ProjetsPage />} />
