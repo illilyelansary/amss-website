@@ -1,7 +1,12 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+// src/App.jsx
+import { BrowserRouter as Router, Routes, Route, useParams, Navigate } from 'react-router-dom'
 import './App.css'
+
+// Layout
 import Header from './components/Header'
 import Footer from './components/Footer'
+
+// Pages
 import HomePage from './pages/HomePage'
 import AboutPage from './pages/AboutPage'
 import EducationPage from './pages/EducationPage'
@@ -18,15 +23,16 @@ import DomainesPage from './pages/DomainesPage'
 import ProjetsPage from './pages/ProjetsPage'
 import ZonesPage from './pages/ZonesPage'
 import PartenairesPage from './pages/PartenairesPage'
-import ActualitesPage from './pages/ActualitesPage'
-import ActualitesPage from './pages/ActualitesPage'
+import ActualitesPage from './pages/ActualitesPage'          // ✅ une seule fois
 import ActualiteDetailPage from './pages/ActualiteDetailPage'
-import { actualites } from './data/actualitesData'
-import { useParams, Navigate } from 'react-router-dom'
 
-// 👉 ajoutez ce composant (fichier: src/components/ScrollToTop.jsx)
+// Données (pour redirection legacy)
+import { actualites } from './data/actualitesData'
+
+// Remonter en haut à chaque navigation
 import ScrollToTop from './components/ScrollToTop'
 
+// Redirection rétro-compatibilité: /actualites/:id -> /actualites/:slug
 function RedirectActuById() {
   const { id } = useParams()
   const item = actualites.find(a => String(a.id) === String(id))
@@ -46,8 +52,8 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/a-propos" element={<AboutPage />} />
-            
-            {/* Pages des domaines d'intervention */}
+
+            {/* Domaines d'intervention */}
             <Route path="/domaines" element={<DomainesPage />} />
             <Route path="/education" element={<EducationPage />} />
             <Route path="/sante" element={<SantePage />} />
@@ -56,23 +62,25 @@ function App() {
             <Route path="/securite-alimentaire" element={<SecuriteAlimentairePage />} />
             <Route path="/gouvernance" element={<GouvernancePage />} />
 
+            {/* Actualités */}
+            {/* ⚠️ La route numérique en premier, pour capter /actualites/123 et rediriger */}
+            <Route path="/actualites/:id(\\d+)" element={<RedirectActuById />} />
             <Route path="/actualites" element={<ActualitesPage />} />
-<Route path="/actualites/:slug" element={<ActualiteDetailPage />} />
-<Route path="/actualites/:id(\d+)" element={<RedirectActuById />} />
-            
-            {/* Pages des projets */}
+            <Route path="/actualites/:slug" element={<ActualiteDetailPage />} />
+
+            {/* Projets */}
             <Route path="/projets" element={<ProjetsPage />} />
             <Route path="/projets-en-cours" element={<ProjetsEnCoursPage />} />
             <Route path="/projets-termines" element={<ProjetsTerminesPage />} />
+
+            {/* Rapports & Contact */}
             <Route path="/rapports" element={<RapportsPage />} />
-            
             <Route path="/contact" element={<ContactPage />} />
-            
-            {/* Routes temporaires pour les autres pages */}
+
+            {/* Autres */}
             <Route path="/zones" element={<ZonesPage />} />
-            <Route path="/zones/:id" element={<ZonesPage />} /> {/* Route pour les pages de zones spécifiques */}
+            <Route path="/zones/:id" element={<ZonesPage />} />
             <Route path="/partenaires" element={<PartenairesPage />} />
-            <Route path="/actualites" element={<ActualitesPage />} />
           </Routes>
         </main>
         <Footer />
