@@ -27,6 +27,7 @@ import PartenairesPage from './pages/PartenairesPage'
 import ActualitesPage from './pages/ActualitesPage'
 import ActualiteDetailPage from './pages/ActualiteDetailPage'
 import RecrutementPage from './pages/RecrutementPage'
+import PartenairesPage from './pages/PartenairesPage.jsx'
 
 // Données (pour redirection legacy id -> slug)
 import { actualites } from './data/actualitesData'
@@ -67,6 +68,8 @@ function App() {
             <Route path="/actualites" element={<ActualitesPage />} />
             <Route path="/actualites/:slug" element={<ActualiteDetailPage />} />
 
+            
+
             {/* Projets */}
             <Route path="/projets" element={<ProjetsPage />} />
             <Route path="/projets-en-cours" element={<ProjetsEnCoursPage />} />
@@ -74,6 +77,7 @@ function App() {
 
             {/* Rapports */}
             <Route path="/rapports" element={<RapportsPage />} />
+            <Route path="/partenaires" element={<PartenairesPage />} />
 
             {/* Recrutement */}
             <Route path="/recrutement" element={<RecrutementPage />} />
