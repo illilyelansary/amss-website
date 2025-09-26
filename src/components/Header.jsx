@@ -42,11 +42,13 @@ const Header = () => {
       dropdown: [
         { name: 'Projets en Cours', href: '/projets#cours' },
         { name: 'Projets Terminés', href: '/projets#termines' },
-        { name: 'Rapports', href: '/projets#rapports' }
+        { name: 'Rapports', href: '/projets#rapports' },
+        // ✅ Partenaires déplacé dans ce sous-menu
+        { name: 'Partenaires', href: '/partenaires' }
       ]
     },
     {
-      name: 'Zones d\'Intervention',
+      name: "Zones d'Intervention",
       href: '/zones',
       dropdown: [
         { name: 'Tombouctou', href: '/zones/tombouctou' },
@@ -57,7 +59,8 @@ const Header = () => {
         { name: 'Sikasso', href: '/zones/sikasso' }
       ]
     },
-    { name: 'Partenaires', href: '/partenaires' },
+    // ❗ Remplace l’entrée principale "Partenaires" par "Recrutement"
+    { name: 'Recrutement', href: '/recrutement' },
     { name: 'Actualités', href: '/actualites' },
     { name: 'Contact', href: '/contact' }
   ]
@@ -117,7 +120,7 @@ const Header = () => {
                   {item.name}
                   {item.dropdown && <ChevronDown className="ml-1 h-4 w-4" />}
                 </Link>
-                
+
                 {/* Dropdown Menu */}
                 {item.dropdown && activeDropdown === index && (
                   <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-border rounded-md shadow-lg py-2 z-50">
@@ -194,4 +197,3 @@ const Header = () => {
 }
 
 export default Header
-
