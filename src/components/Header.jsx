@@ -9,7 +9,7 @@ const Header = () => {
   const [activeDropdown, setActiveDropdown] = useState(null)
   const location = useLocation()
 
-  // Ignore le hash pour le style "actif"
+  // Ignore le hash pour l'état "actif"
   const basePath = (href) => href.split('#')[0] || href
 
   const menuItems = [
@@ -43,8 +43,8 @@ const Header = () => {
         { name: 'Projets en Cours', href: '/projets#cours' },
         { name: 'Projets Terminés', href: '/projets#termines' },
         { name: 'Rapports', href: '/projets#rapports' },
-        // ✅ Partenaires déplacé dans ce sous-menu
-        { name: 'Partenaires', href: '/partenaires' }
+        // ✅ Partenaires désormais dans ce sous-menu, vers l’ancre de la page projets
+        { name: 'Partenaires', href: '/projets#partenaires' }
       ]
     },
     {
@@ -59,7 +59,6 @@ const Header = () => {
         { name: 'Sikasso', href: '/zones/sikasso' }
       ]
     },
-    // ❗ Remplace l’entrée principale "Partenaires" par "Recrutement"
     { name: 'Recrutement', href: '/recrutement' },
     { name: 'Actualités', href: '/actualites' },
     { name: 'Contact', href: '/contact' }
@@ -73,7 +72,7 @@ const Header = () => {
 
   return (
     <header className="bg-white shadow-lg sticky top-0 z-50">
-      {/* Top bar with contact info */}
+      {/* Top bar */}
       <div className="bg-primary text-primary-foreground py-2">
         <div className="container mx-auto px-4 flex justify-between items-center text-sm">
           <div className="flex items-center space-x-4">
@@ -88,7 +87,7 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Main navigation */}
+      {/* Main nav */}
       <nav className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
@@ -100,7 +99,7 @@ const Header = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop */}
           <div className="hidden lg:flex items-center space-x-1">
             {menuItems.map((item, index) => (
               <div
@@ -121,7 +120,6 @@ const Header = () => {
                   {item.dropdown && <ChevronDown className="ml-1 h-4 w-4" />}
                 </Link>
 
-                {/* Dropdown Menu */}
                 {item.dropdown && activeDropdown === index && (
                   <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-border rounded-md shadow-lg py-2 z-50">
                     {item.dropdown.map((dropdownItem, dropdownIndex) => (
@@ -140,7 +138,7 @@ const Header = () => {
             <Button className="ml-4">Faire un Don</Button>
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile button */}
           <div className="lg:hidden">
             <Button
               variant="ghost"
@@ -152,7 +150,7 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile nav */}
         {isMenuOpen && (
           <div className="lg:hidden border-t border-border">
             <div className="py-4 space-y-2">
