@@ -43,8 +43,8 @@ const Header = () => {
         { name: 'Projets en Cours', href: '/projets#cours' },
         { name: 'Projets Terminés', href: '/projets#termines' },
         { name: 'Rapports', href: '/projets#rapports' },
-        // ✅ Partenaires désormais dans ce sous-menu, vers l’ancre de la page projets
-        { name: 'Partenaires', href: '/projets#partenaires' }
+        // ✅ Partenaires maintenant vers la page dédiée
+        { name: 'Partenaires', href: '/partenaires' }
       ]
     },
     {
@@ -67,6 +67,13 @@ const Header = () => {
   const isActive = (href) => {
     const target = basePath(href)
     if (target === '/') return location.pathname === '/'
+
+    // ✅ Rendez "Nos Projets" actif aussi pour ses pages associées
+    if (target === '/projets') {
+      const related = ['/projets', '/projets-en-cours', '/projets-termines', '/rapports', '/partenaires']
+      return related.some(p => location.pathname.startsWith(p))
+    }
+
     return location.pathname.startsWith(target)
   }
 
