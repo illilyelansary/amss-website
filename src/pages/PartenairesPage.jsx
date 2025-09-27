@@ -6,11 +6,18 @@ import { Button } from '@/components/ui/button'
 import { projetsEnCours, projetsTermines } from '../data/projetsData'
 
 /**
- * Partenaires (acronyme + nom complet)
- * Placez les logos dans: public/assets/partenaires/
- * (ex: /assets/partenaires/unhcr.png). Un placeholder est utilisé si absent.
+ * === PARTENAIRES — CATALOGUE DE RÉFÉRENCE ===
+ * - acronym : sigle court
+ * - name    : nom complet
+ * - type    : nature du partenaire
+ * - logo    : /public/assets/partenaires/...
+ * - website : lien (facultatif)
+ * - match   : alias utilisés pour identifier ce partenaire dans le champ "donor" des projets
+ *
+ * Si un donateur n'est pas listé ici, il sera AJOUTÉ dynamiquement à l'affichage
+ * (acronyme = libellé du "donor", logo = placeholder).
  */
-const PARTNERS = [
+const STATIC_PARTNERS = [
   // ONU & agences
   { acronym: 'UNHCR', name: 'Haut-Commissariat des Nations Unies pour les Réfugiés', type: 'Organisation internationale', logo: '/assets/partenaires/unhcr.png', website: 'https://www.unhcr.org/', match: ['unhcr', 'hcr'] },
   { acronym: 'UNICEF', name: 'Fonds des Nations Unies pour l’Enfance', type: 'Organisation internationale', logo: '/assets/partenaires/unicef.png', website: 'https://www.unicef.org/mali/', match: ['unicef'] },
@@ -24,14 +31,14 @@ const PARTNERS = [
   { acronym: 'USAID', name: 'United States Agency for International Development', type: 'Bailleur', logo: '/assets/partenaires/usaid.png', website: 'https://www.usaid.gov/', match: ['usaid'] },
   { acronym: 'Fondation Strømme', name: 'Fondation Strømme Afrique de l’Ouest', type: 'Bailleur', logo: '/assets/partenaires/stromme.png', website: 'https://strommefoundation.org/', match: ['stromme', 'strømme', "fondation stromme afrique de l'ouest"] },
   { acronym: 'UE', name: 'Union Européenne', type: 'Bailleur', logo: '/assets/partenaires/ue.png', website: 'https://europa.eu/', match: ['union européenne', 'ue', 'european union', 'europeaid'] },
-  { acronym: 'DDC', name: 'Direction du Développement et de la Coopération (Coopération suisse)', type: 'Bailleur', logo: '/assets/partenaires/ddc.png', website: 'https://www.eda.admin.ch/', match: ['ddc', 'coopération suisse'] },
+  { acronym: 'DDC', name: 'Direction du Développement et de la Coopération (Coopération suisse)', type: 'Bailleur', logo: '/assets/partenaires/ddc.png', website: 'https://www.eda.admin.ch/', match: ['ddc', 'coopération suisse', 'cooperation suisse'] },
   { acronym: 'GFFO', name: 'German Federal Foreign Office', type: 'Bailleur', logo: '/assets/partenaires/gffo.png', website: 'https://www.auswaertiges-amt.de/en/', match: ['gffo'] },
   { acronym: 'Ambassade NL', name: 'Ambassade des Pays-Bas au Mali', type: 'Bailleur', logo: '/assets/partenaires/paysbas.png', website: 'https://www.netherlandsandyou.nl/', match: ['pays-bas', 'pays bas', 'netherlands'] },
 
   { acronym: 'FHI 360', name: 'Family Health International 360', type: 'ONG internationale', logo: '/assets/partenaires/fhi360.png', website: 'https://www.fhi360.org/', match: ['fhi 360', 'fhi360'] },
   { acronym: 'Save the Children', name: 'Save the Children International', type: 'ONG internationale', logo: '/assets/partenaires/savethechildren.png', website: 'https://www.savethechildren.net/', match: ['save the children'] },
   { acronym: 'World Vision', name: 'World Vision International', type: 'ONG internationale', logo: '/assets/partenaires/worldvision.png', website: 'https://www.wvi.org/', match: ['world vision'] },
-  { acronym: 'EUMC', name: 'Entraide Universitaire Mondiale du Canada', type: 'ONG internationale', logo: '/assets/partenaires/eumc.png', website: 'https://wusc.ca/', match: ['eumc'] },
+  { acronym: 'EUMC', name: 'Entraide Universitaire Mondiale du Canada', type: 'ONG internationale', logo: '/assets/partenaires/eumc.png', website: 'https://wusc.ca/', match: ['eumc', 'wusc'] },
   { acronym: 'WHH', name: 'Welthungerhilfe', type: 'ONG internationale', logo: '/assets/partenaires/whh.png', website: 'https://www.welthungerhilfe.org/', match: ['whh', 'welthungerhilfe'] },
   { acronym: 'CRS', name: 'Catholic Relief Services', type: 'ONG internationale', logo: '/assets/partenaires/crs.png', website: 'https://www.crs.org/', match: ['crs', 'catholic relief'] },
   { acronym: 'Oxfam', name: 'Oxfam International', type: 'ONG internationale', logo: '/assets/partenaires/oxfam.png', website: 'https://www.oxfam.org/', match: ['oxfam'] },
@@ -56,28 +63,64 @@ const PARTNERS = [
   { acronym: 'ARGA', name: 'Alliance pour Refonder la Gouvernance en Afrique', type: 'Réseau', logo: '/assets/partenaires/arga.png', website: '', match: ['arga'] },
 ]
 
-// Normalisation simple pour matching texte (accents, casse)
+// Normalisation pour matching texte
 const norm = (s) =>
   (s || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 
-// Associe projets → partenaires via le bailleur (donor)
-const usePartnerProjects = () => {
-  const all = [...(projetsEnCours || []), ...(projetsTermines || [])].map(p => ({
-    ...p,
-    _donor: norm(p.donor),
-    _status: String(p.status || '').toLowerCase(),
-  }))
+/**
+ * Construit dynamiquement la table {acronym -> partenaire enrichi}
+ * 1) seed avec STATIC_PARTNERS
+ * 2) pour chaque projet, on tente de matcher "donor" avec un alias
+ * 3) si aucun match, on crée un partenaire "dynamique" à partir du donor
+ */
+function buildPartnerIndexFromProjects(allProjects) {
+  // 1) seed
+  const index = {}
+  const aliasToAcronym = {}
 
-  const byPartner = Object.fromEntries(PARTNERS.map(pt => [pt.acronym, []]))
-
-  all.forEach(p => {
-    PARTNERS.forEach(pt => {
-      const hit = (pt.match || []).some(k => p._donor.includes(norm(k)))
-      if (hit) byPartner[pt.acronym].push(p)
+  STATIC_PARTNERS.forEach(p => {
+    index[p.acronym] = { ...p, _projects: [] }
+    ;(p.match || []).forEach(alias => {
+      aliasToAcronym[norm(alias)] = p.acronym
     })
   })
 
-  return byPartner
+  // 2) lecture projets -> match alias
+  allProjects.forEach(pr => {
+    const donor = norm(pr.donor)
+    if (!donor) return
+
+    // essaie de retrouver un alias connu dans le donor
+    let matchedAcronym = null
+    for (const alias in aliasToAcronym) {
+      if (donor.includes(alias)) {
+        matchedAcronym = aliasToAcronym[alias]
+        break
+      }
+    }
+
+    if (matchedAcronym) {
+      index[matchedAcronym]._projects.push(pr)
+      return
+    }
+
+    // 3) aucun match => créer un partenaire "dynamique" basé sur le donor
+    const dynamicAcronym = donor.toUpperCase().slice(0, 32) // petit garde-fou
+    if (!index[dynamicAcronym]) {
+      index[dynamicAcronym] = {
+        acronym: dynamicAcronym,
+        name: pr.donor, // libellé tel que dans les données projets
+        type: 'Partenaire / Bailleur',
+        logo: '/assets/partenaires/placeholder.png',
+        website: '',
+        match: [],
+        _projects: [],
+      }
+    }
+    index[dynamicAcronym]._projects.push(pr)
+  })
+
+  return index
 }
 
 const PartenairesPage = () => {
@@ -85,7 +128,26 @@ const PartenairesPage = () => {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [])
 
-  const partnerProjects = useMemo(() => usePartnerProjects(), [])
+  // ⚠️ Ces imports sont la "source de vérité".
+  // Ajoute un projet dans projetsData.js => il sera pris en compte ici automatiquement au prochain reload/build.
+  const allProjects = useMemo(() => {
+    const encours = (projetsEnCours || []).map(p => ({ ...p, _status: 'En cours' }))
+    const termines = (projetsTermines || []).map(p => ({ ...p, _status: 'Terminé' }))
+    return [...encours, ...termines]
+  }, [projetsEnCours, projetsTermines])
+
+  const partnerIndex = useMemo(
+    () => buildPartnerIndexFromProjects(allProjects),
+    [allProjects]
+  )
+
+  const partners = useMemo(() => {
+    return Object.values(partnerIndex).sort((a, b) => {
+      // trier par nombre de projets décroissant, puis alpha
+      const d = (b._projects?.length || 0) - (a._projects?.length || 0)
+      return d !== 0 ? d : a.acronym.localeCompare(b.acronym)
+    })
+  }, [partnerIndex])
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,9 +170,10 @@ const PartenairesPage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {PARTNERS.map((p) => {
-                const projects = partnerProjects[p.acronym] || []
-                const hasSuspendedUSAID = p.acronym === 'USAID' && projects.some(pr => pr.usaidNote)
+              {partners.map((p) => {
+                const projects = p._projects || []
+                const hasSuspendedUSAID =
+                  p.acronym === 'USAID' && projects.some(pr => pr.usaidNote)
 
                 return (
                   <div key={p.acronym} className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow">
@@ -122,7 +185,7 @@ const PartenairesPage = () => {
                         onError={(e) => { e.currentTarget.src = '/assets/partenaires/placeholder.png' }}
                       />
                       <div className="flex-1">
-                        <div className="text-sm text-muted-foreground">{p.type}</div>
+                        <div className="text-sm text-muted-foreground">{p.type || 'Partenaire'}</div>
                         <h3 className="text-lg font-semibold text-foreground">
                           {p.acronym} <span className="text-muted-foreground">— {p.name}</span>
                         </h3>
