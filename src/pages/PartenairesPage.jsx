@@ -3,133 +3,89 @@ import React, { useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Handshake, Globe, MapPin, ArrowRight, Clock, CheckCircle, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { projetsEnCours, projetsTermines } from '../data/projetsData'
 
-// Données locales (on garde ton style et tes partenaires saisis ici)
-const partenairesData = [
-  {
-    id: 1,
-    name: 'Fondation Stromme',
-    logo: '/assets/partenaires/stromme.png',
-    type: 'Bailleur de fonds',
-    description: "Partenaire clé dans le financement de nos programmes d'éducation et de développement communautaire.",
-    website: 'https://strommefoundation.org/'
-  },
-  {
-    id: 2,
-    name: 'UNICEF Mali',
-    logo: '/assets/partenaires/unicef.png',
-    type: 'Partenaire technique et financier',
-    description: "Collaboration sur les projets WASH d'urgence et la protection des enfants.",
-    website: 'https://www.unicef.org/mali/'
-  },
-  {
-    id: 3,
-    name: 'PNUD Mali',
-    logo: '/assets/partenaires/pnud.png',
-    type: 'Partenaire institutionnel',
-    description: 'Soutien au renforcement des capacités des femmes et à la gouvernance locale.',
-    website: 'https://www.undp.org/mali'
-  },
-  {
-    id: 4,
-    name: 'GFFO (German Federal Foreign Office)',
-    logo: '/assets/partenaires/gffo.png',
-    type: 'Bailleur de fonds',
-    description: 'Financement de projets de sécurité alimentaire et de résilience dans les régions vulnérables.',
-    website: 'https://www.auswaertiges-amt.de/en/'
-  },
-  {
-    id: 5,
-    name: "Ministère de l'Éducation Nationale du Mali",
-    logo: '/assets/partenaires/education_mali.png',
-    type: 'Partenaire gouvernemental',
-    description: "Collaboration étroite pour la mise en œuvre des programmes d'éducation alternative et formelle.",
-    website: 'https://www.education.gouv.ml/'
-  },
-  {
-    id: 6,
-    name: 'Ministère de la Santé et du Développement Social du Mali',
-    logo: '/assets/partenaires/sante_mali.png',
-    type: 'Partenaire gouvernemental',
-    description: "Partenariat pour l'amélioration des services de santé et de nutrition communautaire.",
-    website: 'https://sante.gouv.ml/'
-  }
+/**
+ * Partenaires (acronyme + nom complet)
+ * Placez les logos dans: public/assets/partenaires/
+ * (ex: /assets/partenaires/unhcr.png). Un placeholder est utilisé si absent.
+ */
+const PARTNERS = [
+  // ONU & agences
+  { acronym: 'UNHCR', name: 'Haut-Commissariat des Nations Unies pour les Réfugiés', type: 'Organisation internationale', logo: '/assets/partenaires/unhcr.png', website: 'https://www.unhcr.org/', match: ['unhcr', 'hcr'] },
+  { acronym: 'UNICEF', name: 'Fonds des Nations Unies pour l’Enfance', type: 'Organisation internationale', logo: '/assets/partenaires/unicef.png', website: 'https://www.unicef.org/mali/', match: ['unicef'] },
+  { acronym: 'UNFPA', name: 'Fonds des Nations Unies pour la Population', type: 'Organisation internationale', logo: '/assets/partenaires/unfpa.png', website: 'https://www.unfpa.org/', match: ['unfpa'] },
+  { acronym: 'OCHA', name: 'Bureau de la coordination des affaires humanitaires', type: 'Organisation internationale', logo: '/assets/partenaires/ocha.png', website: 'https://www.unocha.org/', match: ['ocha'] },
+  { acronym: 'UNMAS', name: 'United Nations Mine Action Service', type: 'Organisation internationale', logo: '/assets/partenaires/unmas.png', website: 'https://www.unmas.org/', match: ['unmas', 'mine action'] },
+  { acronym: 'PNUD', name: 'Programme des Nations Unies pour le Développement', type: 'Organisation internationale', logo: '/assets/partenaires/pnud.png', website: 'https://www.undp.org/mali', match: ['pnud', 'undp'] },
+  { acronym: 'PAM', name: 'Programme Alimentaire Mondial (WFP)', type: 'Organisation internationale', logo: '/assets/partenaires/pam.png', website: 'https://www.wfp.org/', match: ['pam', 'wfp'] },
+
+  // Bailleurs / ONG internationales
+  { acronym: 'USAID', name: 'United States Agency for International Development', type: 'Bailleur', logo: '/assets/partenaires/usaid.png', website: 'https://www.usaid.gov/', match: ['usaid'] },
+  { acronym: 'Fondation Strømme', name: 'Fondation Strømme Afrique de l’Ouest', type: 'Bailleur', logo: '/assets/partenaires/stromme.png', website: 'https://strommefoundation.org/', match: ['stromme', 'strømme', "fondation stromme afrique de l'ouest"] },
+  { acronym: 'UE', name: 'Union Européenne', type: 'Bailleur', logo: '/assets/partenaires/ue.png', website: 'https://europa.eu/', match: ['union européenne', 'ue', 'european union', 'europeaid'] },
+  { acronym: 'DDC', name: 'Direction du Développement et de la Coopération (Coopération suisse)', type: 'Bailleur', logo: '/assets/partenaires/ddc.png', website: 'https://www.eda.admin.ch/', match: ['ddc', 'coopération suisse'] },
+  { acronym: 'GFFO', name: 'German Federal Foreign Office', type: 'Bailleur', logo: '/assets/partenaires/gffo.png', website: 'https://www.auswaertiges-amt.de/en/', match: ['gffo'] },
+  { acronym: 'Ambassade NL', name: 'Ambassade des Pays-Bas au Mali', type: 'Bailleur', logo: '/assets/partenaires/paysbas.png', website: 'https://www.netherlandsandyou.nl/', match: ['pays-bas', 'pays bas', 'netherlands'] },
+
+  { acronym: 'FHI 360', name: 'Family Health International 360', type: 'ONG internationale', logo: '/assets/partenaires/fhi360.png', website: 'https://www.fhi360.org/', match: ['fhi 360', 'fhi360'] },
+  { acronym: 'Save the Children', name: 'Save the Children International', type: 'ONG internationale', logo: '/assets/partenaires/savethechildren.png', website: 'https://www.savethechildren.net/', match: ['save the children'] },
+  { acronym: 'World Vision', name: 'World Vision International', type: 'ONG internationale', logo: '/assets/partenaires/worldvision.png', website: 'https://www.wvi.org/', match: ['world vision'] },
+  { acronym: 'EUMC', name: 'Entraide Universitaire Mondiale du Canada', type: 'ONG internationale', logo: '/assets/partenaires/eumc.png', website: 'https://wusc.ca/', match: ['eumc'] },
+  { acronym: 'WHH', name: 'Welthungerhilfe', type: 'ONG internationale', logo: '/assets/partenaires/whh.png', website: 'https://www.welthungerhilfe.org/', match: ['whh', 'welthungerhilfe'] },
+  { acronym: 'CRS', name: 'Catholic Relief Services', type: 'ONG internationale', logo: '/assets/partenaires/crs.png', website: 'https://www.crs.org/', match: ['crs', 'catholic relief'] },
+  { acronym: 'Oxfam', name: 'Oxfam International', type: 'ONG internationale', logo: '/assets/partenaires/oxfam.png', website: 'https://www.oxfam.org/', match: ['oxfam'] },
+  { acronym: 'HI', name: 'Handicap International (Humanity & Inclusion)', type: 'ONG internationale', logo: '/assets/partenaires/hi.png', website: 'https://www.hi.org/', match: ['handicap international', 'hi', 'humanity & inclusion'] },
+  { acronym: 'ACF', name: 'Action contre la Faim', type: 'ONG internationale', logo: '/assets/partenaires/acf.png', website: 'https://www.actioncontrelafaim.org/', match: ['acf', 'action contre la faim'] },
+  { acronym: 'CARE', name: 'CARE International', type: 'ONG internationale', logo: '/assets/partenaires/care.png', website: 'https://www.care-international.org/', match: ['care'] },
+  { acronym: 'DRC', name: 'Danish Refugee Council', type: 'ONG internationale', logo: '/assets/partenaires/drc.png', website: 'https://www.drc.ngo/', match: ['drc', 'danish refugee'] },
+  { acronym: 'IRC', name: 'International Rescue Committee', type: 'ONG internationale', logo: '/assets/partenaires/irc.png', website: 'https://www.rescue.org/', match: ['irc', 'rescue committee'] },
+  { acronym: 'MSF', name: 'Médecins Sans Frontières', type: 'ONG internationale', logo: '/assets/partenaires/msf.png', website: 'https://www.msf.org/', match: ['msf', 'médecins sans frontières', 'medecins sans frontieres'] },
+  { acronym: 'FBA', name: 'Folke Bernadotte Academy', type: 'Agence gouvernementale suédoise', logo: '/assets/partenaires/fba.png', website: 'https://fba.se/en/', match: ['fba', 'folke bernadotte'] },
+  { acronym: 'FHM', name: 'Fonds Humanitaire pour le Mali', type: 'Fonds humanitaire', logo: '/assets/partenaires/fhm.png', website: '', match: ['fonds humanitaire pour le mali', 'fhm'] },
+
+  // Nationaux / réseaux
+  { acronym: 'GOUVERNEMENT DU MALI', name: 'Gouvernement du Mali (ministères et collectivités territoriales)', type: 'Gouvernement', logo: '/assets/partenaires/gouv_mali.png', website: 'https://www.gouv.ml/', match: ['gouvernement du mali', 'etat du mali', 'ministère', 'ministere'] },
+  { acronym: 'PONAH', name: 'Plateforme des ONG Nationales Actives dans l’Humanitaire', type: 'Plateforme nationale', logo: '/assets/partenaires/ponah.png', website: '', match: ['ponah'] },
+  { acronym: 'CAEB', name: 'Conseil et Appui pour l’Éducation à la Base', type: 'ONG nationale', logo: '/assets/partenaires/caeb.png', website: '', match: ['caeb'] },
+  { acronym: 'FONGIM', name: 'Forum des ONG Internationales au Mali', type: 'Plateforme', logo: '/assets/partenaires/fongim.png', website: 'https://fongim.org/', match: ['fongim'] },
+  { acronym: 'EDUCO', name: 'EDUCO – Éducation et protection de l’enfance', type: 'ONG', logo: '/assets/partenaires/educo.png', website: 'https://www.educo.org/', match: ['educo'] },
+  { acronym: 'ADEFIM', name: 'Association pour le Développement de la Femme au Mali', type: 'ONG nationale', logo: '/assets/partenaires/adefim.png', website: '', match: ['adefim'] },
+  { acronym: 'THINK PEACE', name: 'Think Peace – ONG malienne de consolidation de la paix', type: 'ONG nationale', logo: '/assets/partenaires/thinkpeace.png', website: '', match: ['think peace'] },
+  { acronym: 'FEMAPH', name: 'Fédération Malienne des Associations de Personnes Handicapées', type: 'Fédération', logo: '/assets/partenaires/femaph.png', website: '', match: ['femaph'] },
+  { acronym: 'ARGA', name: 'Alliance pour Refonder la Gouvernance en Afrique', type: 'Réseau', logo: '/assets/partenaires/arga.png', website: '', match: ['arga'] },
 ]
 
-// Données projets (on n’importe plus "partenaires" ici)
-import {
-  projetsEnCours,
-  projetsTermines
-} from '../data/projetsData'
-
-// Utils
+// Normalisation simple pour matching texte (accents, casse)
 const norm = (s) =>
-  String(s || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
+  (s || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 
-const slugify = (s) =>
-  String(s || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
+// Associe projets → partenaires via le bailleur (donor)
+const usePartnerProjects = () => {
+  const all = [...(projetsEnCours || []), ...(projetsTermines || [])].map(p => ({
+    ...p,
+    _donor: norm(p.donor),
+    _status: String(p.status || '').toLowerCase(),
+  }))
 
-// Matching partenaire ↔ projet (donor + alias + fallback sur le titre)
-const aliasGroups = [
-  ['unicef mali', 'unicef'],
-  ['hcr', 'unhcr'],
-  ['programme alimentaire mondial', 'pam', 'wfp'],
-  ['union europeenne', 'ue', 'european union', 'europeaid'],
-  ['fondation stromme', 'stromme', "fondation stromme afrique de l'ouest"],
-  ['usaid', 'us aid']
-]
+  const byPartner = Object.fromEntries(PARTNERS.map(pt => [pt.acronym, []]))
 
-function matchPartnerProject(partner, project) {
-  const pName = norm(partner.name)
-  const donor = norm(project.donor)
-  const title = norm(project.title)
+  all.forEach(p => {
+    PARTNERS.forEach(pt => {
+      const hit = (pt.match || []).some(k => p._donor.includes(norm(k)))
+      if (hit) byPartner[pt.acronym].push(p)
+    })
+  })
 
-  // 1) bailleur ↔ nom partenaire
-  if (donor && pName && (donor.includes(pName) || pName.includes(donor))) return true
-
-  // 2) alias fréquents
-  for (const group of aliasGroups) {
-    if (group.some(a => pName.includes(a))) {
-      if (group.some(a => donor.includes(a))) return true
-    }
-  }
-
-  // 3) fallback: le nom du partenaire apparaît dans le titre du projet
-  if (title && pName && title.includes(pName.split(' ')[0])) return true
-
-  return false
+  return byPartner
 }
 
-export default function PartenairesPage() {
+const PartenairesPage = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [])
 
-  const allProjects = useMemo(() => {
-    const encours = (projetsEnCours || []).map(p => ({ ...p, _status: 'En cours' }))
-    const termines = (projetsTermines || []).map(p => ({ ...p, _status: 'Terminé' }))
-    return [...encours, ...termines]
-  }, [])
-
-  const partners = useMemo(() => {
-    return partenairesData
-      .map(p => {
-        const slug = slugify(p.name)
-        const projects = allProjects.filter(pr => matchPartnerProject(p, pr))
-        return { ...p, slug, _projects: projects }
-      })
-      .sort((a, b) => b._projects.length - a._projects.length || a.name.localeCompare(b.name))
-  }, [allProjects])
+  const partnerProjects = useMemo(() => usePartnerProjects(), [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -141,114 +97,113 @@ export default function PartenairesPage() {
               Nos Partenaires
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              L’AMSS collabore avec un réseau solide de partenaires nationaux et internationaux
-              pour maximiser son impact et atteindre ses objectifs.
+              L’AMSS collabore avec des partenaires nationaux et internationaux pour maximiser son impact.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Grille */}
+      {/* Grille des partenaires */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {partners.map((partenaire) => (
-                <div
-                  key={partenaire.slug}
-                  id={partenaire.slug}
-                  className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow"
-                >
-                  {partenaire.logo && (
-                    <img
-                      src={partenaire.logo}
-                      alt={partenaire.name}
-                      className="h-20 object-contain mx-auto mb-4"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null
-                        e.currentTarget.src = '/assets/partenaires/placeholder.png'
-                      }}
-                    />
-                  )}
+              {PARTNERS.map((p) => {
+                const projects = partnerProjects[p.acronym] || []
+                const hasSuspendedUSAID = p.acronym === 'USAID' && projects.some(pr => pr.usaidNote)
 
-                  <div className="text-center">
-                    <h3 className="text-xl font-semibold text-foreground">{partenaire.name}</h3>
-                    <p className="text-primary font-medium mt-1">{partenaire.type || 'Partenaire'}</p>
-                  </div>
-
-                  {partenaire.description && (
-                    <p className="text-muted-foreground text-sm mt-3 leading-relaxed text-center">
-                      {partenaire.description}
-                    </p>
-                  )}
-
-                  {partenaire.website && (
-                    <div className="text-center mt-3">
-                      <a
-                        href={partenaire.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-accent hover:underline text-sm"
-                      >
-                        <Globe className="h-4 w-4 mr-1" /> Visiter le site
-                      </a>
-                    </div>
-                  )}
-
-                  {/* Projets liés */}
-                  <div className="mt-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-foreground">
-                        Projets liés ({partenaire._projects.length})
-                      </span>
-                      <Link to="/projets" className="text-xs text-primary hover:underline">
-                        Tous les projets
-                      </Link>
-                    </div>
-
-                    {partenaire._projects.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Aucun projet associé trouvé.</p>
-                    ) : (
-                      <div className="space-y-3">
-                        {partenaire._projects.map((pr, idx) => (
-                          <div key={idx} className="border border-border rounded-lg p-3">
-                            <div className="flex flex-wrap items-center gap-2 text-xs mb-2">
-                              {pr._status === 'En cours' ? (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
-                                  <Clock className="h-3 w-3 mr-1" /> En cours
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
-                                  <CheckCircle className="h-3 w-3 mr-1" /> Terminé
-                                </span>
-                              )}
-                              {pr.usaidNote && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">
-                                  Suspendu (USAID)
-                                </span>
-                              )}
-                              {pr.region && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
-                                  <MapPin className="h-3 w-3 mr-1" /> {pr.region}
-                                </span>
-                              )}
-                              {pr.beneficiaries ? (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
-                                  <Users className="h-3 w-3 mr-1" /> {Number(pr.beneficiaries).toLocaleString('fr-FR')}
-                                </span>
-                              ) : null}
-                            </div>
-                            <div className="font-medium">{pr.title}</div>
-                            {pr.excerpt && (
-                              <div className="text-sm text-muted-foreground mt-1">{pr.excerpt}</div>
-                            )}
+                return (
+                  <div key={p.acronym} className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow">
+                    <div className="flex items-start gap-4">
+                      <img
+                        src={p.logo || '/assets/partenaires/placeholder.png'}
+                        alt={p.acronym}
+                        className="h-16 w-16 object-contain rounded-md border border-muted"
+                        onError={(e) => { e.currentTarget.src = '/assets/partenaires/placeholder.png' }}
+                      />
+                      <div className="flex-1">
+                        <div className="text-sm text-muted-foreground">{p.type}</div>
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {p.acronym} <span className="text-muted-foreground">— {p.name}</span>
+                        </h3>
+                        {p.website && (
+                          <a
+                            href={p.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-primary text-sm hover:underline mt-1"
+                          >
+                            <Globe className="h-4 w-4 mr-1" /> Site officiel
+                          </a>
+                        )}
+                        {hasSuspendedUSAID && (
+                          <div className="mt-2 inline-flex items-center text-xs px-2 py-1 rounded bg-red-100 text-red-700">
+                            Projets USAID suspendus (décision du Gouvernement américain)
                           </div>
-                        ))}
+                        )}
                       </div>
-                    )}
+                    </div>
+
+                    {/* Projets liés */}
+                    <div className="mt-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Handshake className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-foreground">
+                          Projets associés ({projects.length})
+                        </span>
+                      </div>
+
+                      {projects.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Aucun projet associé dans la base actuelle.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {projects.slice(0, 6).map((pr) => (
+                            <div key={`${p.acronym}-${pr.id}`} className="border border-border rounded-lg p-3">
+                              <div className="flex flex-wrap items-center gap-2 text-xs mb-2">
+                                {String(pr.status).toLowerCase().includes('cours') ? (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                                    <Clock className="h-3 w-3 mr-1" /> En cours
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                                    <CheckCircle className="h-3 w-3 mr-1" /> Terminé
+                                  </span>
+                                )}
+                                {pr.usaidNote && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">
+                                    Suspendu (USAID)
+                                  </span>
+                                )}
+                                {pr.region && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
+                                    <MapPin className="h-3 w-3 mr-1" /> {pr.region}
+                                  </span>
+                                )}
+                                {pr.beneficiaries ? (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
+                                    <Users className="h-3 w-3 mr-1" /> {Number(pr.beneficiaries).toLocaleString('fr-FR')}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <div className="font-medium">{pr.title}</div>
+                              {pr.excerpt && (
+                                <div className="text-sm text-muted-foreground mt-1">
+                                  {pr.excerpt}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {projects.length > 6 && (
+                            <div className="text-xs text-muted-foreground">
+                              + {projects.length - 6} autre(s) projet(s)
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             <div className="text-center mt-12">
@@ -264,11 +219,9 @@ export default function PartenairesPage() {
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-6">
-              Devenez un Partenaire de l’AMSS
-            </h2>
+            <h2 className="text-3xl font-bold text-foreground mb-6">Devenez un Partenaire de l’AMSS</h2>
             <p className="text-xl text-muted-foreground mb-8">
-              Ensemble, nous pouvons faire une différence durable dans la vie des populations du Sahel.
+              Ensemble, nous pouvons faire une différence durable pour les populations du Sahel.
             </p>
             <Link to="/contact">
               <Button size="lg" className="text-lg px-8 py-3">
@@ -281,3 +234,5 @@ export default function PartenairesPage() {
     </div>
   )
 }
+
+export default PartenairesPage
