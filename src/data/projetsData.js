@@ -1,3 +1,11 @@
+// src/data/projetsData.js
+// MAJ à partir du Rapport Gouvernement 2024 AMSS + demandes spécifiques
+// Corrections intégrées :
+//  - id:25  (donor USAID, budget & communes précisés)
+//  - id:34  (donor Fondation Hilton, budget précisé)
+//  - id:32  (USAID via FHI360, période 2024-11 → 2029-04, budget global)
+//  - id:5   (altTitle ajouté pour correspondre au libellé du rapport)
+
 export const projetsEnCours = [
   // --- Partenariat Fondation Strømme (Éducation/Microfinance/Green Jobs) ---
   {
@@ -13,13 +21,13 @@ export const projetsEnCours = [
     domain: "Éducation, Microfinance, Environnement",
     region: "Tombouctou, Goundam, Diré & Mountougoula (Koulikoro)",
     beneficiaries: 25456,
-    budget: "≈ 419 535 502 FCFA",
+    budget: "≈ 419 535 502 FCFA",
     sources: ["Rapport 2024, p.7–11"]
   },
   // --- Gouvernance locale (Cordaid) ---
   {
     id: 2,
-    title: "Programme Gouvernance Locale Redevable (P‑GLR+)",
+    title: "Programme Gouvernance Locale Redevable (P-GLR+)",
     startDate: "2021-04-01",
     endDate: "2025-12-31",
     status: "En cours",
@@ -30,7 +38,7 @@ export const projetsEnCours = [
     domain: "Gouvernance, Paix",
     region: "Région de Tombouctou (35 communes)",
     beneficiaries: 1050,
-    budget: "175 355 625 FCFA (2024)",
+    budget: "175 355 625 FCFA (2024)",
     sources: ["Rapport 2024, p.12–17"]
   },
   // --- Pain pour le Monde (cohésion/relance) ---
@@ -47,7 +55,7 @@ export const projetsEnCours = [
     domain: "Cohésion sociale, Relance économique",
     region: "Tombouctou, Douékiré, Kondi",
     beneficiaries: 700,
-    budget: "117 655 566 FCFA",
+    budget: "117 655 566 FCFA",
     sources: ["Rapport 2024, p.19–21"]
   },
   // --- NEX4FOOD / AECID (AEA) ---
@@ -64,13 +72,14 @@ export const projetsEnCours = [
     domain: "Sécurité Alimentaire, Nutrition",
     region: "Ségou (Pelengana, Sébougou, Ségou ville)",
     beneficiaries: 1400,
-    budget: "84 742 €",
+    budget: "84 742 €",
     sources: ["Rapport 2024, p.21–23"]
   },
   // --- Plan International (BMZ) ---
   {
     id: 5,
     title: "Plan International — Résilience & cohésion sociale (BMZ)",
+    altTitle: "Ensemble pour un avenir meilleur – Résilience & cohésion sociale (Sahel central)", // alias du rapport
     startDate: "2024-01-01",
     endDate: "2025-12-31",
     status: "En cours",
@@ -81,7 +90,7 @@ export const projetsEnCours = [
     domain: "Protection, Nutrition, Employabilité",
     region: "Gao & Ansongo",
     beneficiaries: 2000,
-    budget: "109 792 322 FCFA (mise en œuvre AMSS)",
+    budget: "109 792 322 FCFA (mise en œuvre AMSS)",
     sources: ["Rapport 2024, p.23–25"]
   },
   // --- Plan International (GFFO) ---
@@ -98,7 +107,7 @@ export const projetsEnCours = [
     domain: "Protection, Nutrition",
     region: "Gao & Ansongo",
     beneficiaries: 2000,
-    budget: "61 712 750 FCFA",
+    budget: "61 712 750 FCFA",
     sources: ["Rapport 2024, p.25–26"]
   },
   // --- CRS (AMC) ---
@@ -128,11 +137,11 @@ export const projetsEnCours = [
     donor: "UNICEF Mali",
     image: "/assets/amss-terrain-activites.jpeg",
     excerpt: "Forages, réhabilitations, latrines et sensibilisation à l’hygiène.",
-    description: `25 forages, 15 puits réhabilités ; 500 latrines familiales ; 50 latrines scolaires ; 15 000 personnes sensibilisées.`,
+    description: `25 forages, 15 puits réhabilités ; 500 latrines familiales ; 50 latrines scolaires ; 15 000 personnes sensibilisées.`,
     domain: "WASH",
     region: "National",
     beneficiaries: 50000,
-    budget: "≈ 500 000 USD",
+    budget: "≈ 500 000 USD",
     sources: ["Synthèse interne AMSS 2024"]
   },
   // --- HCR (monitoring/protection communautaire) ---
@@ -152,7 +161,7 @@ export const projetsEnCours = [
     budget: "N/D",
     sources: ["Rapport 2024, table des matières pp.39–41, 44–50"]
   },
-  // --- USAID/JSI MIHR (doit porter la mention de suspension) ---
+  // --- USAID/JSI MIHR (mention suspension) ---
   {
     id: 10,
     title: "USAID/JSI — MIHR (Santé communautaire)",
@@ -396,21 +405,23 @@ export const projetsEnCours = [
     budget: "N/D",
     sources: ["Rapport 2024, p.72"]
   },
+  // 🔁 CORRIGÉ (USAID + budget + communes)
   {
     id: 25,
     title: "Protection d'Urgence, WASH NFI (Centre et Nord du Mali)",
     startDate: "2024-01-01",
     endDate: "2025-12-31",
     status: "En cours",
-    donor: "N/D",
+    donor: "USAID",
     image: "/assets/amss-terrain-activites.jpeg",
-    excerpt: "Protection d'urgence, assainissement, hygiène et services WASH NFI pour les populations touchées par le conflit.",
-    description: "Projet d'assistance humanitaire pour les populations déplacées.",
+    excerpt: "Protection d'urgence, assainissement, hygiène et kits NFI pour populations touchées par le conflit.",
+    description:
+      "Programme USAID couvrant Socoura, Sio, Fakala, Djenné (Mopti), Ansongo (Gao) et Ménaka. Sensibilisations VBG/PSEA, renforcement des comités de protection, et activités de réduction des risques liés aux EEI.",
     domain: "Protection, WASH",
-    region: "Centre et Nord du Mali",
-    beneficiaries: "N/D",
-    budget: "N/D",
-    sources: ["Rapport 2024, p.74"]
+    region: "Mopti (Socoura, Sio, Fakala, Djenné), Gao (Ansongo), Ménaka (Ménaka)",
+    beneficiaries: 15195,
+    budget: "373 501 410 FCFA",
+    sources: ["Rapport 2024, p.75"]
   },
   {
     id: 26,
@@ -508,21 +519,24 @@ export const projetsEnCours = [
     budget: "N/D",
     sources: ["Rapport 2024, p.87"]
   },
+  // 🔁 CORRIGÉ (USAID via FHI360 + période + budget)
   {
     id: 32,
-    title: "Projet SHIFIN NI TAGNE (SNT) Consortuim AMSS-FHI360",
-    startDate: "2024-01-01",
-    endDate: "2025-12-31",
+    title: "Projet SHIFIN NI TAGNE (SNT) – Consortium AMSS-FHI360",
+    startDate: "2024-11-01",
+    endDate: "2029-04-30",
     status: "En cours",
-    donor: "AMSS-FHI360",
+    donor: "USAID Mali (via FHI360)",
     image: "/assets/amss-terrain-activites.jpeg",
-    excerpt: "Projet de collaboration entre AMSS et FHI360.",
-    description: "Projet en consortium avec FHI360.",
-    domain: "N/D",
-    region: "N/D",
-    beneficiaries: "N/D",
-    budget: "N/D",
-    sources: ["Rapport 2024, p.90"]
+    excerpt:
+      "Insertion socio-éco et santé sexuelle/reproductive des jeunes (15–29 ans) ; centres d’apprentissage et emplois verts.",
+    description:
+      "Objectif: 18 000 à 20 000 jeunes formés (dont 1 000 en situation de handicap) sur compétences de base, professionnelles et SSR ; mise en place/animation de centres d’apprentissage co-administrés.",
+    domain: "Éducation, Employabilité, Santé SR/Jeunes",
+    region: "Ségou, San, Mopti, Bandiagara, District de Bamako",
+    beneficiaries: 20000,
+    budget: "3 139 549 741 XOF (subvention globale, démarrage fin 2024)",
+    sources: ["Rapport 2024, p.92"]
   },
   {
     id: 33,
@@ -540,21 +554,23 @@ export const projetsEnCours = [
     budget: "N/D",
     sources: ["Rapport 2024, p.92"]
   },
+  // 🔁 CORRIGÉ (Fondation Hilton + budget)
   {
     id: 34,
-    title: "Projet Renforcement Sécurité Alimentaire et Nutritionnelle (Tombouctou, Gao, Ménaka)",
+    title: "Renforcement de la Sécurité Alimentaire et Nutritionnelle (Tombouctou, Gao, Ménaka)",
     startDate: "2024-01-01",
     endDate: "2025-12-31",
     status: "En cours",
-    donor: "N/D",
+    donor: "Fondation Hilton",
     image: "/assets/amss-terrain-activites.jpeg",
-    excerpt: "Renforcement de la sécurité alimentaire et nutritionnelle aux bénéfices des ménages très pauvres.",
-    description: "Projet visant à améliorer la sécurité alimentaire et nutritionnelle des ménages vulnérables.",
+    excerpt: "Appui sécurité alimentaire, nutrition et GSAN pour ménages très pauvres.",
+    description:
+      "Formations agricoles, dotations intrants, appui élevage, transferts (bons marchandises, e-espèces) et mise en place/renforcement de 150 GSAN dans les zones ciblées.",
     domain: "Sécurité Alimentaire, Nutrition",
-    region: "Tombouctou, Gao et Ménaka",
+    region: "Tombouctou, Gao et Ménaka (communes listées dans le rapport)",
     beneficiaries: "N/D",
-    budget: "N/D",
-    sources: ["Rapport 2024, p.94"]
+    budget: "298 000 000 FCFA",
+    sources: ["Rapport 2024, p.95–96"]
   },
   {
     id: 35,
@@ -716,22 +732,22 @@ export const projetsTermines = [
     domain: "Protection",
     region: "Tombouctou",
     beneficiaries: 15000,
-    budget: "200 000 USD"
+    budget: "200 000 USD"
   },
   {
     id: 102,
-    title: "Programme Multi‑acteurs d’Alphabétisation",
+    title: "Programme Multi-acteurs d’Alphabétisation",
     startDate: "2020-01-01",
     endDate: "2023-12-31",
     status: "Terminé",
     donor: "Gouvernement du Mali",
     image: "/assets/amss-terrain-activites.jpeg",
     excerpt: "Alphabétisation fonctionnelle pour les femmes des groupes d’épargne/crédit.",
-    description: `1 000+ femmes alphabétisées, 150 groupes d’épargne, taux de réussite 85 %.`,
+    description: `1 000+ femmes alphabétisées, 150 groupes d’épargne, taux de réussite 85 %.`,
     domain: "Éducation",
     region: "National",
     beneficiaries: 1000,
-    budget: "250 000 USD"
+    budget: "250 000 USD"
   },
   {
     id: 103,
@@ -746,7 +762,7 @@ export const projetsTermines = [
     domain: "Gouvernance",
     region: "Tombouctou",
     beneficiaries: 25000,
-    budget: "800 000 USD"
+    budget: "800 000 USD"
   },
   {
     id: 104,
@@ -754,14 +770,14 @@ export const projetsTermines = [
     startDate: "2018-01-01",
     endDate: "2021-12-31",
     status: "Terminé",
-    donor: "Ambassade des Pays‑Bas",
+    donor: "Ambassade des Pays-Bas",
     image: "/assets/amss-securite-humaine.jpeg",
     excerpt: "Atténuation des conflits et réconciliation intercommunautaire.",
     description: `50 accords de paix intercommunautaires, 200 médiateurs formés.`,
     domain: "Gouvernance",
     region: "Gao",
     beneficiaries: 30000,
-    budget: "450 000 USD"
+    budget: "450 000 USD"
   },
   {
     id: 105,
@@ -772,11 +788,11 @@ export const projetsTermines = [
     donor: "PAM",
     image: "/assets/amss-terrain-activites.jpeg",
     excerpt: "Assistance alimentaire d’urgence aux familles affectées par conflits et sécheresse.",
-    description: `10 000 ménages assistés ; 500 t de vivres ; 1 200 enfants traités pour malnutrition.`,
+    description: `10 000 ménages assistés ; 500 t de vivres ; 1 200 enfants traités pour malnutrition.`,
     domain: "Sécurité Alimentaire",
     region: "Tombouctou",
     beneficiaries: 50000,
-    budget: "1 200 000 USD"
+    budget: "1 200 000 USD"
   }
 ]
 
@@ -792,5 +808,3 @@ export const rapports = [
     published: true
   }
 ]
-
-
