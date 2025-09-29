@@ -1,164 +1,141 @@
-import React from 'react';
+// src/pages/ZonesPage.jsx
+import React, { useMemo, useEffect } from 'react';
+import { MapPin, Users, FolderOpen, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { MapPin, Users, Package, Globe } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { projetsEnCours, projetsTermines } from '../data/projetsData';
 
-const zonesData = [
-  {
-    id: 'tombouctou',
-    name: 'Tombouctou',
-    image: '/assets/zones/tombouctou.jpg',
-    description: 'Région historique du Mali, confrontée à des défis humanitaires et de développement.',
-    stats: {
-      population: '1.2M',
-      projets: '15+',
-      beneficiaires: '100K+'
-    },
-    link: '/zones/tombouctou'
-  },
-  {
-    id: 'gao',
-    name: 'Gao',
-    image: '/assets/zones/gao.jpg',
-    description: 'Carrefour commercial et culturel, la région de Gao est au cœur de nos interventions.',
-    stats: {
-      population: '800K',
-      projets: '10+',
-      beneficiaires: '70K+'
-    },
-    link: '/zones/gao'
-  },
-  {
-    id: 'menaka',
-    name: 'Ménaka',
-    image: '/assets/zones/menaka.jpg',
-    description: 'Région pastorale, où nous soutenons la résilience des communautés face aux crises.',
-    stats: {
-      population: '250K',
-      projets: '5+',
-      beneficiaires: '30K+'
-    },
-    link: '/zones/menaka'
-  },
-  {
-    id: 'mopti',
-    name: 'Mopti',
-    image: '/assets/zones/mopti.jpg',
-    description: 'Surnommée la Venise du Mali, Mopti est une zone d\'intervention clé pour la sécurité alimentaire.',
-    stats: {
-      population: '2.5M',
-      projets: '20+',
-      beneficiaires: '150K+'
-    },
-    link: '/zones/mopti'
-  },
-  {
-    id: 'segou',
-    name: 'Ségou',
-    image: '/assets/zones/segou.jpg',
-    description: 'Région agricole majeure, où nous renforçons les capacités des agriculteurs locaux.',
-    stats: {
-      population: '3M',
-      projets: '18+',
-      beneficiaires: '180K+'
-    },
-    link: '/zones/segou'
-  },
-  {
-    id: 'sikasso',
-    name: 'Sikasso',
-    image: '/assets/zones/sikasso.jpg',
-    description: 'Zone frontalière avec un fort potentiel agricole, nos projets y visent le développement durable.',
-    stats: {
-      population: '2.8M',
-      projets: '12+',
-      beneficiaires: '120K+'
-    },
-    link: '/zones/sikasso'
-  }
+const detectCoreRegion = (regionStr='') => {
+  const s = String(regionStr || '').toLowerCase();
+  if (s.includes('tombouctou')) return 'Tombouctou';
+  if (s.includes('taoud') || s.includes('taouden')) return 'Taoudénit';
+  if (s.includes('gao')) return 'Gao';
+  if (s.includes('ménaka') || s.includes('menaka')) return 'Ménaka';
+  if (s.includes('kidal')) return 'Kidal';
+  if (s.includes('mopti')) return 'Mopti';
+  if (s.includes('ségou') || s.includes('segou')) return 'Ségou';
+  if (s.includes('sikasso')) return 'Sikasso';
+  return 'Autres';
+};
+
+const coreRegions = [
+  { key: 'Tombouctou', image: '/assets/zones/tombouctou.jpg' },
+  { key: 'Taoudénit', image: '/assets/zones/taoudenit.jpg' },
+  { key: 'Gao', image: '/assets/zones/gao.jpg' },
+  { key: 'Ménaka', image: '/assets/zones/menaka.jpg' },
+  { key: 'Kidal', image: '/assets/zones/kidal.jpg' },
+  { key: 'Mopti', image: '/assets/zones/mopti.jpg' },
+  { key: 'Ségou', image: '/assets/zones/segou.jpg' },
+  { key: 'Sikasso', image: '/assets/zones/sikasso.jpg' },
 ];
 
-const ZonesPage = () => {
+export default function ZonesPage() {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
+  const all = useMemo(() => (projetsEnCours || []).concat(projetsTermines || []), []);
+  const grouped = useMemo(() => {
+    const g = {};
+    for (const p of all) {
+      const key = detectCoreRegion(p.region);
+      if (!g[key]) g[key] = [];
+      g[key].push(p);
+    }
+    return g;
+  }, [all]);
+
+  const cards = useMemo(() => {
+    return coreRegions.map(r => {
+      const list = grouped[r.key] || [];
+      const enCours = list.filter(p => String(p.status || '').toLowerCase().includes('en cours') || p.status === 'Suspendu (USAID)');
+      const termines = list.filter(p => String(p.status || '').toLowerCase().includes('termin'));
+      const bene = enCours.reduce((acc, p) => acc + (typeof p.beneficiaries === 'number' ? p.beneficiaries : 0), 0);
+      return {
+        ...r,
+        countEnCours: enCours.length,
+        countTermines: termines.length,
+        beneficiaries: bene,
+        sample: list.slice(0, 4),
+      };
+    });
+  }, [grouped]);
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-primary/10 to-accent/10">
+      {/* Hero */}
+      <section className="py-16 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Nos Zones d'Intervention
-            </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              L'AMSS est présente dans les régions les plus vulnérables du Mali pour un impact durable.
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Zones d’intervention</h1>
+            <p className="text-lg md:text-xl text-muted-foreground">
+              Vue dynamique par région, synchronisée avec la page « Nos Projets ». Les chiffres se mettent à jour automatiquement quand vous ajoutez un projet.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Zones Grid */}
+      {/* Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {zonesData.map((zone) => (
-                <div key={zone.id} className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow">
-                  <img src={zone.image} alt={zone.name} className="w-full h-48 object-cover rounded-lg mb-4" />
-                  <h3 className="text-xl font-semibold text-foreground mb-3">
-                    {zone.name}
-                  </h3>
-                  <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-                    {zone.description}
-                  </p>
-                  <div className="grid grid-cols-3 gap-2 text-center text-sm mb-4">
-                    <div>
-                      <Users className="h-5 w-5 text-primary mx-auto mb-1" />
-                      <span className="font-medium">{zone.stats.population}</span>
-                      <p className="text-muted-foreground">Pop.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            {cards.map(c => (
+              <div key={c.key} className="bg-white rounded-xl border border-border shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                {c.image && <img src={c.image} alt={c.key} className="w-full h-40 object-cover" />}
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold text-foreground">{c.key}</h3>
+                    <span className="inline-flex items-center text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4 mr-1" /> { (grouped[c.key] || []).length } projets
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 my-4">
+                    <div className="text-center rounded-lg bg-muted/40 p-3">
+                      <div className="text-xs text-muted-foreground">En cours</div>
+                      <div className="text-lg font-semibold">{c.countEnCours}</div>
                     </div>
-                    <div>
-                      <Package className="h-5 w-5 text-accent mx-auto mb-1" />
-                      <span className="font-medium">{zone.stats.projets}</span>
-                      <p className="text-muted-foreground">Projets</p>
+                    <div className="text-center rounded-lg bg-muted/40 p-3">
+                      <div className="text-xs text-muted-foreground">Terminés</div>
+                      <div className="text-lg font-semibold">{c.countTermines}</div>
                     </div>
-                    <div>
-                      <Globe className="h-5 w-5 text-primary mx-auto mb-1" />
-                      <span className="font-medium">{zone.stats.beneficiaires}</span>
-                      <p className="text-muted-foreground">Bénéf.</p>
+                    <div className="text-center rounded-lg bg-muted/40 p-3">
+                      <div className="text-xs text-muted-foreground">Bénéficiaires</div>
+                      <div className="text-lg font-semibold">{new Intl.NumberFormat('fr-FR').format(c.beneficiaries)}</div>
                     </div>
                   </div>
-                  <Link to={zone.link}>
-                    <Button variant="outline" className="w-full">
-                      En savoir plus sur {zone.name}
-                    </Button>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Call to Action */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-6">
-              Un Impact Local, une Portée Nationale
-            </h2>
-            <p className="text-xl text-muted-foreground mb-8">
-              Notre présence sur le terrain nous permet de comprendre les besoins spécifiques de chaque communauté.
-            </p>
-            <Link to="/contact">
-              <Button size="lg" className="text-lg px-8 py-3">
-                Nous Contacter
-              </Button>
-            </Link>
+                  {c.sample.length > 0 && (
+                    <>
+                      <div className="text-sm font-medium text-foreground mb-2">Exemples récents</div>
+                      <ul className="space-y-2">
+                        {c.sample.map((p, idx) => (
+                          <li key={idx} className="text-sm">
+                            <span className="font-medium">{p.title}</span>
+                            {p.usaidNote ? (
+                              <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 border border-red-200">Suspendu (USAID)</span>
+                            ) : (
+                              <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 border border-green-200">{p.status || 'En cours'}</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+
+                  <div className="mt-5 flex justify-between items-center">
+                    <Link to="/projets" className="inline-flex items-center text-primary hover:underline">
+                      Voir les projets <ArrowRight className="ml-1 h-4 w-4" />
+                    </Link>
+                    <Link to="/partenaires" className="inline-flex items-center text-primary hover:underline">
+                      Partenaires <ArrowRight className="ml-1 h-4 w-4" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
     </div>
   );
-};
-
-export default ZonesPage;
-
+}
