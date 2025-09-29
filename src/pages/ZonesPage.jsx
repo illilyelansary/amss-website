@@ -1,141 +1,178 @@
 // src/pages/ZonesPage.jsx
-import React, { useMemo, useEffect } from 'react';
-import { MapPin, Users, FolderOpen, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { projetsEnCours, projetsTermines } from '../data/projetsData';
+import React, { useMemo, useEffect } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { MapPin, Users, AlertTriangle, Clock } from 'lucide-react'
+import { projetsEnCours, projetsTermines } from '../data/projetsData'
+import { Button } from '@/components/ui/button'
 
-const detectCoreRegion = (regionStr='') => {
-  const s = String(regionStr || '').toLowerCase();
-  if (s.includes('tombouctou')) return 'Tombouctou';
-  if (s.includes('taoud') || s.includes('taouden')) return 'Taoudénit';
-  if (s.includes('gao')) return 'Gao';
-  if (s.includes('ménaka') || s.includes('menaka')) return 'Ménaka';
-  if (s.includes('kidal')) return 'Kidal';
-  if (s.includes('mopti')) return 'Mopti';
-  if (s.includes('ségou') || s.includes('segou')) return 'Ségou';
-  if (s.includes('sikasso')) return 'Sikasso';
-  return 'Autres';
-};
+const REGIONS = [
+  'Tombouctou', 'Taoudénit', 'Taoudenni', 'Gao', 'Ménaka', 'Menaka', 'Kidal',
+  'Mopti', 'Ségou', 'Segou', 'Sikasso', 'Koulikoro', 'Bamako'
+]
 
-const coreRegions = [
-  { key: 'Tombouctou', image: '/assets/zones/tombouctou.jpg' },
-  { key: 'Taoudénit', image: '/assets/zones/taoudenit.jpg' },
-  { key: 'Gao', image: '/assets/zones/gao.jpg' },
-  { key: 'Ménaka', image: '/assets/zones/menaka.jpg' },
-  { key: 'Kidal', image: '/assets/zones/kidal.jpg' },
-  { key: 'Mopti', image: '/assets/zones/mopti.jpg' },
-  { key: 'Ségou', image: '/assets/zones/segou.jpg' },
-  { key: 'Sikasso', image: '/assets/zones/sikasso.jpg' },
-];
-
-export default function ZonesPage() {
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, []);
-
-  const all = useMemo(() => (projetsEnCours || []).concat(projetsTermines || []), []);
-  const grouped = useMemo(() => {
-    const g = {};
-    for (const p of all) {
-      const key = detectCoreRegion(p.region);
-      if (!g[key]) g[key] = [];
-      g[key].push(p);
+// extrait proprement les régions à partir du champ free-text `region`
+function extractRegions(regionStr) {
+  const s = String(regionStr || '')
+  const found = new Set()
+  for (const r of REGIONS) {
+    const re = new RegExp(`\\b${r}\\b`, 'i')
+    if (re.test(s)) found.add(
+      // normalise quelques variantes
+      r.replace(/Segou/i, 'Ségou').replace(/Menaka/i, 'Ménaka').replace(/Taoudenni/i, 'Taoudénit')
+    )
+  }
+  // split basique en complément (ex: "Ségou (Pelengana, Sébougou)")
+  s.split(/[,/|;]+/).forEach(tok => {
+    const t = tok.trim()
+    for (const r of REGIONS) {
+      if (new RegExp(`\\b${r}\\b`, 'i').test(t)) {
+        found.add(r.replace(/Segou/i, 'Ségou').replace(/Menaka/i, 'Ménaka').replace(/Taoudenni/i, 'Taoudénit'))
+      }
     }
-    return g;
-  }, [all]);
+  })
+  return Array.from(found)
+}
 
-  const cards = useMemo(() => {
-    return coreRegions.map(r => {
-      const list = grouped[r.key] || [];
-      const enCours = list.filter(p => String(p.status || '').toLowerCase().includes('en cours') || p.status === 'Suspendu (USAID)');
-      const termines = list.filter(p => String(p.status || '').toLowerCase().includes('termin'));
-      const bene = enCours.reduce((acc, p) => acc + (typeof p.beneficiaries === 'number' ? p.beneficiaries : 0), 0);
-      return {
-        ...r,
-        countEnCours: enCours.length,
-        countTermines: termines.length,
-        beneficiaries: bene,
-        sample: list.slice(0, 4),
-      };
-    });
-  }, [grouped]);
+export default function ZonesPage () {
+  const { id } = useParams()
+
+  useEffect(() => {
+    // si on arrive avec /zones/:id on scrolle vers la zone correspondante
+    if (id) {
+      const el = document.getElementById(id.toLowerCase())
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }, [id])
+
+  // index des projets par région
+  const zones = useMemo(() => {
+    const index = new Map()
+    const push = (region, p, status) => {
+      const key = region.toLowerCase()
+      const curr = index.get(key) || { key, label: region, enCours: [], termines: [] }
+      curr[status].push(p)
+      index.set(key, curr)
+    }
+
+    const allEnCours = (projetsEnCours || [])
+    const allTermines = (projetsTermines || [])
+
+    for (const p of allEnCours) {
+      const regions = extractRegions(p.region)
+      if (regions.length === 0) regions.push('National')
+      regions.forEach(r => push(r, p, 'enCours'))
+    }
+    for (const p of allTermines) {
+      const regions = extractRegions(p.region)
+      if (regions.length === 0) regions.push('National')
+      regions.forEach(r => push(r, p, 'termines'))
+    }
+
+    // tri par nombre de projets en cours (desc)
+    return Array.from(index.values()).sort((a, b) => b.enCours.length - a.enCours.length)
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="py-16 bg-gradient-to-br from-primary/10 to-accent/10">
+      <section className="py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Zones d’intervention</h1>
-            <p className="text-lg md:text-xl text-muted-foreground">
-              Vue dynamique par région, synchronisée avec la page « Nos Projets ». Les chiffres se mettent à jour automatiquement quand vous ajoutez un projet.
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Zones d&apos;Intervention</h1>
+            <p className="text-xl text-muted-foreground leading-relaxed">
+              Cette page se met à jour automatiquement à partir des régions indiquées dans vos projets.
+              <br />Sikasso s’affichera dès qu’au moins un projet contient « Sikasso » dans son champ région.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Grid */}
+      {/* Liste des zones */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {cards.map(c => (
-              <div key={c.key} className="bg-white rounded-xl border border-border shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                {c.image && <img src={c.image} alt={c.key} className="w-full h-40 object-cover" />}
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold text-foreground">{c.key}</h3>
-                    <span className="inline-flex items-center text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4 mr-1" /> { (grouped[c.key] || []).length } projets
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3 my-4">
-                    <div className="text-center rounded-lg bg-muted/40 p-3">
-                      <div className="text-xs text-muted-foreground">En cours</div>
-                      <div className="text-lg font-semibold">{c.countEnCours}</div>
-                    </div>
-                    <div className="text-center rounded-lg bg-muted/40 p-3">
-                      <div className="text-xs text-muted-foreground">Terminés</div>
-                      <div className="text-lg font-semibold">{c.countTermines}</div>
-                    </div>
-                    <div className="text-center rounded-lg bg-muted/40 p-3">
-                      <div className="text-xs text-muted-foreground">Bénéficiaires</div>
-                      <div className="text-lg font-semibold">{new Intl.NumberFormat('fr-FR').format(c.beneficiaries)}</div>
-                    </div>
-                  </div>
-
-                  {c.sample.length > 0 && (
-                    <>
-                      <div className="text-sm font-medium text-foreground mb-2">Exemples récents</div>
-                      <ul className="space-y-2">
-                        {c.sample.map((p, idx) => (
-                          <li key={idx} className="text-sm">
-                            <span className="font-medium">{p.title}</span>
-                            {p.usaidNote ? (
-                              <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 border border-red-200">Suspendu (USAID)</span>
-                            ) : (
-                              <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 border border-green-200">{p.status || 'En cours'}</span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-
-                  <div className="mt-5 flex justify-between items-center">
-                    <Link to="/projets" className="inline-flex items-center text-primary hover:underline">
-                      Voir les projets <ArrowRight className="ml-1 h-4 w-4" />
-                    </Link>
-                    <Link to="/partenaires" className="inline-flex items-center text-primary hover:underline">
-                      Partenaires <ArrowRight className="ml-1 h-4 w-4" />
-                    </Link>
+          <div className="max-w-6xl mx-auto space-y-10">
+            {zones.map(zone => (
+              <div key={zone.key} id={zone.key} className="bg-white rounded-xl p-6 shadow-sm border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <MapPin className="h-6 w-6 text-primary" />
+                    {zone.label}
+                  </h2>
+                  <div className="text-sm text-muted-foreground">
+                    {zone.enCours.length} en cours • {zone.termines.length} terminés
                   </div>
                 </div>
+
+                {/* Projets en cours */}
+                {zone.enCours.length > 0 && (
+                  <>
+                    <h3 className="text-lg font-semibold mb-3">Projets en cours</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                      {zone.enCours.map((p, i) => (
+                        <div key={i} className="border border-border rounded-lg p-4">
+                          <div className="flex flex-wrap items-center gap-2 text-xs mb-2">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                              <Clock className="h-3 w-3 mr-1" /> En cours
+                            </span>
+                            {p.usaidNote && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">
+                                Suspendu (USAID)
+                              </span>
+                            )}
+                            {p.beneficiaries ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
+                                <Users className="h-3 w-3 mr-1" /> {Number(p.beneficiaries).toLocaleString('fr-FR')}
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="font-medium">{p.title}</div>
+                          <div className="text-sm text-muted-foreground">{p.domain}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Projets terminés */}
+                {zone.termines.length > 0 && (
+                  <>
+                    <h3 className="text-lg font-semibold mb-3">Projets terminés</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {zone.termines.map((p, i) => (
+                        <div key={i} className="border border-border rounded-lg p-4">
+                          <div className="flex flex-wrap items-center gap-2 text-xs mb-2">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                              Terminé
+                            </span>
+                          </div>
+                          <div className="font-medium">{p.title}</div>
+                          <div className="text-sm text-muted-foreground">{p.domain}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Aucun projet */}
+                {zone.enCours.length === 0 && zone.termines.length === 0 && (
+                  <div className="text-sm text-muted-foreground flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    Pas de projets référencés dans cette zone pour le moment.
+                  </div>
+                )}
               </div>
             ))}
+
+            <div className="text-center">
+              <Link to="/projets">
+                <Button variant="outline">Voir tous les projets</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
     </div>
-  );
+  )
 }
