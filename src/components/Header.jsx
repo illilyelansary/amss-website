@@ -43,20 +43,19 @@ const Header = () => {
         { name: 'Projets en Cours', href: '/projets#cours' },
         { name: 'Projets Terminés', href: '/projets#termines' },
         { name: 'Rapports', href: '/projets#rapports' },
-        // ✅ Partenaires maintenant vers la page dédiée
-        { name: 'Partenaires', href: '/partenaires' }
+        { name: 'Partenaires', href: '/partenaires' } // page dédiée
       ]
     },
     {
       name: "Zones d'Intervention",
       href: '/zones',
       dropdown: [
-        { name: 'Tombouctou', href: '/zones/tombouctou' },
-        { name: 'Gao', href: '/zones/gao' },
-        { name: 'Ménaka', href: '/zones/menaka' },
-        { name: 'Mopti', href: '/zones/mopti' },
-        { name: 'Ségou', href: '/zones/segou' },
-        { name: 'Sikasso', href: '/zones/sikasso' }
+        { name: 'Tombouctou', href: '/zones#zone-tombouctou' },
+        { name: 'Gao', href: '/zones#zone-gao' },
+        { name: 'Ménaka', href: '/zones#zone-menaka' },
+        { name: 'Mopti', href: '/zones#zone-mopti' },
+        { name: 'Ségou', href: '/zones#zone-segou' },
+        { name: 'Sikasso', href: '/zones#zone-sikasso' }
       ]
     },
     { name: 'Recrutement', href: '/recrutement' },
@@ -68,13 +67,28 @@ const Header = () => {
     const target = basePath(href)
     if (target === '/') return location.pathname === '/'
 
-    // ✅ Rendez "Nos Projets" actif aussi pour ses pages associées
+    // Rendez "Nos Projets" actif aussi pour ses pages associées
     if (target === '/projets') {
       const related = ['/projets', '/projets-en-cours', '/projets-termines', '/rapports', '/partenaires']
       return related.some(p => location.pathname.startsWith(p))
     }
 
     return location.pathname.startsWith(target)
+  }
+
+  // Scroll fluide si on reste sur la même page; sinon navigation normale (la page cible gère l'ancre)
+  const handleSmoothNav = (e, href) => {
+    const [path, hash] = href.split('#')
+    if (!hash) return // lien sans ancre -> navigation standard
+
+    if (location.pathname === path) {
+      // Même page : on intercepte et on scrolle
+      e.preventDefault()
+      const el = document.getElementById(hash)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    // Sinon, on laisse Link faire la navigation vers /path#hash
+    // Le navigateur appliquera l'ancre à l'arrivée.
   }
 
   return (
@@ -88,8 +102,10 @@ const Header = () => {
           </div>
           <div className="flex items-center space-x-2">
             <span>Suivez-nous:</span>
-            <a href="#" className="hover:text-accent transition-colors">Facebook</a>
-            <a href="#" className="hover:text-accent transition-colors">Twitter</a>
+            <a href="https://www.facebook.com/ONGAMSS" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">Facebook</a>
+            <a href="https://x.com/ONG_AMSS" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">Twitter</a>
+            <a href="https://www.linkedin.com/company/ong-amss" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">LinkedIn</a>
+            <a href="https://www.youtube.com/@ONG-AMSS" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">YouTube</a>
           </div>
         </div>
       </div>
@@ -117,6 +133,7 @@ const Header = () => {
               >
                 <Link
                   to={item.href}
+                  onClick={(e)=>handleSmoothNav(e, item.href)}
                   className={`flex items-center px-3 py-2 text-sm font-medium transition-colors ${
                     isActive(item.href)
                       ? 'text-primary border-b-2 border-primary'
@@ -133,6 +150,10 @@ const Header = () => {
                       <Link
                         key={dropdownIndex}
                         to={dropdownItem.href}
+                        onClick={(e)=>{
+                          handleSmoothNav(e, dropdownItem.href)
+                          setActiveDropdown(null)
+                        }}
                         className="block px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-primary transition-colors"
                       >
                         {dropdownItem.name}
@@ -165,12 +186,15 @@ const Header = () => {
                 <div key={index}>
                   <Link
                     to={item.href}
+                    onClick={(e)=>{
+                      handleSmoothNav(e, item.href)
+                      setIsMenuOpen(false)
+                    }}
                     className={`block px-4 py-2 text-sm font-medium transition-colors ${
                       isActive(item.href)
                         ? 'text-primary bg-muted'
                         : 'text-foreground hover:text-primary hover:bg-muted'
                     }`}
-                    onClick={() => setIsMenuOpen(false)}
                   >
                     {item.name}
                   </Link>
@@ -180,15 +204,18 @@ const Header = () => {
                         <Link
                           key={dropdownIndex}
                           to={dropdownItem.href}
+                          onClick={(e)=>{
+                            handleSmoothNav(e, dropdownItem.href)
+                            setIsMenuOpen(false)
+                          }}
                           className="block px-4 py-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-                          onClick={() => setIsMenuOpen(false)}
                         >
                           {dropdownItem.name}
                         </Link>
                       ))}
                     </div>
                   )}
-                </div>
+                  </div>
               ))}
               <div className="px-4 pt-4">
                 <Button className="w-full">Faire un Don</Button>
