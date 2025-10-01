@@ -27,6 +27,7 @@ import PartenairesPage from './pages/PartenairesPage.jsx'  // ✅ import unique
 import ActualitesPage from './pages/ActualitesPage'
 import ActualiteDetailPage from './pages/ActualiteDetailPage'
 import RecrutementPage from './pages/RecrutementPage.jsx'  // ✅ extension explicite
+import DonPage from './pages/DonPage'
 
 // Données (pour redirection legacy id -> slug)
 import { actualites } from './data/actualitesData'
@@ -81,6 +82,8 @@ function App() {
             {/* Recrutement & Contact */}
             <Route path="/recrutement" element={<RecrutementPage />} />
             <Route path="/contact" element={<ContactPage />} />
+              <Route path="/don" element={<DonPage />} />
+
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
