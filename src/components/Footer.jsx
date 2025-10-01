@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin } from 'lucide-react'
+import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Youtube } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import logoAmss from '../assets/LogoAMSSFHD.png'
 
@@ -20,12 +20,30 @@ const Footer = () => {
   ]
 
   const zones = [
-    { name: 'Tombouctou', href: '#tombouctou' },
-    { name: 'Gao', href: '#gao' },
-    { name: 'Mopti', href: '#mopti' },
-    { name: 'Ségou', href: '#segou' },
-    { name: 'Bamako', href: '#bamako' }
+    { name: 'Tombouctou', href: 'zones#zone-tombouctou' },
+    { name: 'Gao', href: 'zones#zone-gao' },
+    { name: 'Mopti', href: 'zones#zone-mopti' },
+    { name: 'Ségou', href: 'zones#zone-segou' },
+    { name: 'Sikasso', href: 'zones#zone-sikasso' }
   ]
+
+  // Gestion du scroll fluide
+  const handleSmoothScroll = (e, href) => {
+    if (href.startsWith('#')) {
+      e.preventDefault()
+      const el = document.querySelector(href)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else if (href.includes('#')) {
+      e.preventDefault()
+      const [path, anchor] = href.split('#')
+      if (window.location.pathname.includes(path)) {
+        const el = document.querySelector(`#${anchor}`)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } else {
+        window.location.href = `/${path}#${anchor}`
+      }
+    }
+  }
 
   return (
     <footer className="bg-foreground text-background">
@@ -65,14 +83,17 @@ const Footer = () => {
 
             {/* Social media */}
             <div className="flex space-x-4 mt-6">
-              <a href="#" className="p-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors">
+              <a href="https://www.facebook.com/ONGAMSS" target="_blank" rel="noopener noreferrer" className="p-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors">
                 <Facebook className="h-5 w-5 text-primary" />
               </a>
-              <a href="#" className="p-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors">
+              <a href="https://x.com/ONG_AMSS" target="_blank" rel="noopener noreferrer" className="p-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors">
                 <Twitter className="h-5 w-5 text-primary" />
               </a>
-              <a href="#" className="p-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors">
+              <a href="https://www.linkedin.com/company/ong-amss" target="_blank" rel="noopener noreferrer" className="p-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors">
                 <Linkedin className="h-5 w-5 text-primary" />
+              </a>
+              <a href="https://www.youtube.com/@ONG-AMSS" target="_blank" rel="noopener noreferrer" className="p-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors">
+                <Youtube className="h-5 w-5 text-primary" />
               </a>
             </div>
           </div>
@@ -85,6 +106,7 @@ const Footer = () => {
                 <li key={index}>
                   <a 
                     href={link.href} 
+                    onClick={(e)=>handleSmoothScroll(e, link.href)}
                     className="text-muted hover:text-primary transition-colors text-sm"
                   >
                     {link.name}
@@ -102,6 +124,7 @@ const Footer = () => {
                 <li key={index}>
                   <a 
                     href={domaine.href} 
+                    onClick={(e)=>handleSmoothScroll(e, domaine.href)}
                     className="text-muted hover:text-primary transition-colors text-sm"
                   >
                     {domaine.name}
@@ -118,7 +141,8 @@ const Footer = () => {
               {zones.map((zone, index) => (
                 <li key={index}>
                   <a 
-                    href={zone.href} 
+                    href={`/${zone.href}`} 
+                    onClick={(e)=>handleSmoothScroll(e, zone.href)}
                     className="text-muted hover:text-primary transition-colors text-sm"
                   >
                     {zone.name}
@@ -160,13 +184,13 @@ const Footer = () => {
               © 2025 AMSS - Association Malienne pour la Survie au Sahel. Tous droits réservés.
             </div>
             <div className="flex space-x-6 text-sm">
-              <a href="#" className="text-muted hover:text-primary transition-colors">
+              <a href="/mentions-legales" className="text-muted hover:text-primary transition-colors">
                 Mentions légales
               </a>
-              <a href="#" className="text-muted hover:text-primary transition-colors">
+              <a href="/politique-confidentialite" className="text-muted hover:text-primary transition-colors">
                 Politique de confidentialité
               </a>
-              <a href="#" className="text-muted hover:text-primary transition-colors">
+              <a href="/transparence" className="text-muted hover:text-primary transition-colors">
                 Transparence
               </a>
             </div>
@@ -178,4 +202,3 @@ const Footer = () => {
 }
 
 export default Footer
-
