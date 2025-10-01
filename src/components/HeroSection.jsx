@@ -1,7 +1,21 @@
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Heart, Users, Globe } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 
 const HeroSection = () => {
+  const { pathname } = useLocation()
+
+  // Scroll fluide si on est déjà sur la page cible (ex: /projets)
+  const handleSmoothNav = (e, href) => {
+    const [path, anchor] = href.split('#')
+    if (!anchor) return
+    if (pathname === path) {
+      e.preventDefault()
+      const el = document.getElementById(anchor)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   return (
     <section className="relative bg-gradient-to-br from-primary/10 via-accent/5 to-background py-20 overflow-hidden">
       {/* Background pattern */}
@@ -49,12 +63,23 @@ const HeroSection = () => {
 
           {/* Call to action buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button size="lg" className="text-lg px-8 py-3">
-              Découvrir nos projets
-              <ArrowRight className="ml-2 h-5 w-5" />
+            {/* ✅ Découvrir nos projets → Nos Projets (section En cours) */}
+            <Button size="lg" className="text-lg px-8 py-3" asChild>
+              <Link
+                to="/projets#cours"
+                onClick={(e)=>handleSmoothNav(e, '/projets#cours')}
+                aria-label="Découvrir nos projets"
+              >
+                Découvrir nos projets
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-              Comment nous aider
+
+            {/* ✅ Comment nous aider → Faire un don */}
+            <Button variant="outline" size="lg" className="text-lg px-8 py-3" asChild>
+              <Link to="/don" aria-label="Faire un don">
+                Comment nous aider
+              </Link>
             </Button>
           </div>
 
@@ -81,4 +106,3 @@ const HeroSection = () => {
 }
 
 export default HeroSection
-
