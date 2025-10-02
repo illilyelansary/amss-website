@@ -32,6 +32,7 @@ import DonPage from './pages/DonPage'
 import MentionsLegalesPage from './pages/MentionsLegalesPage'
 import PolitiqueConfidentialitePage from './pages/PolitiqueConfidentialitePage'
 import TransparencePage from './pages/TransparencePage'
+import BadgeEmployePage from './pages/BadgeEmployePage'
 
 
 // Données (pour redirection legacy id -> slug)
@@ -97,6 +98,7 @@ function App() {
             <Route path="/recrutement" element={<RecrutementPage />} />
 <Route path="/recrutement/emplois" element={<RecrutementPage />} />
 <Route path="/recrutement/marches" element={<RecrutementPage />} />
+            <Route path="/badge-employe" element={<BadgeEmployePage />} />
 
 
             {/* Fallback */}
