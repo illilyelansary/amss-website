@@ -1,36 +1,51 @@
 // src/pages/ProjetsPage.jsx
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Clock, CheckCircle, FileText, ArrowRight, Handshake, Filter, Search } from 'lucide-react'
+import { Clock, CheckCircle, FileText, ArrowRight, Handshake, Filter, Search, Users, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { projetsEnCours, projetsTermines, rapports } from '../data/projetsData'
 
 // --- Helpers ---
+const norm = (s) =>
+  String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+
 const sum = (arr) => arr.reduce((a, b) => a + b, 0)
 
-// Domaines multiples => tableau
 const splitDomains = (label) =>
   String(label || '')
     .split(/[,/|;]+/)
     .map(s => s.trim())
     .filter(Boolean)
 
+const splitRegions = (label) =>
+  String(label || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+
+const safeYear = (value) => {
+  if (!value) return 'N/D'
+  const y = new Date(value)
+  return Number.isNaN(y.getTime()) ? 'N/D' : y.getFullYear()
+}
+
 // Essaie d’estimer les communes à partir du champ `region` (approximatif).
 const extractCommunes = (regionStr) => {
   if (!regionStr) return { names: [], countHint: 0 }
   const s = String(regionStr)
 
-  // 1) Nombre explicite "X communes"
   const mCount = s.match(/(\d+)\s*commune/i)
   const countHint = mCount ? Number(mCount[1]) : 0
 
-  // 2) Liste entre parenthèses
   const inside = (s.match(/\(([^)]+)\)/)?.[1]) || ''
   const listFromParentheses = inside
     ? inside.split(/[,&/;]| et /i).map(t => t.trim()).filter(Boolean)
     : []
 
-  // 3) Fallback split sur toute la chaîne si pas de parenthèses
   const fallbackList = !listFromParentheses.length
     ? s.split(/[,&/;]| et /i).map(t => t.trim()).filter(Boolean)
     : []
@@ -59,20 +74,15 @@ const extractCommunes = (regionStr) => {
 export default function ProjetsPage() {
   const { hash } = useLocation()
 
-  // Scroll initial + au changement de hash (depuis le menu Header)
+  // Scroll initial + au changement de hash
   useEffect(() => {
-    const scrollToHash = () => {
-      if (!hash) {
-        window.scrollTo({ top: 0, behavior: 'instant' })
-        return
-      }
-      const id = hash.replace('#', '')
-      const el = document.getElementById(id)
-      if (el) {
-        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
-      }
+    if (!hash) {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      return
     }
-    scrollToHash()
+    const id = hash.replace('#', '')
+    const el = document.getElementById(id)
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
   }, [hash])
 
   // ========= Données & listes pour filtres =========
@@ -85,19 +95,25 @@ export default function ProjetsPage() {
   const domainOptions = useMemo(() => {
     const set = new Set()
     allProjects.forEach(p => splitDomains(p.domain).forEach(d => set.add(d)))
-    return ['Tous', ...Array.from(set).sort()]
+    return ['Tous', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
   }, [allProjects])
 
   const regionOptions = useMemo(() => {
     const set = new Set()
-    allProjects.forEach(p => p.region && set.add(String(p.region)))
-    return ['Toutes', ...Array.from(set).sort()]
+    allProjects.forEach(p => splitRegions(p.region).forEach(r => set.add(r)))
+    return ['Toutes', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
   }, [allProjects])
 
   const donorOptions = useMemo(() => {
     const set = new Set()
-    allProjects.forEach(p => p.donor && set.add(String(p.donor)))
-    return ['Tous', ...Array.from(set).sort()]
+    allProjects.forEach(p =>
+      String(p.donor || '')
+        .split('/')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .forEach(d => set.add(d))
+    )
+    return ['Tous', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
   }, [allProjects])
 
   // ========= État des filtres =========
@@ -110,54 +126,46 @@ export default function ProjetsPage() {
 
   // ========= Application des filtres =========
   const filteredAll = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase()
+    const q = norm(searchTerm)
     return allProjects.filter(p => {
-      // recherche plein texte (titre + excerpt + donor + region)
-      const hay = (p.title + ' ' + (p.excerpt || '') + ' ' + (p.donor || '') + ' ' + (p.region || '')).toLowerCase()
+      const hay = norm(`${p.title} ${p.excerpt || ''} ${p.donor || ''} ${p.region || ''} ${p.domain || ''}`)
       const matchSearch = q === '' || hay.includes(q)
 
-      // domaine
-      const parts = splitDomains(p.domain)
-      const matchDomain = selectedDomain === 'Tous' || parts.some(d => d === selectedDomain)
+      const partsDomain = splitDomains(p.domain).map(norm)
+      const matchDomain = selectedDomain === 'Tous' || partsDomain.includes(norm(selectedDomain))
 
-      // région
-      const matchRegion = selectedRegion === 'Toutes' || String(p.region) === selectedRegion
+      const partsRegion = splitRegions(p.region)
+      const matchRegion = selectedRegion === 'Toutes' || partsRegion.includes(selectedRegion)
 
-      // bailleur
-      const matchDonor = selectedDonor === 'Tous' || String(p.donor) === selectedDonor
+      const partsDonor = String(p.donor || '')
+        .split('/')
+        .map(s => s.trim())
+        .filter(Boolean)
+      const matchDonor = selectedDonor === 'Tous' || partsDonor.includes(selectedDonor)
 
-      // statut
       const matchStatus = statusScope === 'Tous' || p._status === statusScope
-
-      // USAID
       const matchUsaid = !usaidOnly || Boolean(p.usaidNote)
 
       return matchSearch && matchDomain && matchRegion && matchDonor && matchStatus && matchUsaid
     })
   }, [allProjects, searchTerm, selectedDomain, selectedRegion, selectedDonor, statusScope, usaidOnly])
 
-  // Séparations visuelles par bloc
   const enCoursFiltered = filteredAll.filter(p => p._status === 'En cours')
   const terminesFiltered = filteredAll.filter(p => p._status === 'Terminé')
 
-  // --- Compteurs dynamiques (UNIQUEMENT projets EN COURS — filtrés) ---
+  // --- Compteurs dynamiques (EN COURS filtrés) ---
   const counters = useMemo(() => {
-    const enCoursStrict = enCoursFiltered
-
-    const totalBenef = sum(enCoursStrict.map(p => Number(p.beneficiaries || 0)))
-
-    // Communes couvertes (≈)
+    const totalBenef = sum(enCoursFiltered.map(p => Number(p.beneficiaries || 0)))
     const communesSet = new Set()
     let communesNumeric = 0
-    enCoursStrict.forEach(p => {
+    enCoursFiltered.forEach(p => {
       const { names, countHint } = extractCommunes(p.region)
       names.forEach(n => communesSet.add(n.toLowerCase()))
       communesNumeric += Number(countHint || 0)
     })
     const totalCommunes = communesSet.size + communesNumeric
-
-    const nbEnCours = enCoursStrict.length
-    const nbSuspendusUSAID = enCoursStrict.filter(p => p.usaidNote === true).length
+    const nbEnCours = enCoursFiltered.length
+    const nbSuspendusUSAID = enCoursFiltered.filter(p => p.usaidNote === true).length
 
     return {
       totalBenef: new Intl.NumberFormat('fr-FR').format(totalBenef),
@@ -167,7 +175,6 @@ export default function ProjetsPage() {
     }
   }, [enCoursFiltered])
 
-  // ====== Partenaires (synthèse inchangée) ======
   const partenairesInstitutionnels = [
     'Gouvernement du Mali (ministères, collectivités territoriales)',
     'UNHCR (HCR)',
@@ -198,7 +205,7 @@ export default function ProjetsPage() {
               Découvrez nos projets en cours, nos réalisations passées, nos rapports et nos partenaires.
             </p>
 
-            {/* Stats clés (basées sur EN COURS filtrés) */}
+            {/* Stats clés (EN COURS filtrés) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-8">
               <div className="rounded-2xl bg-white p-5 shadow-sm border">
                 <div className="text-sm text-muted-foreground">Bénéficiaires (projets en cours)</div>
@@ -207,7 +214,7 @@ export default function ProjetsPage() {
               <div className="rounded-2xl bg-white p-5 shadow-sm border">
                 <div className="text-sm text-muted-foreground">Communes couvertes (≈)</div>
                 <div className="text-3xl font-semibold mt-1">{counters.totalCommunes}</div>
-                <div className="text-xs text-muted-foreground mt-1">Estimation basée sur les champs “région”</div>
+                <div className="text-xs text-muted-foreground mt-1">Estimation basée sur “Région”</div>
               </div>
               <div className="rounded-2xl bg-white p-5 shadow-sm border">
                 <div className="text-sm text-muted-foreground">Projets en cours</div>
@@ -303,8 +310,8 @@ export default function ProjetsPage() {
       <section id="cours" className="py-16 outline-none scroll-mt-24">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-center mb-8">
-              <Clock className="h-8 w-8 text-primary mr-3" />
+            <div className="flex items-center gap-3 mb-8">
+              <Clock className="h-8 w-8 text-primary" />
               <h2 className="text-3xl font-bold text-foreground">Projets en Cours</h2>
             </div>
 
@@ -312,29 +319,29 @@ export default function ProjetsPage() {
               <p className="text-muted-foreground">Aucun projet ne correspond aux filtres.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {enCoursFiltered.map((projet, index) => (
-                  <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
+                {enCoursFiltered.map((p, index) => (
+                  <article key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
                     <div className="flex items-center mb-4">
-                      <div className={`w-3 h-3 rounded-full mr-2 ${projet.usaidNote ? 'bg-red-500' : 'bg-green-500'}`}></div>
-                      <span className={`text-sm font-medium ${projet.usaidNote ? 'text-red-600' : 'text-green-600'}`}>
-                        {projet.status || 'En cours'}
+                      <div className={`w-3 h-3 rounded-full mr-2 ${p.usaidNote ? 'bg-red-500' : 'bg-green-500'}`} />
+                      <span className={`text-sm font-medium ${p.usaidNote ? 'text-red-600' : 'text-green-600'}`}>
+                        {p.status || 'En cours'}
                       </span>
-                      {projet.usaidNote && (
+                      {p.usaidNote && (
                         <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 border border-red-200">
                           Suspendu (USAID)
                         </span>
                       )}
                     </div>
 
-                    <h3 className="text-lg font-semibold text-foreground mb-3">{projet.title}</h3>
-                    <p className="text-muted-foreground text-sm mb-4">{projet.excerpt}</p>
+                    <h3 className="text-lg font-semibold text-foreground mb-3">{p.title}</h3>
+                    {p.excerpt && <p className="text-muted-foreground text-sm mb-4">{p.excerpt}</p>}
 
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right">{projet.region}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Bailleur :</span><span className="font-medium text-right">{projet.donor}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Domaine :</span><span className="font-medium text-right">{projet.domain}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right">{p.region}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Bailleur :</span><span className="font-medium text-right">{p.donor}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Domaine :</span><span className="font-medium text-right">{p.domain}</span></div>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
             )}
@@ -355,8 +362,8 @@ export default function ProjetsPage() {
       <section id="termines" className="py-16 bg-muted/30 outline-none scroll-mt-24">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-center mb-8">
-              <CheckCircle className="h-8 w-8 text-accent mr-3" />
+            <div className="flex items-center gap-3 mb-8">
+              <CheckCircle className="h-8 w-8 text-accent" />
               <h2 className="text-3xl font-bold text-foreground">Projets Terminés</h2>
             </div>
 
@@ -364,30 +371,22 @@ export default function ProjetsPage() {
               <p className="text-muted-foreground">Aucun projet ne correspond aux filtres.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {terminesFiltered.map((projet, index) => (
-                  <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
+                {terminesFiltered.map((p, index) => (
+                  <article key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
                     <div className="flex items-center mb-4">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                      <div className="w-3 h-3 bg-blue-500 rounded-full mr-2" />
                       <span className="text-sm font-medium text-blue-600">Terminé</span>
                     </div>
 
-                    <h3 className="text-lg font-semibold text-foreground mb-3">{projet.title}</h3>
-                    <p className="text-muted-foreground text-sm mb-4">{projet.excerpt}</p>
+                    <h3 className="text-lg font-semibold text-foreground mb-3">{p.title}</h3>
+                    {p.excerpt && <p className="text-muted-foreground text-sm mb-4">{p.excerpt}</p>}
 
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right">{projet.region}</span></div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Période :</span>
-                        <span className="font-medium text-right">
-                          {new Date(projet.startDate).getFullYear()}–{new Date(projet.endDate).getFullYear()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Bénéficiaires :</span>
-                        <span className="font-medium text-right">{projet.beneficiaries?.toLocaleString('fr-FR') || 'N/D'}</span>
-                      </div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right">{p.region}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Période :</span><span className="font-medium text-right">{safeYear(p.startDate)}–{safeYear(p.endDate)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Bénéficiaires :</span><span className="font-medium text-right">{typeof p.beneficiaries === 'number' ? p.beneficiaries.toLocaleString('fr-FR') : 'N/D'}</span></div>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
             )}
@@ -408,30 +407,44 @@ export default function ProjetsPage() {
       <section id="rapports" className="py-16 outline-none scroll-mt-24">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-center mb-8">
-              <FileText className="h-8 w-8 text-primary mr-3" />
+            <div className="flex items-center gap-3 mb-8">
+              <FileText className="h-8 w-8 text-primary" />
               <h2 className="text-3xl font-bold text-foreground">Rapports et Documentation</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {rapports.map((rapport, index) => (
-                <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
-                  <div className="flex items-center mb-4">
-                    <FileText className="h-5 w-5 text-primary mr-2" />
-                    <span className="text-sm font-medium text-primary">{rapport.type}</span>
-                  </div>
+            {(!rapports || rapports.length === 0) ? (
+              <p className="text-muted-foreground">Aucun rapport disponible pour le moment.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {rapports.map((r, index) => {
+                  const year = r?.date ? String(r.date).slice(0, 4) : 'N/D'
+                  return (
+                    <article key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
+                      <div className="flex items-center mb-4">
+                        <FileText className="h-5 w-5 text-primary mr-2" />
+                        <span className="text-sm font-medium text-primary">{r?.category || 'Rapport'}</span>
+                      </div>
 
-                  <h3 className="text-lg font-semibold text-foreground mb-3">{rapport.title}</h3>
-                  <p className="text-muted-foreground text-sm mb-4">{rapport.description}</p>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">{r?.title}</h3>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        {r?.date ? `Publié le ${r.date}` : 'Date N/D'}
+                      </p>
 
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Année : {rapport.year}</span>
-                    {/* Remplacez par un lien réel si disponible : rapport.file */}
-                    <Button variant="outline" size="sm">Télécharger</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Année : {year}</span>
+                        {r?.fileUrl ? (
+                          <a href={r.fileUrl} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" size="sm">Télécharger</Button>
+                          </a>
+                        ) : (
+                          <Button variant="outline" size="sm" disabled>Indisponible</Button>
+                        )}
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            )}
 
             <div className="text-center">
               <Link to="/rapports" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
@@ -449,8 +462,8 @@ export default function ProjetsPage() {
       <section id="partenaires" className="py-16 bg-white outline-none scroll-mt-24">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-center mb-8">
-              <Handshake className="h-8 w-8 text-primary mr-3" />
+            <div className="flex items-center gap-3 mb-8">
+              <Handshake className="h-8 w-8 text-primary" />
               <h2 className="text-3xl font-bold text-foreground">Partenaires</h2>
             </div>
 
