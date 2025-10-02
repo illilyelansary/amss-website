@@ -1,9 +1,3 @@
-Voici **Header.jsx** mis à jour :
-
-* Le bouton **“Faire un Don”** pointe bien vers **/don** (desktop + mobile).
-* La **top bar** est responsive : en mobile, le numéro et les réseaux **ne se superposent plus** (stack + icônes compactes).
-
-```jsx
 import { useEffect, useState } from 'react'
 import { Menu, X, ChevronDown, Facebook, Twitter, Linkedin, Youtube } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -287,4 +281,3 @@ const Header = () => {
 }
 
 export default Header
-```
