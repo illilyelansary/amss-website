@@ -2,192 +2,19 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Calendar, MapPin, Users, Briefcase, Archive, Search, Filter, Clock, FileDown, FileText } from 'lucide-react'
 import { Link } from 'react-router-dom'
-
-/**
- * Données source
- * - Ajoute `category: "emploi" | "marche"` pour piloter les onglets.
- * - Ajoute `pdfUrl` si un PDF est disponible (déposé dans public/recrutements/…).
- */
-const recrutementData = {
-  enCours: [
-    {
-      id: 1,
-      category: 'emploi',
-      titre: "Un Superviseur en Agriculture",
-      lieu: "Mountoungoula, Mali",
-      datePublication: "13 mai 2025",
-      type: "CDI",
-      domaine: "Agriculture",
-      description:
-        "Recherche d'un superviseur expérimenté pour superviser les activités agricoles dans le cadre du projet Sécurité Alimentaire financé par la Fondation Stromme.",
-      competences: ["Diplôme en agronomie", "5 ans d'expérience minimum", "Maîtrise du français et langues locales"],
-      dateExpiration: "30 septembre 2025",
-      // pdfUrl: "/recrutements/2025-05-13-superviseur-agriculture.pdf",
-    },
-    {
-      id: 2,
-      category: 'emploi',
-      titre: "Avis de recrutement de (90) Animateurs/trices de centres d'Alphabétisation",
-      lieu: "Mali (plusieurs régions)",
-      datePublication: "6 janvier 2025",
-      type: "CDD",
-      domaine: "Éducation",
-      description:
-        "Recrutement massif d'animateurs pour les centres d'alphabétisation dans le cadre de l'expansion des programmes éducatifs de l'AMSS.",
-      competences: ["DEF minimum", "Expérience en alphabétisation", "Connaissance des langues locales"],
-      dateExpiration: "15 octobre 2025",
-      // pdfUrl: "/recrutements/2025-01-06-animateurs-alphabetisation.pdf",
-    },
-    // Exemple marché/prestations actif
-    // {
-    //   id: 13,
-    //   category: 'marche',
-    //   titre: "Appel d’offres – Réhabilitation de forages (Région de Ségou)",
-    //   lieu: "Ségou",
-    //   datePublication: "1 mars 2025",
-    //   type: "Prestation",
-    //   domaine: "WASH",
-    //   description: "Sélection d’un prestataire pour réhabiliter 10 forages et latrines.",
-    //   dateExpiration: "20 mars 2025",
-    //   pdfUrl: "/recrutements/2025-03-01-ao-forages.pdf",
-    // },
-  ],
-  archives: [
-    {
-      id: 3,
-      category: 'emploi',
-      titre: "Six (06) Conseillers(ères) en Education",
-      lieu: "Sikasso, Mali",
-      datePublication: "18 décembre 2024",
-      type: "CDD",
-      domaine: "Éducation",
-      statut: "Clôturé",
-      description: "Conseillers pédagogiques pour l'amélioration de la qualité de l'éducation dans la région de Sikasso.",
-      // pdfUrl: "/recrutements/2024-12-18-conseillers-education.pdf",
-    },
-    {
-      id: 4,
-      category: 'emploi',
-      titre: "COORDINATEUR/TRICE EDUCATION",
-      lieu: "Mountoungoula, Mali",
-      datePublication: "15 août 2024",
-      type: "CDI",
-      domaine: "Éducation",
-      statut: "Pourvu",
-      description: "Coordination des activités éducatives et supervision des équipes pédagogiques.",
-    },
-    {
-      id: 5,
-      category: 'marche',
-      titre: "TROIS (3) PRESTATAIRES AU COMPTE DU PROJET PARTAGE",
-      lieu: "GAO, MOPTI, SEGOU",
-      datePublication: "19 juin 2024",
-      type: "Prestation",
-      domaine: "Humanitaire",
-      statut: "Clôturé",
-      description:
-        "Prestataires pour le projet PARTAGE en partenariat avec INTERSOS dans les régions de Gao, Mopti et Ségou.",
-    },
-    {
-      id: 6,
-      category: 'emploi',
-      titre: "30 ADC pour les antennes AMSS",
-      lieu: "Bamako (06), Ségou (12) et Mopti (12)",
-      datePublication: "23 avril 2024",
-      type: "CDD",
-      domaine: "Administration",
-      statut: "Pourvu",
-      description:
-        "Agents de Développement Communautaire pour renforcer les équipes des antennes régionales.",
-    },
-    {
-      id: 7,
-      category: 'emploi',
-      titre: "03 coordinateurs régionaux",
-      lieu: "Bamako, Ségou et Mopti",
-      datePublication: "23 avril 2024",
-      type: "CDI",
-      domaine: "Coordination",
-      statut: "Pourvu",
-      description:
-        "Coordinateurs pour la supervision des activités dans les antennes régionales.",
-    },
-    {
-      id: 8,
-      category: 'emploi',
-      titre: "Un (01) Responsable du CURRICULUM",
-      lieu: "Mali",
-      datePublication: "23 avril 2024",
-      type: "CDI",
-      domaine: "Éducation",
-      statut: "Pourvu",
-      description:
-        "Responsable de l'élaboration et de la mise à jour des curricula éducatifs.",
-    },
-    {
-      id: 9,
-      category: 'emploi',
-      titre: "Un (01) Spécialiste de l'entrepreneuriat",
-      lieu: "Bamako, Mali",
-      datePublication: "23 avril 2024",
-      type: "CDI",
-      domaine: "Entrepreneuriat",
-      statut: "Pourvu",
-      description:
-        "Spécialiste pour le développement des programmes d'entrepreneuriat et de microfinance.",
-    },
-    {
-      id: 10,
-      category: 'emploi',
-      titre: "16 Superviseurs Alpha",
-      lieu: "Bamako (04), Ségou (07) et Mopti (05)",
-      datePublication: "23 avril 2024",
-      type: "CDD",
-      domaine: "Éducation",
-      statut: "Pourvu",
-      description:
-        "Superviseurs pour les programmes d'alphabétisation dans les antennes régionales.",
-    },
-    {
-      id: 11,
-      category: 'emploi',
-      titre: "Deux (02) Comptables",
-      lieu: "Ségou (01) et Mopti (01)",
-      datePublication: "23 avril 2024",
-      type: "CDI",
-      domaine: "Finance",
-      statut: "Pourvu",
-      description:
-        "Comptables pour la gestion financière des antennes de Ségou et Mopti.",
-    },
-    {
-      id: 12,
-      category: 'emploi',
-      titre: "Un(e) Gestionnaire de l'information",
-      lieu: "Bamako, Mali",
-      datePublication: "2 avril 2024",
-      type: "CDI",
-      domaine: "Information",
-      statut: "Pourvu",
-      description:
-        "Gestionnaire pour la collecte, l'analyse et la diffusion de l'information institutionnelle.",
-    },
-  ],
-}
+import { enCours as EN_COURS_SOURCE, archives as ARCHIVES_SOURCE, CATEGORIES } from '../data/recrutementsData'
 
 // --- Utilitaires dates FR ---
 const MONTHS_FR = {
   janvier: 0, fevrier: 1, février: 1, mars: 2, avril: 3, mai: 4, juin: 5,
   juillet: 6, aout: 7, août: 7, septembre: 8, octobre: 9, novembre: 10, decembre: 11, décembre: 11,
 }
-
 const strip = (s) =>
   String(s || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim()
-
 function parseFRDate(input) {
   if (!input) return null
   const iso = new Date(input)
@@ -201,8 +28,6 @@ function parseFRDate(input) {
   if (month == null) return null
   return new Date(Date.UTC(year, month, day))
 }
-
-// true si date < aujourd'hui (00:00)
 function isExpired(dateStr) {
   const d = parseFRDate(dateStr)
   if (!d) return false
@@ -211,7 +36,6 @@ function isExpired(dateStr) {
   const dueUTC = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
   return dueUTC < todayUTC
 }
-
 function daysLeft(dateStr) {
   const d = parseFRDate(dateStr)
   if (!d) return null
@@ -221,7 +45,6 @@ function daysLeft(dateStr) {
   const diff = Math.round((end - start) / (1000 * 60 * 60 * 24))
   return diff
 }
-
 const getStatutColor = (statut) => {
   switch (statut) {
     case 'Pourvu':
@@ -232,7 +55,6 @@ const getStatutColor = (statut) => {
       return 'bg-blue-100 text-blue-800'
   }
 }
-
 const getTypeColor = (type) => {
   switch (type) {
     case 'CDI':
@@ -245,7 +67,6 @@ const getTypeColor = (type) => {
       return 'bg-gray-100 text-gray-800'
   }
 }
-
 const domainesFixes = [
   'Tous',
   'Éducation',
@@ -265,11 +86,11 @@ const RecrutementPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterDomaine, setFilterDomaine] = useState('')
 
-  // Auto-archivage à l'affichage
+  // Auto-archivage à l’affichage (à partir des données importées)
   useEffect(() => {
     const expired = []
     const stillOpen = []
-    for (const off of recrutementData.enCours) {
+    for (const off of EN_COURS_SOURCE) {
       if (off.dateExpiration && isExpired(off.dateExpiration)) {
         expired.push({
           ...off,
@@ -281,14 +102,13 @@ const RecrutementPage = () => {
       }
     }
     const archiveMap = new Map()
-    ;[...recrutementData.archives, ...expired].forEach((a) => archiveMap.set(a.id, a))
+    ;[...ARCHIVES_SOURCE, ...expired].forEach((a) => archiveMap.set(a.id, a))
     setData({ enCours: stillOpen, archives: Array.from(archiveMap.values()) })
   }, [])
 
-  // Comptages par catégorie
   const counts = useMemo(() => {
-    const emploi = data.enCours.filter(o => (o.category || 'emploi') === 'emploi').length
-    const marche = data.enCours.filter(o => o.category === 'marche').length
+    const emploi = data.enCours.filter(o => (o.category || CATEGORIES.EMPLOI) === CATEGORIES.EMPLOI).length
+    const marche = data.enCours.filter(o => o.category === CATEGORIES.MARCHE).length
     return { emploi, marche, archives: data.archives.length }
   }, [data])
 
@@ -320,11 +140,10 @@ const RecrutementPage = () => {
     return `mailto:recrutement@ong-amss.org?subject=${subject}&body=${body}`
   }
 
-  // Liste à afficher selon l’onglet
   const list = useMemo(() => {
     if (activeTab === 'archives') return filtered(data.archives)
-    if (activeTab === 'marche') return filtered(data.enCours.filter(o => o.category === 'marche'))
-    return filtered(data.enCours.filter(o => (o.category || 'emploi') === 'emploi'))
+    if (activeTab === 'marche') return filtered(data.enCours.filter(o => o.category === CATEGORIES.MARCHE))
+    return filtered(data.enCours.filter(o => (o.category || CATEGORIES.EMPLOI) === CATEGORIES.EMPLOI))
   }, [activeTab, data, searchTerm, filterDomaine])
 
   return (
@@ -441,7 +260,6 @@ const RecrutementPage = () => {
                     else if (dleft === 0) badge = `Aujourd'hui`
                     else badge = `Expiré`
                   }
-
                   const isArchiveTab = activeTab === 'archives'
                   const expired = isArchiveTab || (dleft != null && dleft < 0)
 
@@ -454,10 +272,10 @@ const RecrutementPage = () => {
                         <div className="flex-1">
                           <div className="flex flex-wrap items-center gap-2 mb-3">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(offre.type)}`}>
-                              {offre.type || (offre.category === 'marche' ? 'Prestation' : 'Emploi')}
+                              {offre.type || (offre.category === CATEGORIES.MARCHE ? 'Prestation' : 'Emploi')}
                             </span>
                             <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {offre.domaine || (offre.category === 'marche' ? 'Marché' : 'Emploi')}
+                              {offre.domaine || (offre.category === CATEGORIES.MARCHE ? 'Marché' : 'Emploi')}
                             </span>
                             {badge && (
                               <span
