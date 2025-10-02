@@ -1,3 +1,4 @@
+// src/components/Header.jsx
 import { useEffect, useState } from 'react'
 import { Menu, X, ChevronDown, Facebook, Twitter, Linkedin, Youtube } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -65,7 +66,14 @@ const Header = () => {
         { name: 'Sikasso', href: '/zones#zone-sikasso' }
       ]
     },
-    { name: 'Recrutement', href: '/recrutement' },
+    {
+      name: 'Recrutement',
+      href: '/recrutement',
+      dropdown: [
+        { name: "Offres d’emploi", href: '/recrutement#offres-emploi' },
+        { name: "Appels d’offres & Prestations", href: '/recrutement#appels-offres' }
+      ]
+    },
     { name: 'Actualités', href: '/actualites' },
     { name: 'Contact', href: '/contact' }
   ]
