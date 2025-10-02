@@ -365,8 +365,14 @@ function findHeaderKey(rowObj, wantedKey) {
   return null;
 }
 
+/**
+ * 🔧 IMPORTANT (Netlify/CI) :
+ * On lit l’Excel en buffer via fs, puis on le parse avec XLSX.read(..., { type: 'buffer' }).
+ * Cela évite l’usage de XLSX.readFile qui peut ne pas exister selon le bundle résolu.
+ */
 function readRowsFromExcel(filePath) {
-  const wb = XLSX.readFile(filePath);
+  const buf = fs.readFileSync(filePath);
+  const wb = XLSX.read(buf, { type: "buffer" });
   const shName = wb.SheetNames[0];
   const ws = wb.Sheets[shName];
   return XLSX.utils.sheet_to_json(ws, { defval: "" });
