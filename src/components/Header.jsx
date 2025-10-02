@@ -1,5 +1,11 @@
+Voici **Header.jsx** mis à jour :
+
+* Le bouton **“Faire un Don”** pointe bien vers **/don** (desktop + mobile).
+* La **top bar** est responsive : en mobile, le numéro et les réseaux **ne se superposent plus** (stack + icônes compactes).
+
+```jsx
 import { useEffect, useState } from 'react'
-import { Menu, X, ChevronDown } from 'lucide-react'
+import { Menu, X, ChevronDown, Facebook, Twitter, Linkedin, Youtube } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Link, useLocation } from 'react-router-dom'
 import logoAmss from '../assets/LogoAMSSFHD.png'
@@ -95,17 +101,55 @@ const Header = () => {
     <header className="bg-white shadow-lg sticky top-0 z-50">
       {/* Top bar */}
       <div className="bg-primary text-primary-foreground py-2">
-        <div className="container mx-auto px-4 flex justify-between items-center text-sm">
-          <div className="flex items-center space-x-4">
-            <span>📧 info@ong-amss.org</span>
-            <span>📞 +223 21 92 10 48</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span>Suivez-nous:</span>
-            <a href="https://www.facebook.com/ONGAMSS" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">Facebook</a>
-            <a href="https://x.com/ONG_AMSS" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">Twitter</a>
-            <a href="https://www.linkedin.com/company/ong-amss" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">LinkedIn</a>
-            <a href="https://www.youtube.com/@ONG-AMSS" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">YouTube</a>
+        <div className="container mx-auto px-4 text-sm">
+          {/* empilage en mobile pour éviter les superpositions */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            {/* email + téléphone : wrap si besoin */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span className="inline-flex items-center gap-1">📧 <span>info@ong-amss.org</span></span>
+              <span className="inline-flex items-center gap-1">📞 <span>+223 21 92 10 48</span></span>
+            </div>
+
+            {/* réseaux sociaux : icônes compactes en mobile */}
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline">Suivez-nous:</span>
+              <a
+                href="https://www.facebook.com/ONGAMSS"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook AMSS"
+                className="p-1.5 rounded-full hover:bg-primary/20 transition-colors"
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+              <a
+                href="https://x.com/ONG_AMSS"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Twitter / X AMSS"
+                className="p-1.5 rounded-full hover:bg-primary/20 transition-colors"
+              >
+                <Twitter className="h-4 w-4" />
+              </a>
+              <a
+                href="https://www.linkedin.com/company/ong-amss"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn AMSS"
+                className="p-1.5 rounded-full hover:bg-primary/20 transition-colors"
+              >
+                <Linkedin className="h-4 w-4" />
+              </a>
+              <a
+                href="https://www.youtube.com/@ONG-AMSS"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="YouTube AMSS"
+                className="p-1.5 rounded-full hover:bg-primary/20 transition-colors"
+              >
+                <Youtube className="h-4 w-4" />
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -163,6 +207,7 @@ const Header = () => {
                 )}
               </div>
             ))}
+            {/* ✅ Don: lien SPA */}
             <Link to="/don">
               <Button className="ml-4">Faire un Don</Button>
             </Link>
@@ -227,6 +272,7 @@ const Header = () => {
                   </div>
                 ))}
                 <div className="px-4 pt-4 pb-6">
+                  {/* ✅ Don mobile */}
                   <Link to="/don" onClick={()=>setIsMenuOpen(false)}>
                     <Button className="w-full">Faire un Don</Button>
                   </Link>
@@ -241,3 +287,4 @@ const Header = () => {
 }
 
 export default Header
+```
