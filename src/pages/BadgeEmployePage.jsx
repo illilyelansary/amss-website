@@ -4,7 +4,10 @@ import { Camera, Printer, Download, Hash, User, BadgeCheck, Building2, Briefcase
 import { Button } from '@/components/ui/button'
 import logoAmss from '@/assets/LogoAMSSFHD.png'
 
-/* ========= Chargement libs QR via CDN (aucune install) ========= */
+/* ========= Chargement libs QR via CDN (aucune install) =========
+   1) qrcode (QRCode.*) – priorité
+   2) qrcode-generator (qrcode()) – fallback
+*/
 function useQrLoaders() {
   const [ready, setReady] = useState(!!window.QRCode || !!window.qrcode)
 
@@ -40,7 +43,7 @@ function addYearsISO(years = 3) {
   d.setFullYear(d.getFullYear() + years)
   return d.toISOString().slice(0, 10)
 }
-/** MM/AAAA */
+/** MM/AAAA (tout en chiffres) */
 function formatMonthYearNum(iso) {
   const d = new Date(iso)
   if (isNaN(d)) return iso || '—'
@@ -51,6 +54,7 @@ function formatMonthYearNum(iso) {
 
 export default function BadgeEmployePage() {
   const qrReady = useQrLoaders()
+
   const qrImgRef = useRef(null)
 
   const [photoDataUrl, setPhotoDataUrl] = useState('')
@@ -100,7 +104,8 @@ export default function BadgeEmployePage() {
           const qr = window.qrcode(0, 'M')
           qr.addData(value)
           qr.make()
-          const dataUrl = qr.createDataURL(4) // densité 4 ~140px
+          // densité 4 => ~140px (selon moduleCount)
+          const dataUrl = qr.createDataURL(4)
           qrImgRef.current.src = dataUrl
           return true
         }
@@ -131,6 +136,7 @@ export default function BadgeEmployePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Impression : on ne sort que les deux cartes (recto puis verso) */}
       <style>{`
         @media print {
           body * { visibility: hidden !important; }
@@ -146,7 +152,7 @@ export default function BadgeEmployePage() {
         <div className="container mx-auto px-4">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Générateur de Badge Employé</h1>
           <p className="text-muted-foreground mt-2">
-            Saisissez les informations, importez une photo et imprimez un badge au format carte.
+            Saisissez les informations, importez une photo et imprimez un badge au format carte. 
             Le <strong>QR code</strong> est au <strong>verso</strong> (sans code-barres).
           </p>
         </div>
@@ -245,12 +251,14 @@ export default function BadgeEmployePage() {
               </div>
             </div>
 
+            {/* Aperçu côte à côte à l’écran, 2 pages à l’impression */}
             <div id="badge-print" className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ====== RECTO ====== */}
               <div
                 className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
                 style={{ width: 336, height: 212 }}
               >
+                {/* Bande supérieure */}
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-primary to-accent rounded-t-xl" />
                 <div className="relative h-full p-3 grid grid-cols-[96px_1fr] gap-3">
                   {/* Photo + logo (agrandi) */}
@@ -274,6 +282,7 @@ export default function BadgeEmployePage() {
                       <div className="text-sm text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
                     </div>
 
+                    {/* Bloc infos : dates MM/AAAA ; labels complets non abrégés */}
                     <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
                       <div className="break-words">
                         <span className="font-medium">Département:</span> {form.departement || '—'}
@@ -298,7 +307,7 @@ export default function BadgeEmployePage() {
                       </div>
                     </div>
 
-                    {/* Pastille plus petite */}
+                    {/* ✅ Pastille plus petite */}
                     <div className="mt-2 inline-flex items-center text-[9px] px-1.5 py-[2px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start">
                       <BadgeCheck className="h-[10px] w-[10px] mr-1" /> AMSS • Identification
                     </div>
@@ -311,14 +320,18 @@ export default function BadgeEmployePage() {
                 className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
                 style={{ width: 336, height: 212 }}
               >
+                {/* Bande supérieure */}
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-accent to-primary rounded-t-xl" />
                 <div className="relative h-full p-3">
                   {/* En-tête */}
-                  <div className="text-center text-xs text-muted-foreground mt-1 mb-2">
+                  <div className="flex items-center justify-center mt-1 mb-2">
+                    <img src={logoAmss} alt="AMSS" className="h-10" />
+                  </div>
+                  <div className="text-center text-xs text-muted-foreground mb-1">
                     Badge Employé • {sanitizeMatricule(form.matricule)}
                   </div>
 
-                  {/* Deux colonnes: QR à gauche, contacts à droite (sans logo) */}
+                  {/* ✅ Deux colonnes: QR à gauche, contacts à droite */}
                   <div className="mt-2 grid grid-cols-2 gap-3 items-start">
                     {/* Colonne QR */}
                     <div className="flex items-center justify-center">
@@ -332,7 +345,7 @@ export default function BadgeEmployePage() {
                       </div>
                     </div>
 
-                    {/* Colonne Contact — sans logo, texte seul */}
+                    {/* Colonne Contact */}
                     <div className="flex flex-col items-center text-center px-1">
                       <div className="text-[11px] leading-tight">
                         <div className="font-medium">Association Malienne pour la Survie au Sahel (AMSS)</div>
