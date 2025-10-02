@@ -2,11 +2,12 @@
 /**
  * Migration Cartographie AMSS -> src/data/projetsData.js + analytics JSON
  * - Lit un fichier .xlsx (buffer + XLSX.read)
- * - Normalise DOMAINES / REGIONS / DONORS
- * - Supprime PONAH
+ * - Normalise DOMAINES / REGIONS / BAILLEURS
+ * - Supprime les lignes dont le titre contient "PONAH"
  * - Sépare en projetsEnCours / projetsTermines
  * - Génère aussi src/data/projetsAnalytics.json (agrégats)
- * - Génère un export "rapports" (depuis un onglet "Rapports" si présent, sinon [])
+ * - Génère un export "rapports" (depuis un onglet contenant "Rapports" si présent, sinon [])
+ * - Ajoute un export "projets" (compat) = concat(en cours, terminés)
  *
  * Usage:
  *   node scripts/migrate-projets.js "data/Cartographie_Projets_AMSS.xlsx" "src/data/projetsData.js"
@@ -181,7 +182,7 @@ function mapTokenToCanon(token) {
 function canonicalizeDomainString(domainStr) {
   if (!domainStr) return "";
   const tokens = String(domainStr)
-    .split(/[;,/|]/)
+    .split(/[;,/|+–—-]|&| et | and /i)  // gère &, "et", "and", tirets, etc.
     .map(s => s.trim())
     .filter(Boolean);
 
@@ -190,6 +191,12 @@ function canonicalizeDomainString(domainStr) {
     const mapped = mapTokenToCanon(tok);
     if (mapped) canonSet.add(mapped);
   });
+
+  // Fallback: essaie sur la chaîne entière si aucun token n'a matché
+  if (canonSet.size === 0) {
+    const fallback = mapTokenToCanon(domainStr);
+    if (fallback) canonSet.add(fallback);
+  }
 
   const canonArr = Array.from(canonSet);
   canonArr.sort((a, b) => DOMAIN_CANON_ORDER.indexOf(a) - DOMAIN_CANON_ORDER.indexOf(b));
@@ -243,10 +250,26 @@ const REGION_ORDER = REGIONS_CANON.map(r => r.label);
 function tokenToRegion(token) {
   const n = _norm(token);
   if (!n) return null;
+
+  // Retire les mots-outils fréquents mais garde la substance (ex: "cercle de goundam")
+  const stripped = n
+    .replace(/\b(région|region|cercle|commune|département|departement|province|wilaya|arrondissement|de|du|des|de la)\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
   for (const [key, list] of Object.entries(REGION_ALIAS)) {
-    if (list.includes(n)) {
-      const found = REGIONS_CANON.find(r => r.key === key);
-      return found ? found.label : null;
+    for (const alias of list) {
+      const a = _norm(alias);
+      // match souple: égalité, sous-chaîne dans les deux sens, ou présence dans la forme originale
+      if (
+        stripped === a ||
+        stripped.includes(a) ||
+        a.includes(stripped) ||
+        n.includes(a)
+      ) {
+        const found = REGIONS_CANON.find(r => r.key === key);
+        return found ? found.label : null;
+      }
     }
   }
   return null;
@@ -254,9 +277,12 @@ function tokenToRegion(token) {
 
 function canonicalizeRegionString(regionStr) {
   if (!regionStr) return "N/D";
-  // enlève commentaires entre parenthèses
-  const clean = String(regionStr).replace(/\([^)]*\)/g, " ");
-  const tokens = clean.split(/[;,/&|+–—-]| et | and /i).map(s => s.trim()).filter(Boolean);
+
+  // NE PAS supprimer le contenu entre parenthèses. On split sur des séparateurs usuels.
+  const tokens = String(regionStr)
+    .split(/[;,/|+–—-]|&| et | and /i)
+    .map(s => s.trim())
+    .filter(Boolean);
 
   const canonSet = new Set();
   tokens.forEach(tok => {
@@ -264,8 +290,8 @@ function canonicalizeRegionString(regionStr) {
     if (m) canonSet.add(m);
   });
 
-  // fallback: si rien n’a matché, garder la chaîne (nettoyée)
-  if (canonSet.size === 0) return regionStr.trim();
+  // Si rien n'a matché, on garde la chaîne d'origine (utile pour l'affichage et d'autres heuristiques)
+  if (canonSet.size === 0) return String(regionStr).trim();
 
   const arr = Array.from(canonSet);
   arr.sort((a, b) => REGION_ORDER.indexOf(a) - REGION_ORDER.indexOf(b));
@@ -418,8 +444,29 @@ function rowToProject(row, idx, headerMap) {
   const beneficiaries = parseNumberLike(benefRaw);
   const budget = String(budgetRaw || "").trim() || "N/D";
 
+  // --- Détection statut plus robuste ---
+  const nowISO = new Date().toISOString().slice(0, 10);
+  const s = statusNorm; // déjà normalisé
+
+  const isTermineText =
+    s.includes("termin") || s.includes("clos") || s.includes("clotur") ||
+    s.includes("achev") || s.includes("acheve") || s.includes("completed") ||
+    s.includes("ended") || s.includes("fin");
+
+  const isEnCoursText =
+    s.includes("en cours") || s.includes("execution") || s.includes("exécution") ||
+    s.includes("mise en oeuvre") || s.includes("mise en œuvre") ||
+    s.includes("ongoing") || s.includes("actif") || s.includes("active");
+
   let status = "En cours";
-  if (statusNorm.includes("termin")) status = "Terminé";
+  if (isTermineText) status = "Terminé";
+  else if (isEnCoursText) status = "En cours";
+  else {
+    // Fallback logique : si date de fin passée => terminé
+    if (endDate && endDate < nowISO) status = "Terminé";
+    else status = "En cours";
+  }
+
   if (isUSAIDSuspended) status = "Suspendu (USAID)";
 
   return {
@@ -539,10 +586,15 @@ export const DOMAINES_CANONIQUES = ${JSON.stringify(DOMAIN_CANON_ORDER, null, 2)
 export const REGIONS_CANONIQUES = ${JSON.stringify(REGIONS_CANON.map(r => r.label), null, 2)};
 `;
 
+  const all = [...enCours, ...termines];
+
   const body =
 `export const projetsEnCours = ${JSON.stringify(enCours, null, 2)};
 
 export const projetsTermines = ${JSON.stringify(termines, null, 2)};
+
+// Compat: certains écrans lisaient "projets" (liste complète)
+export const projets = ${JSON.stringify(all, null, 2)};
 
 /**
  * Liste des rapports. Si l’onglet "Rapports" est absent dans l’Excel,
@@ -555,7 +607,9 @@ ${exportCanon}
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, header + body, "utf8");
+
   console.log(`✅ Écrit: ${outputPath}`);
+  console.log(`ℹ️  Comptes -> en cours: ${enCours.length}, terminés: ${termines.length}, total: ${all.length}, rapports: ${rapportsList?.length || 0}`);
 }
 
 /* =========================
@@ -693,7 +747,7 @@ async function main() {
   generateIds(projects, 1);
   const { enCours, termines } = toArraysSplitByStatus(projects);
 
-  // Rapports (facultatif) depuis l’onglet "Rapports"
+  // Rapports (facultatif) depuis un onglet "Rapports"
   const excelBuffer = readWorkbookBuffer(input);
   const rapportsList = tryReadRapportsFromWorkbookBuffer(excelBuffer);
 
