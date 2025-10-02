@@ -42,7 +42,7 @@ const recrutementData = {
      {
       id: 21,
       category: 'marche',
-      titre: "’élaboration des subventions,
+      titre: "’élaboration des subventions",
       lieu: "Sirakoro",
       datePublication: "02/10/2025",
       type: "Prestation",
