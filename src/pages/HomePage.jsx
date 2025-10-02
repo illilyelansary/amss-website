@@ -1,10 +1,11 @@
+// src/pages/HomePage.jsx
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import HeroSection from '../components/HeroSection'
 import DomainesSection from '../components/DomainesSection'
 import ZonesSection from '../components/ZonesSection'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Users, Target, Award, ListTree } from 'lucide-react'
+import { ArrowRight, Users, Target, Award, ListTree, MapPin } from 'lucide-react'
 import projetTerrain from '../assets/projet-terrain.jpeg'
 
 const sections = [
@@ -193,11 +194,21 @@ const HomePage = () => {
 
           {/* Raccourcis vers Projets / Zones */}
           <div className="mt-10 flex flex-wrap gap-3 justify-center">
-            <Link to="/projets" aria-label="Découvrir nos projets en détail">
+            {/* Découvrir nos projets en détail -> directement la section Projets en cours */}
+            <Link to="/projets#cours" onClick={(e)=>{/* pas de smooth ici: changement de page */}} aria-label="Découvrir nos projets en détail">
               <Button>Découvrir nos projets en détail</Button>
             </Link>
 
-            <Link to="/zones#top" aria-label="Voir nos projets par région">
+            {/* Carte interactive des zones */}
+            <Link to="/zones#carte" aria-label="Ouvrir la carte interactive des zones">
+              <Button variant="outline" className="inline-flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Carte interactive
+              </Button>
+            </Link>
+
+            {/* Voir nos projets par région */}
+            <Link to="/zones#carte" aria-label="Voir nos projets par région">
               <Button variant="outline">Voir nos projets par région</Button>
             </Link>
           </div>
