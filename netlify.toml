@@ -5,6 +5,7 @@
 [build.environment]
   NODE_VERSION = "20"
   PNPM_FLAGS = "--no-frozen-lockfile"
+  SKIP_MIGRATION = "1"   # >>> Empêche l'écrasement de src/data/projetsData.js pendant le build
 
 [[redirects]]
   from = "/*"
