@@ -1,28 +1,29 @@
 // src/data/recrutementsData.js
 
-// Catégories standard
+// Catégories standard (onglets)
 export const CATEGORIES = {
   EMPLOI: 'emploi',
   MARCHE: 'marche', // marchés & prestations
 }
 
 /**
- * 🧩 Schéma d’une offre (enCours) :
- * {
- *   id: number,
- *   category: 'emploi' | 'marche',
- *   titre: string,
- *   lieu?: string,
- *   datePublication?: string (ex: "13 mai 2025" ou "2025-05-13"),
- *   type?: string (ex: "CDI" | "CDD" | "Prestation"),
- *   domaine?: string,
- *   description?: string,
- *   competences?: string[],
- *   dateExpiration?: string (FR ou ISO),
- *   pdfUrl?: string (ex: "/recrutements/2025-05-13-offre.pdf")
- * }
+ * Schémas :
+ * - Offre active (enCours)
+ *   {
+ *     id: number,
+ *     category: 'emploi' | 'marche',
+ *     titre: string,
+ *     lieu?: string,
+ *     datePublication?: string, // "13 mai 2025" ou "2025-05-13"
+ *     type?: string,            // "CDI" | "CDD" | "Prestation" | ...
+ *     domaine?: string,
+ *     description?: string,
+ *     competences?: string[],
+ *     dateExpiration?: string,  // FR ou ISO
+ *     pdfUrl?: string           // ex: "/recrutements/2025-05-13-offre.pdf"
+ *   }
  *
- * 🧩 Schéma d’une archive (archives) = ci-dessus + statut?: "Clôturé" | "Pourvu" | ...
+ * - Archive (archives) = ci-dessus + statut?: "Clôturé" | "Pourvu" | ...
  */
 
 export const enCours = [
@@ -38,7 +39,6 @@ export const enCours = [
       "Recherche d'un superviseur expérimenté pour superviser les activités agricoles dans le cadre du projet Sécurité Alimentaire financé par la Fondation Stromme.",
     competences: ["Diplôme en agronomie", "5 ans d'expérience minimum", "Maîtrise du français et langues locales"],
     dateExpiration: "30 septembre 2025",
-    // Dépose ton PDF dans /public/recrutements/ puis référence-le ci-dessous :
     // pdfUrl: "/recrutements/2025-05-13-superviseur-agriculture.pdf",
   },
   {
@@ -56,7 +56,23 @@ export const enCours = [
     // pdfUrl: "/recrutements/2025-01-06-animateurs-alphabetisation.pdf",
   },
 
-  // Exemple d’avis « marchés & prestations » (actif)
+  // Marché / prestation ACTIF
+  {
+    id: 21,
+    category: CATEGORIES.MARCHE,
+    titre: "Chargé(e) de l’élaboration des subventions",
+    lieu: "Sirakoro",
+    datePublication: "02/10/2025",
+    type: "Prestation",
+    domaine: "Developpement",
+    description:
+      "La personne chargée de l’élaboration des subventions travaillera avec les organisations viables qui font avancer le mandat du projet en complétant les activités directement mises en œuvre de l'AMSS.",
+    competences: ["Très expérimenté(e)"],
+    dateExpiration: "03 octobre 2025",
+    pdfUrl: "/recrutements/Avis de recrutement chargé lélaboration des subventions_5.2020.pdf",
+  },
+
+  // Exemple (à activer plus tard si besoin)
   // {
   //   id: 13,
   //   category: CATEGORIES.MARCHE,
@@ -108,5 +124,88 @@ export const archives = [
     description:
       "Prestataires pour le projet PARTAGE en partenariat avec INTERSOS dans les régions de Gao, Mopti et Ségou.",
   },
-  // … tes autres archives historiques …
+  {
+    id: 6,
+    category: CATEGORIES.EMPLOI,
+    titre: "30 ADC pour les antennes AMSS",
+    lieu: "Bamako (06), Ségou (12) et Mopti (12)",
+    datePublication: "23 avril 2024",
+    type: "CDD",
+    domaine: "Administration",
+    statut: "Pourvu",
+    description:
+      "Agents de Développement Communautaire pour renforcer les équipes des antennes régionales.",
+  },
+  {
+    id: 7,
+    category: CATEGORIES.EMPLOI,
+    titre: "03 coordinateurs régionaux",
+    lieu: "Bamako, Ségou et Mopti",
+    datePublication: "23 avril 2024",
+    type: "CDI",
+    domaine: "Coordination",
+    statut: "Pourvu",
+    description:
+      "Coordinateurs pour la supervision des activités dans les antennes régionales.",
+  },
+  {
+    id: 8,
+    category: CATEGORIES.EMPLOI,
+    titre: "Un (01) Responsable du CURRICULUM",
+    lieu: "Mali",
+    datePublication: "23 avril 2024",
+    type: "CDI",
+    domaine: "Éducation",
+    statut: "Pourvu",
+    description:
+      "Responsable de l'élaboration et de la mise à jour des curricula éducatifs.",
+  },
+  {
+    id: 9,
+    category: CATEGORIES.EMPLOI,
+    titre: "Un (01) Spécialiste de l'entrepreneuriat",
+    lieu: "Bamako, Mali",
+    datePublication: "23 avril 2024",
+    type: "CDI",
+    domaine: "Entrepreneuriat",
+    statut: "Pourvu",
+    description:
+      "Spécialiste pour le développement des programmes d'entrepreneuriat et de microfinance.",
+  },
+  {
+    id: 10,
+    category: CATEGORIES.EMPLOI,
+    titre: "16 Superviseurs Alpha",
+    lieu: "Bamako (04), Ségou (07) et Mopti (05)",
+    datePublication: "23 avril 2024",
+    type: "CDD",
+    domaine: "Éducation",
+    statut: "Pourvu",
+    description:
+      "Superviseurs pour les programmes d'alphabétisation dans les antennes régionales.",
+  },
+  {
+    id: 11,
+    category: CATEGORIES.EMPLOI,
+    titre: "Deux (02) Comptables",
+    lieu: "Ségou (01) et Mopti (01)",
+    datePublication: "23 avril 2024",
+    type: "CDI",
+    domaine: "Finance",
+    statut: "Pourvu",
+    description:
+      "Comptables pour la gestion financière des antennes de Ségou et Mopti.",
+  },
+  {
+    id: 12,
+    category: CATEGORIES.EMPLOI,
+    titre: "Un(e) Gestionnaire de l'information",
+    lieu: "Bamako, Mali",
+    datePublication: "2 avril 2024",
+    type: "CDI",
+    domaine: "Information",
+    statut: "Pourvu",
+    description:
+      "Gestionnaire pour la collecte, l'analyse et la diffusion de l'information institutionnelle.",
+  },
 ]
