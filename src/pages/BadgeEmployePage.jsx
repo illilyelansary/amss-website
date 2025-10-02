@@ -286,8 +286,8 @@ export default function BadgeEmployePage() {
                 className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
                 style={{ width: 336, height: 212 }}
               >
-                {/* Pastille verticale côté droit (lecture bas->haut) */}
-                <div className="absolute right-1 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                {/* ✅ Pastille verticale côté gauche (lecture bas->haut) */}
+                <div className="absolute left-1 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
                   <div
                     className="px-1 py-[2px] rounded border border-emerald-200 bg-emerald-50 text-emerald-700 font-medium tracking-tight"
                     style={{ fontSize: '8px', writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
