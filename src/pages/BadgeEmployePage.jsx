@@ -1,6 +1,6 @@
 // src/pages/BadgeEmployePage.jsx
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Camera, Printer, Download, Hash, User, BadgeCheck, Building2, Briefcase, MapPin, CalendarDays, Phone } from 'lucide-react'
+import { Camera, Printer, Download, Hash, User, BadgeCheck, Building2, Briefcase, MapPin, CalendarDays, Phone, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import logoAmss from '@/assets/LogoAMSSFHD.png'
 
@@ -44,10 +44,10 @@ function addYearsISO(years = 3) {
   d.setFullYear(d.getFullYear() + years)
   return d.toISOString().slice(0, 10)
 }
-function formatDateFR(iso) {
+function formatMonthYearFR(iso) {
   const d = new Date(iso)
   if (isNaN(d)) return iso || '—'
-  return d.toLocaleDateString('fr-FR')
+  return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' })
 }
 
 export default function BadgeEmployePage() {
@@ -61,6 +61,7 @@ export default function BadgeEmployePage() {
   const [form, setForm] = useState({
     nom: '',
     prenom: '',
+    email: '',
     fonction: '',
     departement: '',
     bureau: 'Tombouctou',
@@ -89,11 +90,11 @@ export default function BadgeEmployePage() {
           displayValue: true,
           textPosition: 'bottom',
           textAlign: 'center',
-          fontSize: 10,       // texte contenu
+          fontSize: 10,
           textMargin: 2,
           lineColor: '#111827',
-          width: 1.6,         // traits fins
-          height: 42,         // hauteur maîtrisée
+          width: 1.6,
+          height: 42,
           margin: 0,
           marginTop: 0,
           marginBottom: 0,
@@ -105,9 +106,13 @@ export default function BadgeEmployePage() {
       try {
         // eslint-disable-next-line no-undef
         window.QRCode.toCanvas(qrCanvasRef.current, value, {
-          width: 120,               // QR net et lisible
+          width: 120,
           margin: 1,
           errorCorrectionLevel: 'M',
+          color: {
+            dark: '#111827',   // ✅ noir
+            light: '#FFFFFF',  // ✅ fond blanc
+          },
         })
       } catch {}
     }
@@ -147,7 +152,7 @@ export default function BadgeEmployePage() {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Générateur de Badge Employé</h1>
           <p className="text-muted-foreground mt-2">
             Saisissez les informations, importez une photo et imprimez un badge au format carte. 
-            Le <strong>QR code</strong> et le <strong>code-barres</strong> sont désormais placés <strong>au verso</strong>.
+            Le <strong>QR code</strong> et le <strong>code-barres</strong> sont placés <strong>au verso</strong>.
           </p>
         </div>
       </section>
@@ -168,6 +173,12 @@ export default function BadgeEmployePage() {
                 <label className="block text-sm font-medium mb-1"><User className="inline h-4 w-4 mr-1" />Nom</label>
                 <input name="nom" value={form.nom} onChange={onChange}
                   className="w-full px-3 py-2 border border-border rounded-md" placeholder="Ex. Traoré" />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium mb-1"><Mail className="inline h-4 w-4 mr-1" />Email</label>
+                <input type="email" name="email" value={form.email} onChange={onChange}
+                  className="w-full px-3 py-2 border border-border rounded-md" placeholder="prenom.nom@ong-amss.org" />
               </div>
 
               <div className="sm:col-span-2">
@@ -249,7 +260,7 @@ export default function BadgeEmployePage() {
                 {/* Bande supérieure */}
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-primary to-accent rounded-t-xl" />
                 <div className="relative h-full p-3 grid grid-cols-[96px_1fr] gap-3">
-                  {/* Photo + logo (agrandi) */}
+                  {/* Photo + logo (plus grand) */}
                   <div className="flex flex-col items-center">
                     <div className="w-[96px] h-[116px] rounded-md overflow-hidden border border-border bg-muted">
                       {photoDataUrl ? (
@@ -260,8 +271,8 @@ export default function BadgeEmployePage() {
                         </div>
                       )}
                     </div>
-                    {/* ✅ Logo bien visible */}
-                    <img src={logoAmss} alt="AMSS" className="h-12 mt-2" />
+                    {/* ✅ Logo agrandi */}
+                    <img src={logoAmss} alt="AMSS" className="h-16 mt-1" />
                   </div>
 
                   {/* Infos */}
@@ -271,8 +282,8 @@ export default function BadgeEmployePage() {
                       <div className="text-sm text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
                     </div>
 
-                    {/* Bloc infos : plus lisible, pas de chevauchement */}
-                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[12px] leading-5">
+                    {/* Bloc infos compact : dates = mois + année ; email avant téléphone */}
+                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
                       <div className="whitespace-nowrap overflow-hidden text-ellipsis">
                         <span className="font-medium">Dept:</span> {form.departement || '—'}
                       </div>
@@ -280,11 +291,16 @@ export default function BadgeEmployePage() {
                         <span className="font-medium">Bureau:</span> {form.bureau}
                       </div>
                       <div className="whitespace-nowrap overflow-hidden text-ellipsis">
-                        <span className="font-medium">Embauche:</span> {formatDateFR(form.dateEmbauche)}
+                        <span className="font-medium">Embauche:</span> {formatMonthYearFR(form.dateEmbauche)}
                       </div>
                       <div className="whitespace-nowrap overflow-hidden text-ellipsis">
-                        <span className="font-medium">Valide:</span> {formatDateFR(form.dateValidite)}
+                        <span className="font-medium">Validité:</span> {formatMonthYearFR(form.dateValidite)}
                       </div>
+                      {form.email ? (
+                        <div className="col-span-2 whitespace-nowrap overflow-hidden text-ellipsis">
+                          <span className="font-medium">Email:</span> {form.email}
+                        </div>
+                      ) : null}
                       {form.telephone ? (
                         <div className="col-span-2 whitespace-nowrap overflow-hidden text-ellipsis">
                           <span className="font-medium">Tél:</span> {form.telephone}
@@ -295,7 +311,7 @@ export default function BadgeEmployePage() {
                       </div>
                     </div>
 
-                    {/* Pastille validation – rien ne chevauche les codes (qui sont au verso) */}
+                    {/* Pastille validation */}
                     <div className="mt-2 inline-flex items-center text-[10.5px] px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start">
                       <BadgeCheck className="h-3 w-3 mr-1" /> AMSS • Identification
                     </div>
@@ -320,18 +336,18 @@ export default function BadgeEmployePage() {
                     Badge Employé • {sanitizeMatricule(form.matricule)}
                   </div>
 
-                  {/* Zone codes : QR à gauche, Code-barres à droite */}
+                  {/* Zone codes : QR à gauche (corrigé), Code-barres à droite */}
                   <div className="mt-2 grid grid-cols-[130px_1fr] gap-3 items-center">
-                    {/* QR Code dans une boîte dédiée (net et centré) */}
+                    {/* QR Code (noir sur fond blanc) */}
                     <div className="flex items-center justify-center w-[130px] h-[130px] bg-white rounded border border-border mx-auto">
                       <canvas
                         ref={qrCanvasRef}
                         className="block"
-                        style={{ width: 120, height: 120 }}
+                        style={{ width: 120, height: 120, backgroundColor: '#FFFFFF' }}
                       />
                     </div>
 
-                    {/* Code-barres dans un cadre fixe pour éviter tout débordement */}
+                    {/* Code-barres */}
                     <div className="flex items-end w-[190px] h-[70px] overflow-hidden mx-auto">
                       <svg
                         ref={barcodeRef}
@@ -343,9 +359,20 @@ export default function BadgeEmployePage() {
                     </div>
                   </div>
 
-                  {/* Petit rappel en bas */}
-                  <div className="absolute inset-x-0 bottom-2 text-center text-[10px] text-muted-foreground">
-                    En cas de perte, merci de contacter l’AMSS.
+                  {/* CONTACT AMSS (avec site web + logo) */}
+                  <div className="mt-2 px-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <img src={logoAmss} alt="AMSS" className="h-6" />
+                      <div className="text-[11px] leading-tight text-center">
+                        <div className="font-medium">Association Malienne pour la Survie au Sahel (AMSS)</div>
+                        <div>www.ong-amss.org • info@ong-amss.org</div>
+                        <div>+223 21 92 10 48 • +223 20 20 27 28</div>
+                        <div>BP 153 Bamako • BP 152 Tombouctou</div>
+                      </div>
+                    </div>
+                    <div className="mt-1 text-center text-[10px] text-muted-foreground">
+                      En cas de perte, merci de contacter l’AMSS.
+                    </div>
                   </div>
                 </div>
               </div>
