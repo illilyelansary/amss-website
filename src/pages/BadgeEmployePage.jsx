@@ -1,6 +1,6 @@
 // src/pages/BadgeEmployePage.jsx
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Camera, Printer, Download, Hash, User, Building2, Briefcase, MapPin, CalendarDays, Phone, Mail } from 'lucide-react'
+import { Camera, Printer, Download, Hash, User, Building2, Briefcase, MapPin, CalendarDays, Phone, Mail, QrCode } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import logoAmss from '@/assets/LogoAMSSFHD.png'
 
@@ -9,25 +9,38 @@ import logoAmss from '@/assets/LogoAMSSFHD.png'
    2) qrcode-generator (qrcode()) – fallback
 */
 function useQrLoaders() {
-  const [ready, setReady] = useState(!!window.QRCode || !!window.qrcode)
+  const [ready, setReady] = useState(
+    typeof window !== 'undefined' && (!!window.QRCode || !!window.qrcode)
+  )
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
     if (window.QRCode || window.qrcode) return
 
-    const s1 = document.createElement('script')
+    let s1, s2
+    const onLoad = () => setReady(!!window.QRCode || !!window.qrcode)
+
+    s1 = document.createElement('script')
     s1.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js'
     s1.async = true
-    s1.onload = () => setReady(true)
+    s1.onload = onLoad
     document.head.appendChild(s1)
 
-    const s2 = document.createElement('script')
+    s2 = document.createElement('script')
     s2.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'
     s2.async = true
-    s2.onload = () => setReady(true)
+    s2.onload = onLoad
     document.head.appendChild(s2)
+
+    return () => {
+      // On laisse les scripts en cache pour éviter rechargements
+      // mais on retire les handlers par prudence
+      if (s1) s1.onload = null
+      if (s2) s2.onload = null
+    }
   }, [])
 
-  return ready || !!window.QRCode || !!window.qrcode
+  return ready
 }
 
 /* ====================== Helpers ====================== */
@@ -52,39 +65,78 @@ function formatMonthYearNum(iso) {
   return `${mm}/${yyyy}`
 }
 
-/** Construit une vCard 3.0 avec les infos du recto */
+/* ===== vCard utils ===== */
+function vcEscape(v = '') {
+  // Echappe \ , ; et retours
+  return String(v).replace(/\\/g, '\\\\').replace(/\n|\r\n?/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;')
+}
+function foldVCardLine(line) {
+  // RFC 2425/2426: max 75 octets; on fait simple ~75 caractères
+  const max = 75
+  if (line.length <= max) return line
+  const parts = []
+  let i = 0
+  while (i < line.length) {
+    const chunk = line.slice(i, i + max)
+    parts.push(i === 0 ? chunk : ' ' + chunk)
+    i += max
+  }
+  return parts.join('\r\n')
+}
+/** Construit une vCard 3.0 avec CRLF, types et folding */
 function buildQrVCard(form, displayName) {
-  const nLast = (form.nom || '').replace(/\r?\n/g, ' ').trim()
-  const nFirst = (form.prenom || '').replace(/\r?\n/g, ' ').trim()
-  const fn = (displayName || ' ').replace(/\r?\n/g, ' ').trim()
-  const title = (form.fonction || '').replace(/\r?\n/g, ' ').trim()
+  const nLast = vcEscape((form.nom || '').trim())
+  const nFirst = vcEscape((form.prenom || '').trim())
+  const fn = vcEscape((displayName || ' ').trim())
+  const title = (form.fonction || '').trim()
   const email = (form.email || '').trim()
   const tel = (form.telephone || '').trim()
-  const dept = (form.departement || '').replace(/\r?\n/g, ' ').trim()
-  const bureau = (form.bureau || '').replace(/\r?\n/g, ' ').trim()
+  const dept = (form.departement || '').trim()
+  const bureau = (form.bureau || '').trim()
   const emb = formatMonthYearNum(form.dateEmbauche)
   const val = formatMonthYearNum(form.dateValidite)
   const mat = sanitizeMatricule(form.matricule)
 
-  const lines = [
+  const rawLines = [
     'BEGIN:VCARD',
     'VERSION:3.0',
     `N:${nLast};${nFirst};;;`,
     `FN:${fn}`,
     'ORG:Association Malienne pour la Survie au Sahel (AMSS)',
-    title ? `TITLE:${title}` : null,
-    email ? `EMAIL:${email}` : null,
-    tel ? `TEL:${tel}` : null,
-    `NOTE:Département=${dept || '—'}; Bureau=${bureau || '—'}; Embauche=${emb}; Validité=${val}; Matricule=${mat}`,
+    title ? `TITLE:${vcEscape(title)}` : null,
+    email ? `EMAIL;TYPE=INTERNET,WORK:${vcEscape(email)}` : null,
+    tel ? `TEL;TYPE=CELL,WORK:${vcEscape(tel)}` : null,
+    `NOTE:${vcEscape(`Département=${dept || '—'}; Bureau=${bureau || '—'}; Embauche=${emb}; Validité=${val}; Matricule=${mat}`)}`,
     'END:VCARD',
   ].filter(Boolean)
 
-  return lines.join('\n')
+  // Folding + CRLF
+  return rawLines.map(foldVCardLine).join('\r\n')
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [head, b64] = dataUrl.split(',')
+  const mime = head.match(/data:(.*?);base64/)?.[1] || 'application/octet-stream'
+  const bin = atob(b64)
+  const arr = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i)
+  return new Blob([arr], { type: mime })
+}
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
 }
 
 export default function BadgeEmployePage() {
   const qrReady = useQrLoaders()
   const qrImgRef = useRef(null)
+  const [lastQrDataUrl, setLastQrDataUrl] = useState('')
 
   const [photoDataUrl, setPhotoDataUrl] = useState('')
   const [form, setForm] = useState({
@@ -121,6 +173,7 @@ export default function BadgeEmployePage() {
             color: { dark: '#111827', light: '#FFFFFF' },
           })
           qrImgRef.current.src = url
+          setLastQrDataUrl(url)
           return true
         }
       } catch {}
@@ -135,6 +188,7 @@ export default function BadgeEmployePage() {
           qr.make()
           const dataUrl = qr.createDataURL(3) // ~105px
           qrImgRef.current.src = dataUrl
+          setLastQrDataUrl(dataUrl)
           return true
         }
       } catch {}
@@ -160,16 +214,29 @@ export default function BadgeEmployePage() {
   }
 
   const handlePrint = () => window.print()
-  const handleDownload = () => window.print() // impression => PDF
+  const handleDownloadPrint = () => window.print() // impression => PDF
+
+  const handleDownloadVcf = () => {
+    const vcf = buildQrVCard(form, displayName)
+    const blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' })
+    downloadBlob(blob, `${sanitizeMatricule(form.matricule) || 'amss-badge'}.vcf`)
+  }
+  const handleDownloadQr = () => {
+    if (!lastQrDataUrl) return
+    const blob = dataUrlToBlob(lastQrDataUrl)
+    downloadBlob(blob, `${sanitizeMatricule(form.matricule) || 'amss-badge'}-qr.png`)
+  }
 
   return (
     <div className="min-h-screen bg-background">
       {/* Impression : on ne sort que les deux cartes (recto puis verso) */}
       <style>{`
+        /* Format carte ID-1 (85.6 × 54 mm), marges nulles pour un calage net */
         @media print {
+          @page { size: 85.6mm 54mm; margin: 0; }
           body * { visibility: hidden !important; }
           #badge-print, #badge-print * { visibility: visible !important; }
-          #badge-print { position: fixed; inset: 0; margin: 0 auto; }
+          #badge-print { position: fixed; inset: 0; margin: auto; }
           .print-card { page-break-after: always; }
           .print-card:last-child { page-break-after: auto; }
         }
@@ -180,7 +247,7 @@ export default function BadgeEmployePage() {
         <div className="container mx-auto px-4">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Générateur de Badge Employé</h1>
           <p className="text-muted-foreground mt-2">
-            Saisissez les informations, importez une photo et imprimez un badge au format carte. 
+            Saisissez les informations, importez une photo et imprimez un badge au format carte.
             Le <strong>QR code</strong> est au <strong>verso</strong> (sans code-barres).
           </p>
         </div>
@@ -194,37 +261,37 @@ export default function BadgeEmployePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1"><User className="inline h-4 w-4 mr-1" />Prénom</label>
-                <input name="prenom" value={form.prenom} onChange={onChange}
+                <label className="block text-sm font-medium mb-1" htmlFor="prenom"><User className="inline h-4 w-4 mr-1" />Prénom</label>
+                <input id="prenom" name="prenom" value={form.prenom} onChange={onChange}
                   className="w-full px-3 py-2 border border-border rounded-md" placeholder="Ex. Aïcha" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1"><User className="inline h-4 w-4 mr-1" />Nom</label>
-                <input name="nom" value={form.nom} onChange={onChange}
+                <label className="block text-sm font-medium mb-1" htmlFor="nom"><User className="inline h-4 w-4 mr-1" />Nom</label>
+                <input id="nom" name="nom" value={form.nom} onChange={onChange}
                   className="w-full px-3 py-2 border border-border rounded-md" placeholder="Ex. Traoré" />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1"><Mail className="inline h-4 w-4 mr-1" />Email</label>
-                <input type="email" name="email" value={form.email} onChange={onChange}
+                <label className="block text-sm font-medium mb-1" htmlFor="email"><Mail className="inline h-4 w-4 mr-1" />Email</label>
+                <input type="email" id="email" name="email" value={form.email} onChange={onChange}
                   className="w-full px-3 py-2 border border-border rounded-md" placeholder="prenom.nom@ong-amss.org" />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1"><Briefcase className="inline h-4 w-4 mr-1" />Fonction</label>
-                <input name="fonction" value={form.fonction} onChange={onChange}
+                <label className="block text-sm font-medium mb-1" htmlFor="fonction"><Briefcase className="inline h-4 w-4 mr-1" />Fonction</label>
+                <input id="fonction" name="fonction" value={form.fonction} onChange={onChange}
                   className="w-full px-3 py-2 border border-border rounded-md" placeholder="Ex. Chargée de projet WASH" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1"><Building2 className="inline h-4 w-4 mr-1" />Département</label>
-                <input name="departement" value={form.departement} onChange={onChange}
+                <label className="block text-sm font-medium mb-1" htmlFor="departement"><Building2 className="inline h-4 w-4 mr-1" />Département</label>
+                <input id="departement" name="departement" value={form.departement} onChange={onChange}
                   className="w-full px-3 py-2 border border-border rounded-md" placeholder="Ex. Direction des Programmes" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1"><MapPin className="inline h-4 w-4 mr-1" />Bureau</label>
-                <select name="bureau" value={form.bureau} onChange={onChange}
+                <label className="block text-sm font-medium mb-1" htmlFor="bureau"><MapPin className="inline h-4 w-4 mr-1" />Bureau</label>
+                <select id="bureau" name="bureau" value={form.bureau} onChange={onChange}
                   className="w-full px-3 py-2 border border-border rounded-md bg-white">
                   {['Tombouctou','Gao','Ménaka','Mopti','Ségou','Sikasso','Bamako','Taoudénit'].map(v=>(
                     <option key={v} value={v}>{v}</option>
@@ -233,33 +300,33 @@ export default function BadgeEmployePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1"><CalendarDays className="inline h-4 w-4 mr-1" />Date d’embauche</label>
-                <input type="date" name="dateEmbauche" value={form.dateEmbauche} onChange={onChange}
+                <label className="block text-sm font-medium mb-1" htmlFor="dateEmbauche"><CalendarDays className="inline h-4 w-4 mr-1" />Date d’embauche</label>
+                <input type="date" id="dateEmbauche" name="dateEmbauche" value={form.dateEmbauche} onChange={onChange}
                   className="w-full px-3 py-2 border border-border rounded-md" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1"><CalendarDays className="inline h-4 w-4 mr-1" />Valide jusqu’au</label>
-                <input type="date" name="dateValidite" value={form.dateValidite} onChange={onChange}
+                <label className="block text-sm font-medium mb-1" htmlFor="dateValidite"><CalendarDays className="inline h-4 w-4 mr-1" />Valide jusqu’au</label>
+                <input type="date" id="dateValidite" name="dateValidite" value={form.dateValidite} onChange={onChange}
                   className="w-full px-3 py-2 border border-border rounded-md" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1"><Phone className="inline h-4 w-4 mr-1" />Téléphone (optionnel)</label>
-                <input name="telephone" value={form.telephone} onChange={onChange}
+                <label className="block text-sm font-medium mb-1" htmlFor="telephone"><Phone className="inline h-4 w-4 mr-1" />Téléphone (optionnel)</label>
+                <input id="telephone" name="telephone" value={form.telephone} onChange={onChange}
                   className="w-full px-3 py-2 border border-border rounded-md" placeholder="+223 ..." />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1"><Hash className="inline h-4 w-4 mr-1" />Matricule</label>
-                <input name="matricule" value={form.matricule} onChange={(e)=>setForm(f=>({...f, matricule: sanitizeMatricule(e.target.value)}))}
+                <label className="block text-sm font-medium mb-1" htmlFor="matricule"><Hash className="inline h-4 w-4 mr-1" />Matricule</label>
+                <input id="matricule" name="matricule" value={form.matricule} onChange={(e)=>setForm(f=>({...f, matricule: sanitizeMatricule(e.target.value)}))}
                   className="w-full px-3 py-2 border border-border rounded-md" placeholder="AMSS-2025-0001" />
                 <p className="text-xs text-muted-foreground mt-1">Servira dans le QR code (espaces supprimés).</p>
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1"><Camera className="inline h-4 w-4 mr-1" />Photo</label>
-                <input type="file" accept="image/*" onChange={onPhoto} className="block w-full text-sm" />
+                <label className="block text-sm font-medium mb-1" htmlFor="photo"><Camera className="inline h-4 w-4 mr-1" />Photo</label>
+                <input id="photo" type="file" accept="image/*" onChange={onPhoto} className="block w-full text-sm" />
                 <p className="text-xs text-muted-foreground mt-1">Photo cadrée (buste), fond neutre si possible.</p>
               </div>
             </div>
@@ -267,13 +334,19 @@ export default function BadgeEmployePage() {
 
           {/* Aperçu Recto + Verso */}
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
               <h2 className="text-lg font-semibold">Aperçu du badge</h2>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleDownload}>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={handleDownloadPrint} title="Impression ou PDF">
                   <Download className="h-4 w-4 mr-2" /> Télécharger / Imprimer
                 </Button>
-                <Button onClick={handlePrint}>
+                <Button variant="outline" onClick={handleDownloadQr} disabled={!lastQrDataUrl} title="PNG du QR">
+                  <QrCode className="h-4 w-4 mr-2" /> QR (PNG)
+                </Button>
+                <Button variant="outline" onClick={handleDownloadVcf} title="vCard .vcf">
+                  <Download className="h-4 w-4 mr-2" /> vCard (.vcf)
+                </Button>
+                <Button onClick={handlePrint} title="Imprimer">
                   <Printer className="h-4 w-4 mr-2" /> Imprimer
                 </Button>
               </div>
@@ -285,6 +358,7 @@ export default function BadgeEmployePage() {
               <div
                 className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
                 style={{ width: 336, height: 212 }}
+                aria-label="Recto du badge"
               >
                 {/* ✅ Pastille verticale côté gauche (lecture bas->haut) */}
                 <div className="absolute left-1 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
@@ -303,14 +377,14 @@ export default function BadgeEmployePage() {
                   <div className="flex flex-col items-center">
                     <div className="w-[96px] h-[116px] rounded-md overflow-hidden border border-border bg-muted">
                       {photoDataUrl ? (
-                        <img src={photoDataUrl} alt="Employé" className="w-full h-full object-cover" />
+                        <img src={photoDataUrl} alt="Photo de l’employé" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
                           Photo
                         </div>
                       )}
                     </div>
-                    <img src={logoAmss} alt="AMSS" className="h-20 mt-1" />
+                    <img src={logoAmss} alt="Logo AMSS" className="h-20 mt-1" />
                   </div>
 
                   {/* Infos */}
@@ -352,13 +426,14 @@ export default function BadgeEmployePage() {
               <div
                 className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
                 style={{ width: 336, height: 212 }}
+                aria-label="Verso du badge"
               >
                 {/* Bande supérieure */}
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-accent to-primary rounded-t-xl" />
                 <div className="relative h-full p-3">
                   {/* En-tête */}
                   <div className="flex items-center justify-center mt-1 mb-2">
-                    <img src={logoAmss} alt="AMSS" className="h-10" />
+                    <img src={logoAmss} alt="Logo AMSS" className="h-10" />
                   </div>
                   <div className="text-center text-xs text-muted-foreground mb-1">
                     Badge Employé • {sanitizeMatricule(form.matricule)}
