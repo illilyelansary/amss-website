@@ -23,7 +23,6 @@ function useQrLoader() {
   useEffect(() => {
     if (window.QRCode) return
     const s = document.createElement('script')
-    // UMD "qrcode" -> window.QRCode.toCanvas(...)
     s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js'
     s.async = true
     s.onload = () => setReady(true)
@@ -48,7 +47,7 @@ function addYearsISO(years = 3) {
 function formatDateFR(iso) {
   const d = new Date(iso)
   if (isNaN(d)) return iso || '—'
-  return d.toLocaleDateString('fr-FR') // jj/mm/aaaa (court, évite les retours à la ligne)
+  return d.toLocaleDateString('fr-FR') // jj/mm/aaaa
 }
 
 export default function BadgeEmployePage() {
@@ -58,7 +57,7 @@ export default function BadgeEmployePage() {
   const barcodeRef = useRef(null)
   const qrCanvasRef = useRef(null)
 
-  // QR par défaut (plus pratique au smartphone)
+  // QR par défaut (mieux pour smartphone)
   const [codeType, setCodeType] = useState('qr') // 'qr' | 'barcode'
 
   const [photoDataUrl, setPhotoDataUrl] = useState('')
@@ -91,11 +90,16 @@ export default function BadgeEmployePage() {
         window.JsBarcode(barcodeRef.current, value, {
           format: 'CODE128',
           displayValue: true,
-          fontSize: 11,
+          textPosition: 'bottom',
+          textAlign: 'center',
+          fontSize: 10,          // ✅ texte plus petit
+          textMargin: 2,
           lineColor: '#111827',
-          width: 2,
-          height: 48,
+          width: 1.6,            // ✅ un peu plus fin
+          height: 42,            // ✅ moins haut pour garder le texte dedans
           margin: 0,
+          marginTop: 0,
+          marginBottom: 0,
         })
       } catch {}
     }
@@ -104,8 +108,8 @@ export default function BadgeEmployePage() {
       try {
         // eslint-disable-next-line no-undef
         window.QRCode.toCanvas(qrCanvasRef.current, value, {
-          width: 92,
-          margin: 0,
+          width: 108,               // ✅ QR un peu plus grand
+          margin: 1,                // petit bord blanc
           errorCorrectionLevel: 'M',
         })
       } catch {}
@@ -125,7 +129,7 @@ export default function BadgeEmployePage() {
   }
 
   const handlePrint = () => window.print()
-  const handleDownload = () => window.print() // simple: via impression => PDF
+  const handleDownload = () => window.print() // impression => PDF
 
   return (
     <div className="min-h-screen bg-background">
@@ -259,7 +263,7 @@ export default function BadgeEmployePage() {
               {/* Bande supérieure */}
               <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-primary to-accent rounded-t-xl" />
               <div className="relative h-full p-3 grid grid-cols-[96px_1fr] gap-3">
-                {/* Photo + logo agrandi */}
+                {/* Photo + logo (logo agrandi) */}
                 <div className="flex flex-col items-center">
                   <div className="w-[96px] h-[116px] rounded-md overflow-hidden border border-border bg-muted">
                     {photoDataUrl ? (
@@ -271,7 +275,7 @@ export default function BadgeEmployePage() {
                     )}
                   </div>
                   {/* ✅ Logo plus grand */}
-                  <img src={logoAmss} alt="AMSS" className="h-10 mt-2" />
+                  <img src={logoAmss} alt="AMSS" className="h-12 mt-2" />
                 </div>
 
                 {/* Infos */}
@@ -281,35 +285,56 @@ export default function BadgeEmployePage() {
                     <div className="text-xs text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
                   </div>
 
-                  {/* Dates en format court + anti-wrap */}
-                  <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-                    <div className="whitespace-nowrap"><span className="font-medium">Dept:</span> {form.departement || '—'}</div>
-                    <div className="whitespace-nowrap"><span className="font-medium">Bureau:</span> {form.bureau}</div>
-                    <div className="whitespace-nowrap"><span className="font-medium">Embauche:</span> {formatDateFR(form.dateEmbauche)}</div>
-                    <div className="whitespace-nowrap"><span className="font-medium">Valide:</span> {formatDateFR(form.dateValidite)}</div>
-                    {form.telephone ? <div className="col-span-2 whitespace-nowrap"><span className="font-medium">Tél:</span> {form.telephone}</div> : null}
-                    <div className="col-span-2 whitespace-nowrap"><span className="font-medium">Matricule:</span> {sanitizeMatricule(form.matricule)}</div>
+                  {/* Bloc infos compact : lignes séparées, pas de chevauchement */}
+                  <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[10.5px] leading-4">
+                    <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span className="font-medium">Dept:</span> {form.departement || '—'}
+                    </div>
+                    <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span className="font-medium">Bureau:</span> {form.bureau}
+                    </div>
+                    <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span className="font-medium">Embauche:</span> {formatDateFR(form.dateEmbauche)}
+                    </div>
+                    <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span className="font-medium">Valide:</span> {formatDateFR(form.dateValidite)}
+                    </div>
+                    {form.telephone ? (
+                      <div className="col-span-2 whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="font-medium">Tél:</span> {form.telephone}
+                      </div>
+                    ) : null}
+                    <div className="col-span-2 whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span className="font-medium">Matricule:</span> {sanitizeMatricule(form.matricule)}
+                    </div>
                   </div>
 
-                  {/* Pastille validation – placée au-dessus de la zone code */}
+                  {/* Pastille validation – au-dessus de la zone code */}
                   <div className="mt-2 inline-flex items-center text-[10px] px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start">
                     <BadgeCheck className="h-3 w-3 mr-1" /> AMSS • Identification
                   </div>
 
                   {/* Zone code */}
                   <div className="mt-auto flex items-end justify-between gap-2">
-                    {/* QR ou Barres (on masque l’autre) */}
-                    <canvas
-                      ref={qrCanvasRef}
-                      className={`${codeType==='qr' ? 'block' : 'hidden'} border border-border rounded`}
-                      style={{ width: 92, height: 92 }}
-                    />
-                    <svg
-                      ref={barcodeRef}
-                      className={`${codeType==='barcode' ? 'block' : 'hidden'} w-full`}
-                      role="img"
-                      aria-label="Code-barres du matricule"
-                    />
+                    {/* QR (boîte dédiée pour un rendu propre) */}
+                    <div className={`${codeType==='qr' ? 'flex' : 'hidden'} items-center justify-center w-[110px] h-[110px] bg-white rounded border border-border`}>
+                      <canvas
+                        ref={qrCanvasRef}
+                        className="block"
+                        style={{ width: 108, height: 108 }}
+                      />
+                    </div>
+
+                    {/* Code-barres dans un cadre fixe pour éviter tout débordement */}
+                    <div className={`${codeType==='barcode' ? 'flex' : 'hidden'} items-end w-[180px] h-[64px] overflow-hidden`}>
+                      <svg
+                        ref={barcodeRef}
+                        className="w-full h-full"
+                        role="img"
+                        aria-label="Code-barres du matricule"
+                        preserveAspectRatio="xMidYMid meet"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
