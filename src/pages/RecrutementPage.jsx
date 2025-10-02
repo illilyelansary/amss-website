@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { Calendar, MapPin, Users, Briefcase, Archive, Search, Filter } from 'lucide-react';
+// src/pages/RecrutementPage.jsx
+import React, { useEffect, useMemo, useState } from 'react'
+import { Calendar, MapPin, Users, Briefcase, Archive, Search, Filter, Clock } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
+// --- Données source (inchangées) ---
 const recrutementData = {
   enCours: [
     {
@@ -10,9 +13,10 @@ const recrutementData = {
       datePublication: "13 mai 2025",
       type: "CDI",
       domaine: "Agriculture",
-      description: "Recherche d'un superviseur expérimenté pour superviser les activités agricoles dans le cadre du projet Sécurité Alimentaire financé par la Fondation Stromme.",
+      description:
+        "Recherche d'un superviseur expérimenté pour superviser les activités agricoles dans le cadre du projet Sécurité Alimentaire financé par la Fondation Stromme.",
       competences: ["Diplôme en agronomie", "5 ans d'expérience minimum", "Maîtrise du français et langues locales"],
-      dateExpiration: "30 septembre 2025"
+      dateExpiration: "30 septembre 2025",
     },
     {
       id: 2,
@@ -21,10 +25,11 @@ const recrutementData = {
       datePublication: "6 janvier 2025",
       type: "CDD",
       domaine: "Éducation",
-      description: "Recrutement massif d'animateurs pour les centres d'alphabétisation dans le cadre de l'expansion des programmes éducatifs de l'AMSS.",
+      description:
+        "Recrutement massif d'animateurs pour les centres d'alphabétisation dans le cadre de l'expansion des programmes éducatifs de l'AMSS.",
       competences: ["DEF minimum", "Expérience en alphabétisation", "Connaissance des langues locales"],
-      dateExpiration: "15 octobre 2025"
-    }
+      dateExpiration: "15 octobre 2025",
+    },
   ],
   archives: [
     {
@@ -35,7 +40,8 @@ const recrutementData = {
       type: "CDD",
       domaine: "Éducation",
       statut: "Clôturé",
-      description: "Conseillers pédagogiques pour l'amélioration de la qualité de l'éducation dans la région de Sikasso."
+      description:
+        "Conseillers pédagogiques pour l'amélioration de la qualité de l'éducation dans la région de Sikasso.",
     },
     {
       id: 4,
@@ -45,7 +51,8 @@ const recrutementData = {
       type: "CDI",
       domaine: "Éducation",
       statut: "Pourvu",
-      description: "Coordination des activités éducatives et supervision des équipes pédagogiques."
+      description:
+        "Coordination des activités éducatives et supervision des équipes pédagogiques.",
     },
     {
       id: 5,
@@ -55,7 +62,8 @@ const recrutementData = {
       type: "Prestation",
       domaine: "Humanitaire",
       statut: "Clôturé",
-      description: "Prestataires pour le projet PARTAGE en partenariat avec INTERSOS dans les régions de Gao, Mopti et Ségou."
+      description:
+        "Prestataires pour le projet PARTAGE en partenariat avec INTERSOS dans les régions de Gao, Mopti et Ségou.",
     },
     {
       id: 6,
@@ -65,7 +73,8 @@ const recrutementData = {
       type: "CDD",
       domaine: "Administration",
       statut: "Pourvu",
-      description: "Agents de Développement Communautaire pour renforcer les équipes des antennes régionales."
+      description:
+        "Agents de Développement Communautaire pour renforcer les équipes des antennes régionales.",
     },
     {
       id: 7,
@@ -75,7 +84,8 @@ const recrutementData = {
       type: "CDI",
       domaine: "Coordination",
       statut: "Pourvu",
-      description: "Coordinateurs pour la supervision des activités dans les antennes régionales."
+      description:
+        "Coordinateurs pour la supervision des activités dans les antennes régionales.",
     },
     {
       id: 8,
@@ -85,7 +95,8 @@ const recrutementData = {
       type: "CDI",
       domaine: "Éducation",
       statut: "Pourvu",
-      description: "Responsable de l'élaboration et de la mise à jour des curricula éducatifs."
+      description:
+        "Responsable de l'élaboration et de la mise à jour des curricula éducatifs.",
     },
     {
       id: 9,
@@ -95,7 +106,8 @@ const recrutementData = {
       type: "CDI",
       domaine: "Entrepreneuriat",
       statut: "Pourvu",
-      description: "Spécialiste pour le développement des programmes d'entrepreneuriat et de microfinance."
+      description:
+        "Spécialiste pour le développement des programmes d'entrepreneuriat et de microfinance.",
     },
     {
       id: 10,
@@ -105,7 +117,8 @@ const recrutementData = {
       type: "CDD",
       domaine: "Éducation",
       statut: "Pourvu",
-      description: "Superviseurs pour les programmes d'alphabétisation dans les antennes régionales."
+      description:
+        "Superviseurs pour les programmes d'alphabétisation dans les antennes régionales.",
     },
     {
       id: 11,
@@ -115,7 +128,8 @@ const recrutementData = {
       type: "CDI",
       domaine: "Finance",
       statut: "Pourvu",
-      description: "Comptables pour la gestion financière des antennes de Ségou et Mopti."
+      description:
+        "Comptables pour la gestion financière des antennes de Ségou et Mopti.",
     },
     {
       id: 12,
@@ -125,43 +139,158 @@ const recrutementData = {
       type: "CDI",
       domaine: "Information",
       statut: "Pourvu",
-      description: "Gestionnaire pour la collecte, l'analyse et la diffusion de l'information institutionnelle."
-    }
-  ]
-};
+      description:
+        "Gestionnaire pour la collecte, l'analyse et la diffusion de l'information institutionnelle.",
+    },
+  ],
+}
+
+// --- Utilitaires dates FR ---
+const MONTHS_FR = {
+  janvier: 0, fevrier: 1, février: 1, mars: 2, avril: 3, mai: 4, juin: 5,
+  juillet: 6, aout: 7, août: 7, septembre: 8, octobre: 9, novembre: 10, decembre: 11, décembre: 11,
+}
+
+// retire accents / minuscule
+const strip = (s) =>
+  String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+
+function parseFRDate(input) {
+  if (!input) return null
+  // format ISO ou Date valide
+  const iso = new Date(input)
+  if (!isNaN(iso.getTime())) return iso
+
+  // ex: "30 septembre 2025"
+  const m = String(input).match(/^\s*(\d{1,2})\s+([A-Za-zÀ-ÿ]+)\s+(\d{4})\s*$/i)
+  if (!m) return null
+  const day = parseInt(m[1], 10)
+  const monthKey = strip(m[2])
+  const year = parseInt(m[3], 10)
+  const month = MONTHS_FR[monthKey]
+  if (month == null) return null
+  const d = new Date(Date.UTC(year, month, day)) // éviter TZ
+  return d
+}
+
+// renvoie true si la date est strictement avant aujourd'hui (à 00:00)
+function isExpired(dateStr) {
+  const d = parseFRDate(dateStr)
+  if (!d) return false
+  const today = new Date()
+  const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+  const dueUTC = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+  return dueUTC < todayUTC
+}
+
+function daysLeft(dateStr) {
+  const d = parseFRDate(dateStr)
+  if (!d) return null
+  const now = new Date()
+  // tronquer à minuit local pour éviter les demi-journées
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const end = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const diff = Math.round((end - start) / (1000 * 60 * 60 * 24))
+  return diff
+}
+
+const getStatutColor = (statut) => {
+  switch (statut) {
+    case 'Pourvu':
+      return 'bg-green-100 text-green-800'
+    case 'Clôturé':
+      return 'bg-red-100 text-red-800'
+    default:
+      return 'bg-blue-100 text-blue-800'
+  }
+}
+
+const getTypeColor = (type) => {
+  switch (type) {
+    case 'CDI':
+      return 'bg-primary/10 text-primary'
+    case 'CDD':
+      return 'bg-accent/10 text-accent'
+    case 'Prestation':
+      return 'bg-purple-100 text-purple-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
+
+const domainesFixes = [
+  'Tous',
+  'Éducation',
+  'Agriculture',
+  'Humanitaire',
+  'Administration',
+  'Coordination',
+  'Entrepreneuriat',
+  'Finance',
+  'Information',
+]
 
 const RecrutementPage = () => {
-  const [activeTab, setActiveTab] = useState('enCours');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterDomaine, setFilterDomaine] = useState('');
+  // --- État maître (après auto-archivage) ---
+  const [data, setData] = useState({ enCours: [], archives: [] })
 
-  const domaines = ['Tous', 'Éducation', 'Agriculture', 'Humanitaire', 'Administration', 'Coordination', 'Entrepreneuriat', 'Finance', 'Information'];
+  // --- Filtres UI ---
+  const [activeTab, setActiveTab] = useState('enCours')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterDomaine, setFilterDomaine] = useState('')
 
-  const filteredData = (data) => {
-    return data.filter(item => {
-      const matchesSearch = item.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           item.lieu.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesDomaine = filterDomaine === '' || filterDomaine === 'Tous' || item.domaine === filterDomaine;
-      return matchesSearch && matchesDomaine;
-    });
-  };
+  // Au montage : archiver automatiquement les offres expirées
+  useEffect(() => {
+    const expired = []
+    const stillOpen = []
 
-  const getStatutColor = (statut) => {
-    switch(statut) {
-      case 'Pourvu': return 'bg-green-100 text-green-800';
-      case 'Clôturé': return 'bg-red-100 text-red-800';
-      default: return 'bg-blue-100 text-blue-800';
+    for (const off of recrutementData.enCours) {
+      if (off.dateExpiration && isExpired(off.dateExpiration)) {
+        expired.push({
+          ...off,
+          statut: 'Clôturé',
+          // pour trace : on conserve la date d’expiration
+          dateCloture: off.dateExpiration,
+        })
+      } else {
+        stillOpen.push(off)
+      }
     }
-  };
 
-  const getTypeColor = (type) => {
-    switch(type) {
-      case 'CDI': return 'bg-primary/10 text-primary';
-      case 'CDD': return 'bg-accent/10 text-accent';
-      case 'Prestation': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+    // éviter les doublons par id dans les archives (si déjà présent)
+    const archiveMap = new Map()
+    ;[...recrutementData.archives, ...expired].forEach((a) => {
+      archiveMap.set(a.id, a)
+    })
+
+    setData({
+      enCours: stillOpen,
+      archives: Array.from(archiveMap.values()),
+    })
+  }, [])
+
+  const domaines = useMemo(() => {
+    const dyn = new Set(domainesFixes)
+    data.enCours.forEach((o) => dyn.add(o.domaine))
+    data.archives.forEach((o) => dyn.add(o.domaine))
+    return Array.from(dyn)
+  }, [data])
+
+  const filteredData = (arr) =>
+    arr.filter((item) => {
+      const q = strip(searchTerm)
+      const matchSearch =
+        !q ||
+        strip(item.titre).includes(q) ||
+        strip(item.lieu).includes(q) ||
+        strip(item.domaine).includes(q)
+      const matchDomaine = !filterDomaine || filterDomaine === 'Tous' || item.domaine === filterDomaine
+      return matchSearch && matchDomaine
+    })
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,11 +298,10 @@ const RecrutementPage = () => {
       <section className="py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Recrutement AMSS
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Recrutement AMSS</h1>
             <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-              Rejoignez notre équipe et contribuez à l'amélioration des conditions de vie des populations vulnérables du Mali.
+              Rejoignez notre équipe et contribuez à l'amélioration des conditions de vie des populations
+              vulnérables du Mali.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <div className="flex items-center text-muted-foreground">
@@ -193,7 +321,7 @@ const RecrutementPage = () => {
         </div>
       </section>
 
-      {/* Navigation Tabs */}
+      {/* Tabs + Filtres */}
       <section className="py-8 bg-white border-b">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
@@ -202,47 +330,43 @@ const RecrutementPage = () => {
                 <button
                   onClick={() => setActiveTab('enCours')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === 'enCours'
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                    activeTab === 'enCours' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   <Briefcase className="h-4 w-4 inline mr-2" />
-                  Offres en cours ({recrutementData.enCours.length})
+                  Offres en cours ({data.enCours.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('archives')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === 'archives'
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                    activeTab === 'archives' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   <Archive className="h-4 w-4 inline mr-2" />
-                  Archives ({recrutementData.archives.length})
+                  Archives ({data.archives.length})
                 </button>
               </div>
 
               {/* Filtres */}
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <div className="relative">
-                  <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                  <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="text"
-                    placeholder="Rechercher un poste..."
+                    placeholder="Rechercher un poste…"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 pr-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                 </div>
                 <div className="relative">
-                  <Filter className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                  <Filter className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <select
                     value={filterDomaine}
                     onChange={(e) => setFilterDomaine(e.target.value)}
                     className="pl-10 pr-8 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none bg-white"
                   >
-                    {domaines.map(domaine => (
+                    {domaines.map((domaine) => (
                       <option key={domaine} value={domaine === 'Tous' ? '' : domaine}>
                         {domaine}
                       </option>
@@ -251,86 +375,122 @@ const RecrutementPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Alerte d'auto-archivage */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              <span>
+                Les offres sont <strong>archivées automatiquement</strong> dès le lendemain de la date limite.
+              </span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Contenu des offres */}
+      {/* Liste des offres */}
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             {activeTab === 'enCours' && (
               <div className="space-y-6">
-                {filteredData(recrutementData.enCours).length === 0 ? (
+                {filteredData(data.enCours).length === 0 ? (
                   <div className="text-center py-12">
                     <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">Aucune offre ne correspond à vos critères de recherche.</p>
                   </div>
                 ) : (
-                  filteredData(recrutementData.enCours).map((offre) => (
-                    <div key={offre.id} className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
-                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex flex-wrap items-center gap-2 mb-3">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(offre.type)}`}>
-                              {offre.type}
-                            </span>
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {offre.domaine}
-                            </span>
-                          </div>
-                          <h3 className="text-xl font-semibold text-foreground mb-2">
-                            {offre.titre}
-                          </h3>
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
-                            <div className="flex items-center">
-                              <MapPin className="h-4 w-4 mr-1" />
-                              <span>{offre.lieu}</span>
+                  filteredData(data.enCours).map((offre) => {
+                    const dleft = daysLeft(offre.dateExpiration)
+                    let badge = null
+                    if (dleft != null) {
+                      if (dleft > 0) badge = `J-${dleft}`
+                      else if (dleft === 0) badge = `Aujourd'hui`
+                      else badge = `Expiré`
+                    }
+
+                    return (
+                      <div
+                        key={offre.id}
+                        className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center gap-2 mb-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(offre.type)}`}>
+                                {offre.type}
+                              </span>
+                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {offre.domaine}
+                              </span>
+                              {badge && (
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                    dleft < 0 ? 'bg-red-100 text-red-700' : dleft === 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                                  }`}
+                                >
+                                  {badge}
+                                </span>
+                              )}
                             </div>
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              <span>Publié le {offre.datePublication}</span>
+
+                            <h3 className="text-xl font-semibold text-foreground mb-2">{offre.titre}</h3>
+
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
+                              <div className="flex items-center">
+                                <MapPin className="h-4 w-4 mr-1" />
+                                <span>{offre.lieu}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <Calendar className="h-4 w-4 mr-1" />
+                                <span>Publié le {offre.datePublication}</span>
+                              </div>
                             </div>
+
+                            <p className="text-muted-foreground mb-4 leading-relaxed">{offre.description}</p>
+
+                            {offre.competences && (
+                              <div className="mb-4">
+                                <h4 className="font-medium text-foreground mb-2">Compétences requises :</h4>
+                                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                  {offre.competences.map((competence, index) => (
+                                    <li key={index}>{competence}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
-                          <p className="text-muted-foreground mb-4 leading-relaxed">
-                            {offre.description}
-                          </p>
-                          {offre.competences && (
+
+                          <div className="lg:text-right">
                             <div className="mb-4">
-                              <h4 className="font-medium text-foreground mb-2">Compétences requises :</h4>
-                              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                {offre.competences.map((competence, index) => (
-                                  <li key={index}>{competence}</li>
-                                ))}
-                              </ul>
+                              <p className="text-sm text-muted-foreground mb-1">Date limite :</p>
+                              <p className={`font-medium ${dleft < 0 ? 'text-red-600' : 'text-accent'}`}>
+                                {offre.dateExpiration || 'N/D'}
+                              </p>
                             </div>
-                          )}
-                        </div>
-                        <div className="lg:text-right">
-                          <div className="mb-4">
-                            <p className="text-sm text-muted-foreground mb-1">Date limite :</p>
-                            <p className="font-medium text-accent">{offre.dateExpiration}</p>
+                            <a
+                              href="mailto:info@ong-amss.org?subject=Candidature%20-%20AMSS"
+                              className="w-full lg:w-auto inline-block px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                            >
+                              Postuler
+                            </a>
                           </div>
-                          <button className="w-full lg:w-auto px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
-                            Postuler
-                          </button>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    )
+                  })
                 )}
               </div>
             )}
 
             {activeTab === 'archives' && (
               <div className="space-y-4">
-                {filteredData(recrutementData.archives).length === 0 ? (
+                {filteredData(data.archives).length === 0 ? (
                   <div className="text-center py-12">
                     <Archive className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">Aucune archive ne correspond à vos critères de recherche.</p>
                   </div>
                 ) : (
-                  filteredData(recrutementData.archives).map((offre) => (
+                  filteredData(data.archives).map((offre) => (
                     <div key={offre.id} className="bg-white rounded-lg p-4 shadow-sm border border-border">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="flex-1">
@@ -341,13 +501,11 @@ const RecrutementPage = () => {
                             <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               {offre.domaine}
                             </span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(offre.statut)}`}>
-                              {offre.statut}
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(offre.statut || 'Clôturé')}`}>
+                              {offre.statut || 'Clôturé'}
                             </span>
                           </div>
-                          <h3 className="font-semibold text-foreground mb-1">
-                            {offre.titre}
-                          </h3>
+                          <h3 className="font-semibold text-foreground mb-1">{offre.titre}</h3>
                           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
                             <div className="flex items-center">
                               <MapPin className="h-3 w-3 mr-1" />
@@ -357,10 +515,14 @@ const RecrutementPage = () => {
                               <Calendar className="h-3 w-3 mr-1" />
                               <span>{offre.datePublication}</span>
                             </div>
+                            {offre.dateCloture && (
+                              <div className="flex items-center">
+                                <Calendar className="h-3 w-3 mr-1" />
+                                <span>Clôturé le {offre.dateCloture}</span>
+                              </div>
+                            )}
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {offre.description}
-                          </p>
+                          <p className="text-sm text-muted-foreground">{offre.description}</p>
                         </div>
                       </div>
                     </div>
@@ -376,34 +538,42 @@ const RecrutementPage = () => {
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-6">
-              Rejoignez l'AMSS
-            </h2>
+            <h2 className="text-3xl font-bold text-foreground mb-6">Rejoignez l'AMSS</h2>
             <p className="text-xl text-muted-foreground mb-8">
               Vous ne trouvez pas le poste qui vous correspond ? Envoyez-nous votre candidature spontanée.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-3 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+              <a
+                href="mailto:info@ong-amss.org?subject=Candidature%20spontan%C3%A9e%20-%20AMSS"
+                className="px-8 py-3 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+              >
                 Candidature Spontanée
-              </button>
-              <button className="px-8 py-3 border border-border text-foreground rounded-md hover:bg-muted/50 transition-colors">
+              </a>
+              {/* 🔗 Toujours vers la page Contact */}
+              <Link
+                to="/contact"
+                className="px-8 py-3 border border-border text-foreground rounded-md hover:bg-muted/50 transition-colors"
+              >
                 Nous Contacter
-              </button>
+              </Link>
             </div>
             <div className="mt-8 text-sm text-muted-foreground">
               <p className="mb-2">
-                <strong>Important :</strong> Merci de spécifier le titre du poste dans l'objet du message lors de votre candidature.
+                <strong>Important :</strong> Merci de spécifier le titre du poste dans l'objet du message lors de votre
+                candidature.
               </p>
               <p>
-                Email : <a href="mailto:info@ong-amss.org" className="text-primary hover:underline">info@ong-amss.org</a>
+                Email :{' '}
+                <a href="mailto:info@ong-amss.org" className="text-primary hover:underline">
+                  info@ong-amss.org
+                </a>
               </p>
             </div>
           </div>
         </div>
       </section>
     </div>
-  );
-};
+  )
+}
 
-export default RecrutementPage;
-
+export default RecrutementPage
