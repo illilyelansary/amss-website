@@ -3,14 +3,14 @@
  * Migration Cartographie AMSS -> src/data/projetsData.js + analytics JSON
  * - Lit un fichier .xlsx (buffer + XLSX.read)
  * - Normalise DOMAINES / REGIONS / BAILLEURS
- * - Supprime les lignes dont le titre contient "PONAH"
+ * - Supprime toute ligne dont le titre contient "PONAH"
  * - Sépare en projetsEnCours / projetsTermines
  * - Génère aussi src/data/projetsAnalytics.json (agrégats)
  * - Génère un export "rapports" (depuis un onglet contenant "Rapports" si présent, sinon [])
- * - Ajoute un export "projets" (compat) = concat(en cours, terminés)
+ * - Ajoute un export par défaut (compat) et un export "projets" (concat)
  *
  * Usage:
- *   node scripts/migrate-projets.js "data/Cartographie_Projets_AMSS.xlsx" "src/data/projetsData.js"
+ *   node scripts/migrate-projets.js data/Cartographie_Projets_AMSS.xlsx src/data/projetsData.js
  */
 
 import fs from "fs";
@@ -57,9 +57,9 @@ function parseDateLike(v) {
 
 function excelDateToISO(v) {
   if (typeof v === "number") {
+    // Excel serial date -> JS Date
     const d = new Date(Math.round((v - 25569) * 86400 * 1000));
-    const iso = d.toISOString().slice(0, 10);
-    return iso;
+    return d.toISOString().slice(0, 10);
   }
   return parseDateLike(v);
 }
@@ -164,7 +164,7 @@ function mapTokenToCanon(token) {
   if (!n) return null;
   if (DOMAIN_SYNONYMS[n]) return DOMAIN_SYNONYMS[n];
 
-  // heuristiques
+  // Heuristiques larges
   if (n.includes("education") || n.includes("éducation") || n.includes("ecole")) return "Éducation";
   if (n.includes("sante") || n.includes("santé") || n.includes("ssr") || n.includes("nutrition")) return "Santé & Nutrition";
   if (n.includes("wash") || n.includes("eau") || n.includes("hyg") || n.includes("assain")) return "WASH";
@@ -182,7 +182,7 @@ function mapTokenToCanon(token) {
 function canonicalizeDomainString(domainStr) {
   if (!domainStr) return "";
   const tokens = String(domainStr)
-    .split(/[;,/|+–—-]|&| et | and /i)  // gère &, "et", "and", tirets, etc.
+    .split(/[;,/|+–—-]|&| et | and /i) // gère &, "et", "and", tirets…
     .map(s => s.trim())
     .filter(Boolean);
 
@@ -192,7 +192,7 @@ function canonicalizeDomainString(domainStr) {
     if (mapped) canonSet.add(mapped);
   });
 
-  // Fallback: essaie sur la chaîne entière si aucun token n'a matché
+  // Fallback sur la chaîne entière si aucun token n'a matché
   if (canonSet.size === 0) {
     const fallback = mapTokenToCanon(domainStr);
     if (fallback) canonSet.add(fallback);
@@ -215,7 +215,7 @@ const REGIONS_CANON = [
   { key: "mopti", label: "Mopti" },
   { key: "segou", label: "Ségou" },
   { key: "sikasso", label: "Sikasso" },
-  // éventuels extra
+  // extra si présent
   { key: "koulikoro", label: "Koulikoro" },
   { key: "bamako", label: "Bamako" }
 ];
@@ -251,7 +251,7 @@ function tokenToRegion(token) {
   const n = _norm(token);
   if (!n) return null;
 
-  // Retire les mots-outils fréquents mais garde la substance (ex: "cercle de goundam")
+  // Retire quelques mots-outils, garde la substance (ex: "cercle de goundam")
   const stripped = n
     .replace(/\b(région|region|cercle|commune|département|departement|province|wilaya|arrondissement|de|du|des|de la)\b/g, "")
     .replace(/\s+/g, " ")
@@ -260,7 +260,6 @@ function tokenToRegion(token) {
   for (const [key, list] of Object.entries(REGION_ALIAS)) {
     for (const alias of list) {
       const a = _norm(alias);
-      // match souple: égalité, sous-chaîne dans les deux sens, ou présence dans la forme originale
       if (
         stripped === a ||
         stripped.includes(a) ||
@@ -278,7 +277,7 @@ function tokenToRegion(token) {
 function canonicalizeRegionString(regionStr) {
   if (!regionStr) return "N/D";
 
-  // NE PAS supprimer le contenu entre parenthèses. On split sur des séparateurs usuels.
+  // NE PAS supprimer le contenu entre parenthèses. Split sur des séparateurs usuels.
   const tokens = String(regionStr)
     .split(/[;,/|+–—-]|&| et | and /i)
     .map(s => s.trim())
@@ -290,7 +289,7 @@ function canonicalizeRegionString(regionStr) {
     if (m) canonSet.add(m);
   });
 
-  // Si rien n'a matché, on garde la chaîne d'origine (utile pour l'affichage et d'autres heuristiques)
+  // Si rien n'a matché, garder la chaîne d'origine (utile pour l’affichage)
   if (canonSet.size === 0) return String(regionStr).trim();
 
   const arr = Array.from(canonSet);
@@ -344,7 +343,6 @@ function canonicalizeOneDonor(name) {
 
 function canonicalizeDonorString(donorStr) {
   if (!donorStr) return "N/D";
-  // découper en sous-bailleurs possibles
   const tokens = String(donorStr)
     .replace(/[()]/g, " ")
     .split(/[;,/|+–—-]| via | et | and /i)
@@ -418,7 +416,7 @@ function rowToProject(row, idx, headerMap) {
 
   const rawTitle = String(get("title")).trim();
   if (!rawTitle) return null;
-  if (/ponah/i.test(rawTitle)) return null; // supprimer PONAH
+  if (/ponah/i.test(rawTitle)) return null; // supprimer PONAH comme projet
 
   const startRaw = get("startDate");
   const endRaw = get("endDate");
@@ -444,9 +442,9 @@ function rowToProject(row, idx, headerMap) {
   const beneficiaries = parseNumberLike(benefRaw);
   const budget = String(budgetRaw || "").trim() || "N/D";
 
-  // --- Détection statut plus robuste ---
+  // --- Détection statut robuste ---
   const nowISO = new Date().toISOString().slice(0, 10);
-  const s = statusNorm; // déjà normalisé
+  const s = statusNorm;
 
   const isTermineText =
     s.includes("termin") || s.includes("clos") || s.includes("clotur") ||
@@ -462,7 +460,6 @@ function rowToProject(row, idx, headerMap) {
   if (isTermineText) status = "Terminé";
   else if (isEnCoursText) status = "En cours";
   else {
-    // Fallback logique : si date de fin passée => terminé
     if (endDate && endDate < nowISO) status = "Terminé";
     else status = "En cours";
   }
@@ -558,7 +555,7 @@ function tryReadRapportsFromWorkbookBuffer(buf) {
 }
 
 /* =========================
- * 8) Split, IDs & Emission fichiers
+ * 8) Split, IDs & Émission fichiers
  * ========================= */
 function toArraysSplitByStatus(projects) {
   const enCours = [];
@@ -593,7 +590,7 @@ export const REGIONS_CANONIQUES = ${JSON.stringify(REGIONS_CANON.map(r => r.labe
 
 export const projetsTermines = ${JSON.stringify(termines, null, 2)};
 
-// Compat: certains écrans lisaient "projets" (liste complète)
+// Compat: liste complète (certains écrans utilisaient "projets")
 export const projets = ${JSON.stringify(all, null, 2)};
 
 /**
@@ -603,6 +600,16 @@ export const projets = ${JSON.stringify(all, null, 2)};
 export const rapports = ${JSON.stringify(rapportsList || [], null, 2)};
 
 ${exportCanon}
+
+// Export par défaut pour compat global
+export default {
+  projetsEnCours,
+  projetsTermines,
+  projets,
+  rapports,
+  DOMAINES_CANONIQUES,
+  REGIONS_CANONIQUES
+};
 `;
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
