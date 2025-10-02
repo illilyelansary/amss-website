@@ -191,13 +191,14 @@ const HomePage = () => {
             </Button>
           </div>
 
-          {/* Raccourcis internes vers Domaines / Zones */}
+          {/* Raccourcis vers Projets / Zones */}
           <div className="mt-10 flex flex-wrap gap-3 justify-center">
-            <Link to="/#domaines" onClick={(e) => handleSmoothNav(e, '/#domaines')}>
-              <Button variant="outline">Voir nos Domaines</Button>
+            <Link to="/projets" aria-label="Découvrir nos projets en détail">
+              <Button>Découvrir nos projets en détail</Button>
             </Link>
-            <Link to="/#zones" onClick={(e) => handleSmoothNav(e, '/#zones')}>
-              <Button variant="outline">Parcourir les Zones</Button>
+
+            <Link to="/zones#top" aria-label="Voir nos projets par région">
+              <Button variant="outline">Voir nos projets par région</Button>
             </Link>
           </div>
         </div>
