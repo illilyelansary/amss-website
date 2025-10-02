@@ -1,0 +1,45 @@
+name: Update pnpm lockfile
+
+on:
+  push:
+    paths:
+      - "package.json"
+      - "pnpm-workspace.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Use pnpm v10
+        run: corepack prepare pnpm@10.4.1 --activate
+
+      - name: Install deps (refresh lockfile)
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Commit updated lockfile if changed
+        run: |
+          if [[ -n "$(git status --porcelain pnpm-lock.yaml)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add pnpm-lock.yaml
+            git commit -m "chore: update pnpm-lock.yaml"
+            git push
+          else
+            echo "Lockfile already up-to-date."
+          fi
