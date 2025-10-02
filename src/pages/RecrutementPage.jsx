@@ -38,6 +38,22 @@ const recrutementData = {
       dateExpiration: "15 octobre 2025",
       // pdfUrl: "/recrutements/2025-01-06-animateurs-alphabetisation.pdf",
     },
+
+     {
+      id: 2!,
+      category: 'marche',
+      titre: "’élaboration des subventions,
+      lieu: "Sirakoro",
+      datePublication: "02/10/2025",
+      type: "Prestation",
+      domaine: "Developpement",
+      description:
+        " l’élaboration des subventions travaillera avec les organisations viables qui font avancer le mandat du projet en complétant les activités directement mises en œuvre de l'AMSS.",
+      competences: ["Tres experimenté"],
+      dateExpiration: "03 octobre 2025",
+      pdfUrl: "recrutements/Avis de recrutement chargé lélaboration des subventions_5.2020.pdf",
+    },
+    
     // Exemple marché/prestations actif
     // {
     //   id: 13,
