@@ -1118,3 +1118,192 @@ export const rapports = [
     published: true
   }
 ]
+/* =========================
+ *  Normalisation des domaines (consolidation)
+ * ========================= */
+
+// Ordre canonique final (utile pour l’affichage trié et cohérent)
+const DOMAIN_CANON_ORDER = [
+  "Éducation",
+  "Santé & Nutrition",
+  "WASH",
+  "Protection & VBG",
+  "Gouvernance & Paix",
+  "Cohésion sociale & Culture",
+  "Sécurité alimentaire & Moyens d’existence",
+  "Environnement & GRN",
+  "Urgence",
+  "Renforcement de capacités & Technologie",
+  "Résilience"
+];
+
+// util: normaliser chaîne pour matcher (sans accents/majuscules)
+const _norm = (s) =>
+  String(s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+// dictionnaire de correspondances -> domaine canonique
+const DOMAIN_SYNONYMS = {
+  // Éducation
+  "education": "Éducation",
+  "éducation": "Éducation",
+  "cours de rattrapage": "Éducation",
+  "padem": "Éducation",
+
+  // Santé & Nutrition
+  "sante": "Santé & Nutrition",
+  "santé": "Santé & Nutrition",
+  "ssr": "Santé & Nutrition",
+  "sante sexuelle et reproductive": "Santé & Nutrition",
+  "santé sexuelle et reproductive": "Santé & Nutrition",
+  "nutrition": "Santé & Nutrition",
+
+  // WASH
+  "wash": "WASH",
+  "eau": "WASH",
+  "assainissement": "WASH",
+  "hygiène": "WASH",
+  "hygiene": "WASH",
+
+  // Protection & VBG
+  "protection": "Protection & VBG",
+  "vbg": "Protection & VBG",
+  "lutte antimines": "Protection & VBG",
+  "eei": "Protection & VBG",
+  "mine": "Protection & VBG",
+  "mines": "Protection & VBG",
+
+  // Gouvernance & Paix
+  "gouvernance": "Gouvernance & Paix",
+  "paix": "Gouvernance & Paix",
+  "citoyennete": "Gouvernance & Paix",
+  "citoyenneté": "Gouvernance & Paix",
+  "justice": "Gouvernance & Paix",
+
+  // Cohésion sociale & Culture
+  "cohesion sociale": "Cohésion sociale & Culture",
+  "cohésion sociale": "Cohésion sociale & Culture",
+  "culture": "Cohésion sociale & Culture",
+  "sport": "Cohésion sociale & Culture",
+
+  // Sécurité alimentaire & Moyens d’existence
+  "securite alimentaire": "Sécurité alimentaire & Moyens d’existence",
+  "sécurité alimentaire": "Sécurité alimentaire & Moyens d’existence",
+  "relance economique": "Sécurité alimentaire & Moyens d’existence",
+  "relance économique": "Sécurité alimentaire & Moyens d’existence",
+  "employabilite": "Sécurité alimentaire & Moyens d’existence",
+  "employabilité": "Sécurité alimentaire & Moyens d’existence",
+  "microfinance": "Sécurité alimentaire & Moyens d’existence",
+  "moyens de subsistance": "Sécurité alimentaire & Moyens d’existence",
+  "moyens d’existence": "Sécurité alimentaire & Moyens d’existence",
+
+  // Environnement & GRN
+  "environnement": "Environnement & GRN",
+  "grn": "Environnement & GRN",
+  "gestion des ressources naturelles": "Environnement & GRN",
+
+  // Urgence
+  "urgence": "Urgence",
+  "assistance d’urgence": "Urgence",
+  "assistance d'urgence": "Urgence",
+  "rrm": "Urgence",
+
+  // Renforcement de capacités & Technologie
+  "renforcement de capacites": "Renforcement de capacités & Technologie",
+  "renforcement de capacités": "Renforcement de capacités & Technologie",
+  "capacites": "Renforcement de capacités & Technologie",
+  "capacités": "Renforcement de capacités & Technologie",
+  "technologie": "Renforcement de capacités & Technologie",
+  "ict": "Renforcement de capacités & Technologie",
+
+  // Résilience
+  "resilience": "Résilience",
+  "résilience": "Résilience"
+};
+
+// remap d’un token -> domaine canonique (ou null si inconnu)
+function mapTokenToCanon(token) {
+  const n = _norm(token);
+  if (!n) return null;
+
+  // match exact
+  if (DOMAIN_SYNONYMS[n]) return DOMAIN_SYNONYMS[n];
+
+  // quelques heuristiques légères par inclusion
+  if (n.includes("education") || n.includes("éducation") || n.includes("ecole")) return "Éducation";
+  if (n.includes("sante") || n.includes("santé") || n.includes("ssr") || n.includes("nutrition")) return "Santé & Nutrition";
+  if (n.includes("wash") || n.includes("eau") || n.includes("hyg") || n.includes("assain")) return "WASH";
+  if (n.includes("vbg") || n.includes("protection") || n.includes("eei") || n.includes("mine")) return "Protection & VBG";
+  if (n.includes("gouvernance") || n.includes("paix") || n.includes("justice") || n.includes("citoyen")) return "Gouvernance & Paix";
+  if (n.includes("cohesion") || n.includes("cohésion") || n.includes("culture") || n.includes("sport")) return "Cohésion sociale & Culture";
+  if (n.includes("securite alimentaire") || n.includes("sécurité alimentaire") || n.includes("microfinance") || n.includes("employab") || n.includes("relance")) return "Sécurité alimentaire & Moyens d’existence";
+  if (n.includes("environnement") || n.includes("grn") || n.includes("ressources naturelles")) return "Environnement & GRN";
+  if (n.includes("urgence") || n.includes("rrm")) return "Urgence";
+  if (n.includes("renforcement") || n.includes("capac") || n.includes("techno") || n.includes("ict")) return "Renforcement de capacités & Technologie";
+  if (n.includes("resilience") || n.includes("résilience")) return "Résilience";
+
+  return null;
+}
+
+// transforme une chaîne "A, B, C" -> "Canon1, Canon2"
+function canonicalizeDomainString(domainStr) {
+  if (!domainStr) return "";
+  const tokens = String(domainStr)
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const canonSet = new Set();
+  tokens.forEach(tok => {
+    const mapped = mapTokenToCanon(tok);
+    if (mapped) canonSet.add(mapped);
+  });
+
+  // si rien n’a matché, on ne met rien (ou on pourrait mettre "Autre")
+  const canonArr = Array.from(canonSet);
+
+  // trier selon l’ordre canonique
+  canonArr.sort(
+    (a, b) =>
+      DOMAIN_CANON_ORDER.indexOf(a) - DOMAIN_CANON_ORDER.indexOf(b)
+  );
+
+  return canonArr.join(", ");
+}
+
+// normalise tout le tableau et supprime PONAH
+function normalizeDataset(arr) {
+  return arr
+    .filter(p => !(p && (p.id === 37 || /ponah/i.test(p.title || ""))))
+    .map(p => ({
+      ...p,
+      domain: canonicalizeDomainString(p.domain)
+    }));
+}
+
+/**
+ * 🔧 Application in-place :
+ * - garde les mêmes exports (projetsEnCours, projetsTermines)
+ * - mais remplace leur contenu par les versions normalisées
+ * - OK même si les tableaux ont été définis en `export const` (on mute via splice)
+ */
+try {
+  if (Array.isArray(projetsEnCours)) {
+    const _normEnCours = normalizeDataset(projetsEnCours);
+    projetsEnCours.splice(0, projetsEnCours.length, ..._normEnCours);
+  }
+  if (Array.isArray(projetsTermines)) {
+    const _normTerm = normalizeDataset(projetsTermines);
+    projetsTermines.splice(0, projetsTermines.length, ..._normTerm);
+  }
+} catch (e) {
+  // no-op si non défini (exécution dans un contexte différent)
+  console.warn("Normalization skipped:", e?.message);
+}
+
+// (facultatif) exporter la liste canonique si tu veux t’en servir côté UI
+export const DOMAINES_CANONIQUES = [...DOMAIN_CANON_ORDER];
+
