@@ -28,6 +28,9 @@ import ActualitesPage from './pages/ActualitesPage'
 import ActualiteDetailPage from './pages/ActualiteDetailPage'
 import RecrutementPage from './pages/RecrutementPage.jsx'  // ✅ extension explicite
 import DonPage from './pages/DonPage'
+import MentionsLegalesPage from './pages/MentionsLegalesPage'
+import PolitiqueConfidentialitePage from './pages/PolitiqueConfidentialitePage'
+import TransparencePage from './pages/TransparencePage'
 
 // Données (pour redirection legacy id -> slug)
 import { actualites } from './data/actualitesData'
@@ -83,6 +86,9 @@ function App() {
             <Route path="/recrutement" element={<RecrutementPage />} />
             <Route path="/contact" element={<ContactPage />} />
               <Route path="/don" element={<DonPage />} />
+             <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
+  <Route path="/politique-confidentialite" element={<PolitiqueConfidentialitePage />} />
+  <Route path="/transparence" element={<TransparencePage />} />
 
 
             {/* Fallback */}
