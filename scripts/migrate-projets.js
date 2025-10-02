@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Migration Cartographie AMSS -> src/data/projetsData.js
+ * Migration Cartographie AMSS -> src/data/projetsData.js + analytics JSON
  * - Lit un fichier .xlsx
- * - Normalise "domain" vers 10 catégories canoniques
+ * - Normalise DOMAINES / REGIONS / DONORS
  * - Supprime PONAH
  * - Sépare en projetsEnCours / projetsTermines
- * - Écrit un module ESM pour le front
+ * - Génère aussi src/data/projetsAnalytics.json (agrégats)
  *
  * Usage:
  *   node scripts/migrate-projets.js "Cartographie_Projets_AMSS.xlsx" "src/data/projetsData.js"
@@ -15,8 +15,9 @@ import fs from "fs";
 import path from "path";
 import * as XLSX from "xlsx";
 
-/* ====== 1) Taxonomie canonique des domaines ====== */
-
+/* =========================
+ * 1) Taxonomie domaines (canon)
+ * ========================= */
 const DOMAIN_CANON_ORDER = [
   "Éducation",
   "Santé & Nutrition",
@@ -119,10 +120,9 @@ const DOMAIN_SYNONYMS = {
 function mapTokenToCanon(token) {
   const n = _norm(token);
   if (!n) return null;
-
   if (DOMAIN_SYNONYMS[n]) return DOMAIN_SYNONYMS[n];
 
-  // heuristiques d’inclusion
+  // heuristiques
   if (n.includes("education") || n.includes("éducation") || n.includes("ecole")) return "Éducation";
   if (n.includes("sante") || n.includes("santé") || n.includes("ssr") || n.includes("nutrition")) return "Santé & Nutrition";
   if (n.includes("wash") || n.includes("eau") || n.includes("hyg") || n.includes("assain")) return "WASH";
@@ -134,14 +134,13 @@ function mapTokenToCanon(token) {
   if (n.includes("urgence") || n.includes("rrm")) return "Urgence";
   if (n.includes("renforcement") || n.includes("capac") || n.includes("techno") || n.includes("ict")) return "Renforcement de capacités & Technologie";
   if (n.includes("resilience") || n.includes("résilience")) return "Résilience";
-
   return null;
 }
 
 function canonicalizeDomainString(domainStr) {
   if (!domainStr) return "";
   const tokens = String(domainStr)
-    .split(/[;,/|]/) // tolérant aux séparateurs variés
+    .split(/[;,/|]/)
     .map(s => s.trim())
     .filter(Boolean);
 
@@ -156,8 +155,150 @@ function canonicalizeDomainString(domainStr) {
   return canonArr.join(", ");
 }
 
-/* ====== 2) Utilitaires parsing ====== */
+/* =========================
+ * 2) Normalisation des régions (alias -> région canonique)
+ * ========================= */
+const REGIONS_CANON = [
+  { key: "tombouctou", label: "Tombouctou" },
+  { key: "taoudenni", label: "Taoudénit" },
+  { key: "gao", label: "Gao" },
+  { key: "menaka", label: "Ménaka" },
+  { key: "kidal", label: "Kidal" },
+  { key: "mopti", label: "Mopti" },
+  { key: "segou", label: "Ségou" },
+  { key: "sikasso", label: "Sikasso" },
+  // zones hors affichage principal mais utiles si présents dans les données
+  { key: "koulikoro", label: "Koulikoro" },
+  { key: "bamako", label: "Bamako" }
+];
 
+const REGION_ALIAS = {
+  tombouctou: [
+    "tt","tombouctou","timbuktu","tombo","goundam","dire","diré","niafunke","niafunké","gourma-rharous","rharous"
+  ],
+  taoudenni: [
+    "taoudenni","taoudéni","taoudenit","taoudénit","taoudeni","taoudent",
+    "achouratt","achaourat","araouane","arawane","boujbeha","al-ourche","al ourche"
+  ],
+  gao: ["gao","ansongo","bourem","gounzoureye","gounzourèye","soni aliber","soni ali ber"],
+  menaka: ["menaka","ménaka","mnk","ander","inekar","tidermene","assakaray","zeugarat","zeguerat"],
+  kidal: ["kidal","tessalit","anefif","abeibara","aguelhoc","agalhoc"],
+  mopti: [
+    "mopti","bandiagara","bankass","koro","douentza","djenne","djenné","tenenkou","ténenkou",
+    "youwarou","sofara","kani-bonzon","boré","bore"
+  ],
+  segou: [
+    "segou","ségou","san","bla","baroueli","barouéli","macina","niono","tominian","markala","fangasso",
+    "sebougou","sébougou","pelengana","sakoiba","cinzana","konodimini","konobougou","sansanding",
+    "dioro","kalake","kalaké","tesséréla","tésséréla","boidie","boidié"
+  ],
+  sikasso: ["sikasso","koutiala","bougouni","kignan","niena","niéna","klela","kléla","lobougoula","missirikoro"],
+  koulikoro: ["koulikoro","mountougoula"],
+  bamako: ["bamako"]
+};
+
+const REGION_ORDER = REGIONS_CANON.map(r => r.label);
+
+function tokenToRegion(token) {
+  const n = _norm(token);
+  if (!n) return null;
+  for (const [key, list] of Object.entries(REGION_ALIAS)) {
+    if (list.includes(n)) {
+      const found = REGIONS_CANON.find(r => r.key === key);
+      return found ? found.label : null;
+    }
+  }
+  return null;
+}
+
+function canonicalizeRegionString(regionStr) {
+  if (!regionStr) return "N/D";
+  // enlève commentaires entre parenthèses
+  const clean = String(regionStr).replace(/\([^)]*\)/g, " ");
+  const tokens = clean.split(/[;,/&|+–—-]| et | and /i).map(s => s.trim()).filter(Boolean);
+
+  const canonSet = new Set();
+  tokens.forEach(tok => {
+    const m = tokenToRegion(tok);
+    if (m) canonSet.add(m);
+  });
+
+  // fallback: si rien n’a matché, garder la chaîne (nettoyée)
+  if (canonSet.size === 0) return regionStr.trim();
+
+  const arr = Array.from(canonSet);
+  arr.sort((a, b) => REGION_ORDER.indexOf(a) - REGION_ORDER.indexOf(b));
+  return arr.join(", ");
+}
+
+/* =========================
+ * 3) Normalisation des bailleurs
+ * ========================= */
+const DONOR_SYNONYMS = {
+  "cordaid": "Cordaid",
+  "unicef": "UNICEF",
+  "unicef mali": "UNICEF",
+  "unhcr": "UNHCR",
+  "hcr": "UNHCR",
+  "usaid": "USAID",
+  "jsi": "JSI",
+  "amc": "Affaires mondiales Canada (AMC)",
+  "affaires mondiales canada": "Affaires mondiales Canada (AMC)",
+  "gffo": "GFFO",
+  "bmz": "BMZ",
+  "danida": "DANIDA",
+  "aecid": "AECID",
+  "ayuda en accion": "Ayuda en Acción",
+  "aea": "Ayuda en Acción",
+  "union europeenne": "Union européenne",
+  "union européenne": "Union européenne",
+  "ue": "Union européenne",
+  "ddc": "DDC",
+  "pain pour le monde": "Pain pour le Monde",
+  "ppm": "Pain pour le Monde",
+  "plan international": "Plan International",
+  "save the children": "Save the Children",
+  "sci": "Save the Children",
+  "fhi 360": "FHI 360",
+  "fhi360": "FHI 360",
+  "ocha": "OCHA",
+  "pam": "PAM",
+  "ecw": "Education Cannot Wait (ECW)",
+  "fhs aoc": "Fonds humanitaire AOC",
+  "fhraoc": "Fonds humanitaire AOC",
+  "fonds humanitaire aoc": "Fonds humanitaire AOC"
+};
+
+function canonicalizeOneDonor(name) {
+  const n = _norm(name.replace(/\s+/g, " ").trim());
+  if (!n) return null;
+  return DONOR_SYNONYMS[n] || name.trim();
+}
+
+function canonicalizeDonorString(donorStr) {
+  if (!donorStr) return "N/D";
+  // découper en sous-bailleurs possibles
+  const tokens = String(donorStr)
+    .replace(/[()]/g, " ")
+    .split(/[;,/|+–—-]| via | et | and /i)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const canonSet = new Set();
+  tokens.forEach(tok => {
+    const c = canonicalizeOneDonor(tok);
+    if (c) canonSet.add(c);
+  });
+
+  if (canonSet.size === 0) return donorStr.trim();
+  const arr = Array.from(canonSet);
+  arr.sort((a, b) => a.localeCompare(b));
+  return arr.join(" / ");
+}
+
+/* =========================
+ * 4) Parsing & helpers
+ * ========================= */
 function parseNumberLike(v) {
   if (v == null || v === "") return null;
   if (typeof v === "number" && Number.isFinite(v)) return v;
@@ -179,7 +320,6 @@ function parseDateLike(v) {
   if (!v) return null;
   if (v instanceof Date && !isNaN(v)) return v.toISOString().slice(0, 10);
   const s = String(v).trim();
-  // formats communs: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY
   const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (isoMatch) return s;
   const fr1 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -192,12 +332,9 @@ function parseDateLike(v) {
     const [_, d, m, y] = fr2;
     return `${y.padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   }
-  // fallback tentative
   const d = new Date(s);
   return isNaN(d) ? null : d.toISOString().slice(0, 10);
 }
-
-/* ====== 3) Mapping entêtes tolérant variations ====== */
 
 const HEADER_ALIASES = {
   title: ["titre", "title", "intitulé", "intitule", "nom du projet", "projet"],
@@ -216,37 +353,34 @@ const HEADER_ALIASES = {
 
 function findHeaderKey(rowObj, wantedKey) {
   const aliases = HEADER_ALIASES[wantedKey] || [];
-  const keys = Object.keys(rowObj || {});
-  for (const k of keys) {
+  for (const k of Object.keys(rowObj || {})) {
     const kn = _norm(k);
     for (const a of aliases) {
       if (kn === _norm(a)) return k;
     }
   }
-  // fallback: tentatives par inclusion approximative
   for (const k of Object.keys(rowObj || {})) {
     if (_norm(k).includes(_norm(wantedKey))) return k;
   }
   return null;
 }
 
-/* ====== 4) Lecture & transformation ====== */
-
 function readRowsFromExcel(filePath) {
   const wb = XLSX.readFile(filePath);
-  const shName = wb.SheetNames[0]; // première feuille
+  const shName = wb.SheetNames[0];
   const ws = wb.Sheets[shName];
   return XLSX.utils.sheet_to_json(ws, { defval: "" });
 }
 
+/* =========================
+ * 5) Transformation d’une ligne
+ * ========================= */
 function rowToProject(row, idx, headerMap) {
   const get = (key) => row[headerMap[key]] ?? "";
 
   const rawTitle = String(get("title")).trim();
   if (!rawTitle) return null;
-
-  // skip PONAH
-  if (/ponah/i.test(rawTitle)) return null;
+  if (/ponah/i.test(rawTitle)) return null; // supprimer PONAH
 
   const startRaw = get("startDate");
   const endRaw = get("endDate");
@@ -266,38 +400,43 @@ function rowToProject(row, idx, headerMap) {
   const isUSAIDSuspended = /suspendu/.test(statusNorm) || /usaid/.test(statusNorm) || /pause/.test(statusNorm);
 
   const domain = canonicalizeDomainString(domainRaw);
+  const region = canonicalizeRegionString(regionRaw);
+  const donor = canonicalizeDonorString(donorRaw);
+
   const beneficiaries = parseNumberLike(benefRaw);
   const budget = String(budgetRaw || "").trim() || "N/D";
 
-  // statut affichable
   let status = "En cours";
   if (statusNorm.includes("termin")) status = "Terminé";
   if (isUSAIDSuspended) status = "Suspendu (USAID)";
 
   return {
-    id: undefined, // on attribue plus bas
+    id: undefined, // défini plus bas
     title: rawTitle,
     startDate: startDate || null,
     endDate: endDate || null,
     status,
-    donor: donorRaw || "N/D",
+    donor,
     image: "/assets/amss-terrain-activites.jpeg",
     excerpt: excerptRaw || null,
     description: descRaw || null,
     domain,
-    region: regionRaw || "N/D",
+    region,
     beneficiaries: beneficiaries ?? "N/D",
     budget,
     usaidNote: isUSAIDSuspended || undefined
   };
 }
 
+/* =========================
+ * 6) Split, IDs & Emission fichiers
+ * ========================= */
 function toArraysSplitByStatus(projects) {
   const enCours = [];
   const termines = [];
   for (const p of projects) {
     if (!p) continue;
-    if (p.status && p.status.toLowerCase().includes("termin")) termines.push(p);
+    if (String(p.status || "").toLowerCase().includes("termin")) termines.push(p);
     else enCours.push(p);
   }
   return { enCours, termines };
@@ -315,6 +454,7 @@ function emitJS(outputPath, enCours, termines) {
 
   const exportCanon = `
 export const DOMAINES_CANONIQUES = ${JSON.stringify(DOMAIN_CANON_ORDER, null, 2)};
+export const REGIONS_CANONIQUES = ${JSON.stringify(REGIONS_CANON.map(r => r.label), null, 2)};
 `;
 
   const body =
@@ -330,8 +470,111 @@ ${exportCanon}
   console.log(`✅ Écrit: ${outputPath}`);
 }
 
-/* ====== 5) Main ====== */
+/* =========================
+ * 7) Analytics JSON (zones & domaines)
+ * ========================= */
+function projectTouchesZone(p, zoneLabel) {
+  const r = String(p.region || "");
+  return r.split(",").map(s => s.trim()).includes(zoneLabel);
+}
 
+function computeAnalytics(allProjects) {
+  const zones = {};
+  REGIONS_CANON.forEach(z => {
+    zones[z.key] = {
+      key: z.key,
+      label: z.label,
+      total: 0,
+      enCours: 0,
+      termines: 0,
+      donors: 0,
+      beneficiaries: 0
+    };
+  });
+
+  const donorsByZone = {};
+  Object.keys(zones).forEach(k => donorsByZone[k] = new Set());
+
+  const domains = {};
+  DOMAIN_CANON_ORDER.forEach(d => {
+    domains[d] = { domain: d, total: 0, enCours: 0, termines: 0, beneficiaries: 0 };
+  });
+
+  const donorsCounter = new Map();
+
+  allProjects.forEach(p => {
+    const isTermine = String(p.status || "").toLowerCase().includes("termin");
+    const isEnCours = !isTermine;
+
+    // zones
+    REGIONS_CANON.forEach(z => {
+      if (projectTouchesZone(p, z.label)) {
+        zones[z.key].total += 1;
+        zones[z.key][isEnCours ? "enCours" : "termines"] += 1;
+
+        // donors uniq
+        String(p.donor || "")
+          .split("/")
+          .map(s => s.trim())
+          .filter(Boolean)
+          .forEach(d => donorsByZone[z.key].add(d));
+
+        // beneficiaries
+        const b = typeof p.beneficiaries === "number" ? p.beneficiaries : null;
+        if (b) zones[z.key].beneficiaries += b;
+      }
+    });
+
+    // domaines
+    String(p.domain || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean)
+      .forEach(d => {
+        if (!domains[d]) domains[d] = { domain: d, total: 0, enCours: 0, termines: 0, beneficiaries: 0 };
+        domains[d].total += 1;
+        domains[d][isEnCours ? "enCours" : "termines"] += 1;
+        const b = typeof p.beneficiaries === "number" ? p.beneficiaries : null;
+        if (b) domains[d].beneficiaries += b;
+      });
+
+    // donors global
+    String(p.donor || "")
+      .split("/")
+      .map(s => s.trim())
+      .filter(Boolean)
+      .forEach(d => {
+        donorsCounter.set(d, (donorsCounter.get(d) || 0) + 1);
+      });
+  });
+
+  // taille ensembles bailleurs
+  Object.keys(zones).forEach(k => {
+    zones[k].donors = donorsByZone[k].size;
+  });
+
+  // donors top list
+  const donors = Array.from(donorsCounter.entries())
+    .map(([donor, projects]) => ({ donor, projects }))
+    .sort((a, b) => b.projects - a.projects);
+
+  return {
+    updatedAt: new Date().toISOString(),
+    zones,
+    domains,
+    donors
+  };
+}
+
+function emitAnalyticsJSON(outputJSONPath, analytics) {
+  fs.mkdirSync(path.dirname(outputJSONPath), { recursive: true });
+  fs.writeFileSync(outputJSONPath, JSON.stringify(analytics, null, 2), "utf8");
+  console.log(`✅ Écrit: ${outputJSONPath}`);
+}
+
+/* =========================
+ * 8) Main
+ * ========================= */
 async function main() {
   const [, , input, output] = process.argv;
   if (!input || !output) {
@@ -345,25 +588,31 @@ async function main() {
     process.exit(1);
   }
 
-  // construire une map d’entêtes résiliente
+  // construire une map d’entêtes
   const first = rows[0];
   const headerMap = {};
   for (const logical of Object.keys(HEADER_ALIASES)) {
-    headerMap[logical] = findHeaderKey(first, logical) || logical; // fallback : le même nom
+    headerMap[logical] = findHeaderKey(first, logical) || logical;
   }
 
+  // transformer
   const projects = rows
     .map((row, i) => rowToProject(row, i, headerMap))
     .filter(Boolean);
 
-  // attribue des IDs stables
   generateIds(projects, 1);
 
-  // split en cours / terminés
   const { enCours, termines } = toArraysSplitByStatus(projects);
 
-  // sortie
+  // écrire JS
   emitJS(output, enCours, termines);
+
+  // analytics (basés sur tous les projets)
+  const analytics = computeAnalytics([...enCours, ...termines]);
+
+  // même dossier que output -> fichier JSON à côté
+  const outputJSON = path.join(path.dirname(output), "projetsAnalytics.json");
+  emitAnalyticsJSON(outputJSON, analytics);
 }
 
 main().catch((e) => {
