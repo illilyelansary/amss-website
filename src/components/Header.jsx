@@ -68,10 +68,10 @@ const Header = () => {
     },
     {
       name: 'Recrutement',
-      href: '/recrutement',
+      href: '/recrutement#en-cours', // par défaut on arrive sur "En cours"
       dropdown: [
-        { name: "Offres d’emploi", href: '/recrutement#offres-emploi' },
-        { name: "Appels d’offres & Prestations", href: '/recrutement#appels-offres' }
+        { name: "Offres d’emploi", href: '/recrutement/emplois#en-cours' },
+        { name: "Appels d’offres & Prestations", href: '/recrutement/marches#en-cours' },
       ]
     },
     { name: 'Actualités', href: '/actualites' },
@@ -85,10 +85,14 @@ const Header = () => {
       const related = ['/projets', '/projets-en-cours', '/projets-termines', '/rapports', '/partenaires']
       return related.some(p => location.pathname.startsWith(p))
     }
+    if (target === '/recrutement') {
+      const related = ['/recrutement', '/recrutement/emplois', '/recrutement/marches']
+      return related.some(p => location.pathname.startsWith(p))
+    }
     return location.pathname.startsWith(target)
   }
 
-  // Scroll fluide si on reste sur la même page; sinon navigation normale (la page cible gère l'ancre)
+  // Scroll fluide si on reste sur la même page; sinon navigation SPA normale
   const handleSmoothNav = (e, href) => {
     const [path, hash] = href.split('#')
     if (!hash) return
@@ -104,15 +108,12 @@ const Header = () => {
       {/* Top bar */}
       <div className="bg-primary text-primary-foreground py-2">
         <div className="container mx-auto px-4 text-sm">
-          {/* empilage en mobile pour éviter les superpositions */}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            {/* email + téléphone : wrap si besoin */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <span className="inline-flex items-center gap-1">📧 <span>info@ong-amss.org</span></span>
               <span className="inline-flex items-center gap-1">📞 <span>+223 21 92 10 48</span></span>
             </div>
 
-            {/* réseaux sociaux : icônes compactes en mobile */}
             <div className="flex items-center gap-2">
               <span className="hidden sm:inline">Suivez-nous:</span>
               <a
