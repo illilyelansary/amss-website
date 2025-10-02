@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Link, useLocation } from 'react-router-dom'
@@ -8,6 +8,13 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState(null)
   const location = useLocation()
+
+  // Lock body scroll quand le menu mobile est ouvert
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = isMenuOpen ? 'hidden' : prev || ''
+    return () => { document.body.style.overflow = prev || '' }
+  }, [isMenuOpen])
 
   // Ignore le hash pour l'état "actif"
   const basePath = (href) => href.split('#')[0] || href
@@ -43,7 +50,7 @@ const Header = () => {
         { name: 'Projets en Cours', href: '/projets#cours' },
         { name: 'Projets Terminés', href: '/projets#termines' },
         { name: 'Rapports', href: '/projets#rapports' },
-        { name: 'Partenaires', href: '/partenaires' } // page dédiée
+        { name: 'Partenaires', href: '/partenaires' }
       ]
     },
     {
@@ -66,29 +73,22 @@ const Header = () => {
   const isActive = (href) => {
     const target = basePath(href)
     if (target === '/') return location.pathname === '/'
-
-    // Rendez "Nos Projets" actif aussi pour ses pages associées
     if (target === '/projets') {
       const related = ['/projets', '/projets-en-cours', '/projets-termines', '/rapports', '/partenaires']
       return related.some(p => location.pathname.startsWith(p))
     }
-
     return location.pathname.startsWith(target)
   }
 
   // Scroll fluide si on reste sur la même page; sinon navigation normale (la page cible gère l'ancre)
   const handleSmoothNav = (e, href) => {
     const [path, hash] = href.split('#')
-    if (!hash) return // lien sans ancre -> navigation standard
-
+    if (!hash) return
     if (location.pathname === path) {
-      // Même page : on intercepte et on scrolle
       e.preventDefault()
       const el = document.getElementById(hash)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-    // Sinon, on laisse Link faire la navigation vers /path#hash
-    // Le navigateur appliquera l'ancre à l'arrivée.
   }
 
   return (
@@ -163,7 +163,9 @@ const Header = () => {
                 )}
               </div>
             ))}
-            <Button className="ml-4">Faire un Don</Button>
+            <Link to="/don">
+              <Button className="ml-4">Faire un Don</Button>
+            </Link>
           </div>
 
           {/* Mobile button */}
@@ -172,56 +174,66 @@ const Header = () => {
               variant="ghost"
               size="icon"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
         </div>
 
-        {/* Mobile nav */}
+        {/* Mobile nav (overlay fixe et scrollable) */}
         {isMenuOpen && (
-          <div className="lg:hidden border-t border-border">
-            <div className="py-4 space-y-2">
-              {menuItems.map((item, index) => (
-                <div key={index}>
-                  <Link
-                    to={item.href}
-                    onClick={(e)=>{
-                      handleSmoothNav(e, item.href)
-                      setIsMenuOpen(false)
-                    }}
-                    className={`block px-4 py-2 text-sm font-medium transition-colors ${
-                      isActive(item.href)
-                        ? 'text-primary bg-muted'
-                        : 'text-foreground hover:text-primary hover:bg-muted'
-                    }`}
-                  >
-                    {item.name}
-                  </Link>
-                  {item.dropdown && (
-                    <div className="pl-6 space-y-1">
-                      {item.dropdown.map((dropdownItem, dropdownIndex) => (
-                        <Link
-                          key={dropdownIndex}
-                          to={dropdownItem.href}
-                          onClick={(e)=>{
-                            handleSmoothNav(e, dropdownItem.href)
-                            setIsMenuOpen(false)
-                          }}
-                          className="block px-4 py-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          {dropdownItem.name}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+          <>
+            {/* backdrop cliquable */}
+            <div
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm lg:hidden"
+              onClick={() => setIsMenuOpen(false)}
+            />
+            <div className="fixed top-20 inset-x-0 bottom-0 bg-white border-t border-border overflow-y-auto lg:hidden">
+              <div className="py-4 space-y-2">
+                {menuItems.map((item, index) => (
+                  <div key={index}>
+                    <Link
+                      to={item.href}
+                      onClick={(e)=>{
+                        handleSmoothNav(e, item.href)
+                        setIsMenuOpen(false)
+                      }}
+                      className={`block px-4 py-2 text-sm font-medium transition-colors ${
+                        isActive(item.href)
+                          ? 'text-primary bg-muted'
+                          : 'text-foreground hover:text-primary hover:bg-muted'
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                    {item.dropdown && (
+                      <div className="pl-6 space-y-1">
+                        {item.dropdown.map((dropdownItem, dropdownIndex) => (
+                          <Link
+                            key={dropdownIndex}
+                            to={dropdownItem.href}
+                            onClick={(e)=>{
+                              handleSmoothNav(e, dropdownItem.href)
+                              setIsMenuOpen(false)
+                            }}
+                            className="block px-4 py-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            {dropdownItem.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
-              ))}
-              <div className="px-4 pt-4">
-                <Button className="w-full">Faire un Don</Button>
+                ))}
+                <div className="px-4 pt-4 pb-6">
+                  <Link to="/don" onClick={()=>setIsMenuOpen(false)}>
+                    <Button className="w-full">Faire un Don</Button>
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
+          </>
         )}
       </nav>
     </header>
