@@ -1,47 +1,44 @@
 import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Youtube } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Link, useLocation } from 'react-router-dom'
 import logoAmss from '../assets/LogoAMSSFHD.png'
 
 const Footer = () => {
+  const location = useLocation()
+
   const quickLinks = [
-    { name: 'À Propos', href: '#apropos' },
-    { name: 'Nos Projets', href: '#projets' },
-    { name: 'Partenaires', href: '#partenaires' },
-    { name: 'Actualités', href: '#actualites' },
-    { name: 'Contact', href: '#contact' }
+    { name: 'À Propos', href: '/a-propos#top' },
+    { name: 'Nos Projets', href: '/projets' },
+    { name: 'Partenaires', href: '/partenaires' },
+    { name: 'Actualités', href: '/actualites' },
+    { name: 'Contact', href: '/#contact' }
   ]
 
   const domaines = [
-    { name: 'Éducation', href: '#education' },
-    { name: 'Santé', href: '#sante' },
-    { name: 'WASH', href: '#wash' },
-    { name: 'Protection', href: '#protection' },
-    { name: 'Gouvernance', href: '#gouvernance' }
+    { name: 'Éducation', href: '/education' },
+    { name: 'Santé', href: '/sante' },
+    { name: 'WASH', href: '/wash' },
+    { name: 'Protection', href: '/protection' },
+    { name: 'Gouvernance', href: '/gouvernance' }
   ]
 
   const zones = [
-    { name: 'Tombouctou', href: 'zones#zone-tombouctou' },
-    { name: 'Gao', href: 'zones#zone-gao' },
-    { name: 'Mopti', href: 'zones#zone-mopti' },
-    { name: 'Ségou', href: 'zones#zone-segou' },
-    { name: 'Sikasso', href: 'zones#zone-sikasso' }
+    { name: 'Tombouctou', href: '/zones#zone-tombouctou' },
+    { name: 'Gao', href: '/zones#zone-gao' },
+    { name: 'Mopti', href: '/zones#zone-mopti' },
+    { name: 'Ségou', href: '/zones#zone-segou' },
+    { name: 'Sikasso', href: '/zones#zone-sikasso' }
   ]
 
-  // Gestion du scroll fluide
-  const handleSmoothScroll = (e, href) => {
-    if (href.startsWith('#')) {
+  // Scroll fluide local si on est déjà sur la page cible
+  const handleSmoothNav = (e, href) => {
+    const isHashOnly = href.startsWith('#')
+    const [path, anchor] = isHashOnly ? [location.pathname, href.slice(1)] : href.split('#')
+    if (!anchor) return
+    if (location.pathname === path) {
       e.preventDefault()
-      const el = document.querySelector(href)
+      const el = document.getElementById(anchor)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    } else if (href.includes('#')) {
-      e.preventDefault()
-      const [path, anchor] = href.split('#')
-      if (window.location.pathname.includes(path)) {
-        const el = document.querySelector(`#${anchor}`)
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      } else {
-        window.location.href = `/${path}#${anchor}`
-      }
     }
   }
 
@@ -104,13 +101,13 @@ const Footer = () => {
             <ul className="space-y-2">
               {quickLinks.map((link, index) => (
                 <li key={index}>
-                  <a 
-                    href={link.href} 
-                    onClick={(e)=>handleSmoothScroll(e, link.href)}
+                  <Link
+                    to={link.href}
+                    onClick={(e)=>handleSmoothNav(e, link.href)}
                     className="text-muted hover:text-primary transition-colors text-sm"
                   >
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -122,13 +119,12 @@ const Footer = () => {
             <ul className="space-y-2">
               {domaines.map((domaine, index) => (
                 <li key={index}>
-                  <a 
-                    href={domaine.href} 
-                    onClick={(e)=>handleSmoothScroll(e, domaine.href)}
+                  <Link
+                    to={domaine.href}
                     className="text-muted hover:text-primary transition-colors text-sm"
                   >
                     {domaine.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -140,13 +136,13 @@ const Footer = () => {
             <ul className="space-y-2">
               {zones.map((zone, index) => (
                 <li key={index}>
-                  <a 
-                    href={`/${zone.href}`} 
-                    onClick={(e)=>handleSmoothScroll(e, zone.href)}
+                  <Link
+                    to={zone.href}
+                    onClick={(e)=>handleSmoothNav(e, zone.href)}
                     className="text-muted hover:text-primary transition-colors text-sm"
                   >
                     {zone.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -184,15 +180,15 @@ const Footer = () => {
               © 2025 AMSS - Association Malienne pour la Survie au Sahel. Tous droits réservés.
             </div>
             <div className="flex space-x-6 text-sm">
-              <a href="/mentions-legales" className="text-muted hover:text-primary transition-colors">
+              <Link to="/mentions-legales" className="text-muted hover:text-primary transition-colors">
                 Mentions légales
-              </a>
-              <a href="/politique-confidentialite" className="text-muted hover:text-primary transition-colors">
+              </Link>
+              <Link to="/politique-confidentialite" className="text-muted hover:text-primary transition-colors">
                 Politique de confidentialité
-              </a>
-              <a href="/transparence" className="text-muted hover:text-primary transition-colors">
+              </Link>
+              <Link to="/transparence" className="text-muted hover:text-primary transition-colors">
                 Transparence
-              </a>
+              </Link>
             </div>
           </div>
         </div>
