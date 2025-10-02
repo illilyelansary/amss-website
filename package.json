@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/migrate-projets.js data/Cartographie_Projets_AMSS.xlsx src/data/projetsData.js",
+    "prebuild": "node -e \"process.exit(process.env.SKIP_MIGRATION?0:1)\" || node scripts/migrate-projets.js data/Cartographie_Projets_AMSS.xlsx src/data/projetsData.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
