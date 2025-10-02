@@ -1,19 +1,67 @@
 #!/usr/bin/env node
 /**
  * Migration Cartographie AMSS -> src/data/projetsData.js + analytics JSON
- * - Lit un fichier .xlsx
+ * - Lit un fichier .xlsx (buffer + XLSX.read)
  * - Normalise DOMAINES / REGIONS / DONORS
  * - Supprime PONAH
  * - Sépare en projetsEnCours / projetsTermines
  * - Génère aussi src/data/projetsAnalytics.json (agrégats)
+ * - Génère un export "rapports" (depuis un onglet "Rapports" si présent, sinon [])
  *
  * Usage:
- *   node scripts/migrate-projets.js "Cartographie_Projets_AMSS.xlsx" "src/data/projetsData.js"
+ *   node scripts/migrate-projets.js "data/Cartographie_Projets_AMSS.xlsx" "src/data/projetsData.js"
  */
 
 import fs from "fs";
 import path from "path";
 import * as XLSX from "xlsx";
+
+/* =========================
+ * 0) Utils
+ * ========================= */
+const _norm = (s) =>
+  String(s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+function parseNumberLike(v) {
+  if (v == null || v === "") return null;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  const s = String(v).replace(/[^\d.-]/g, "");
+  const num = Number(s);
+  return Number.isFinite(num) ? num : null;
+}
+
+function parseDateLike(v) {
+  if (!v) return null;
+  if (v instanceof Date && !isNaN(v)) return v.toISOString().slice(0, 10);
+  const s = String(v).trim();
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) return s;
+  const fr1 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (fr1) {
+    const [_, d, m, y] = fr1;
+    return `${y.padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  }
+  const fr2 = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (fr2) {
+    const [_, d, m, y] = fr2;
+    return `${y.padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  }
+  const d = new Date(s);
+  return isNaN(d) ? null : d.toISOString().slice(0, 10);
+}
+
+function excelDateToISO(v) {
+  if (typeof v === "number") {
+    const d = new Date(Math.round((v - 25569) * 86400 * 1000));
+    const iso = d.toISOString().slice(0, 10);
+    return iso;
+  }
+  return parseDateLike(v);
+}
 
 /* =========================
  * 1) Taxonomie domaines (canon)
@@ -31,13 +79,6 @@ const DOMAIN_CANON_ORDER = [
   "Renforcement de capacités & Technologie",
   "Résilience"
 ];
-
-const _norm = (s) =>
-  String(s || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
 
 const DOMAIN_SYNONYMS = {
   // Éducation
@@ -167,7 +208,7 @@ const REGIONS_CANON = [
   { key: "mopti", label: "Mopti" },
   { key: "segou", label: "Ségou" },
   { key: "sikasso", label: "Sikasso" },
-  // zones hors affichage principal mais utiles si présents dans les données
+  // éventuels extra
   { key: "koulikoro", label: "Koulikoro" },
   { key: "bamako", label: "Bamako" }
 ];
@@ -297,45 +338,23 @@ function canonicalizeDonorString(donorStr) {
 }
 
 /* =========================
- * 4) Parsing & helpers
+ * 4) Lecture Excel
  * ========================= */
-function parseNumberLike(v) {
-  if (v == null || v === "") return null;
-  if (typeof v === "number" && Number.isFinite(v)) return v;
-  const s = String(v).replace(/[^\d.-]/g, "");
-  const num = Number(s);
-  return Number.isFinite(num) ? num : null;
+function readWorkbookBuffer(filePath) {
+  return fs.readFileSync(filePath);
 }
 
-function excelDateToISO(v) {
-  if (typeof v === "number") {
-    const d = new Date(Math.round((v - 25569) * 86400 * 1000));
-    const iso = d.toISOString().slice(0, 10);
-    return iso;
-  }
-  return parseDateLike(v);
+function readRowsFromExcel(filePath) {
+  const buf = readWorkbookBuffer(filePath);
+  const wb = XLSX.read(buf, { type: "buffer" });
+  const shName = wb.SheetNames[0];
+  const ws = wb.Sheets[shName];
+  return XLSX.utils.sheet_to_json(ws, { defval: "" });
 }
 
-function parseDateLike(v) {
-  if (!v) return null;
-  if (v instanceof Date && !isNaN(v)) return v.toISOString().slice(0, 10);
-  const s = String(v).trim();
-  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (isoMatch) return s;
-  const fr1 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (fr1) {
-    const [_, d, m, y] = fr1;
-    return `${y.padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-  }
-  const fr2 = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
-  if (fr2) {
-    const [_, d, m, y] = fr2;
-    return `${y.padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-  }
-  const d = new Date(s);
-  return isNaN(d) ? null : d.toISOString().slice(0, 10);
-}
-
+/* =========================
+ * 5) Mapping des entêtes pour la feuille Projets
+ * ========================= */
 const HEADER_ALIASES = {
   title: ["titre", "title", "intitulé", "intitule", "nom du projet", "projet"],
   startDate: ["debut", "début", "date debut", "date début", "start", "startdate", "datedebut"],
@@ -365,21 +384,8 @@ function findHeaderKey(rowObj, wantedKey) {
   return null;
 }
 
-/**
- * 🔧 IMPORTANT (Netlify/CI) :
- * On lit l’Excel en buffer via fs, puis on le parse avec XLSX.read(..., { type: 'buffer' }).
- * Cela évite l’usage de XLSX.readFile qui peut ne pas exister selon le bundle résolu.
- */
-function readRowsFromExcel(filePath) {
-  const buf = fs.readFileSync(filePath);
-  const wb = XLSX.read(buf, { type: "buffer" });
-  const shName = wb.SheetNames[0];
-  const ws = wb.Sheets[shName];
-  return XLSX.utils.sheet_to_json(ws, { defval: "" });
-}
-
 /* =========================
- * 5) Transformation d’une ligne
+ * 6) Transformation d’une ligne -> projet
  * ========================= */
 function rowToProject(row, idx, headerMap) {
   const get = (key) => row[headerMap[key]] ?? "";
@@ -435,7 +441,77 @@ function rowToProject(row, idx, headerMap) {
 }
 
 /* =========================
- * 6) Split, IDs & Emission fichiers
+ * 7) Rapports : lecture facultative d’un onglet "Rapports"
+ * ========================= */
+const RAPPORT_HEADER_ALIASES = {
+  title: ["titre", "title", "nom", "intitulé", "intitule"],
+  date: ["date", "date de publication", "publication", "publié le", "publie le"],
+  fileUrl: ["lien", "url", "fichier", "document", "link"],
+  category: ["categorie", "catégorie", "type", "section"]
+};
+
+function findRapportHeaderKey(rowObj, wantedKey) {
+  const aliases = RAPPORT_HEADER_ALIASES[wantedKey] || [];
+  for (const k of Object.keys(rowObj || {})) {
+    const kn = _norm(k);
+    for (const a of aliases) {
+      if (kn === _norm(a)) return k;
+    }
+  }
+  for (const k of Object.keys(rowObj || {})) {
+    if (_norm(k).includes(_norm(wantedKey))) return k;
+  }
+  return null;
+}
+
+function tryReadRapportsFromWorkbookBuffer(buf) {
+  const wb = XLSX.read(buf, { type: "buffer" });
+
+  // Cherche un onglet dont le nom contient "rapport"
+  const sheetName = wb.SheetNames.find(n =>
+    String(n || "").trim().toLowerCase().includes("rapport")
+  );
+  if (!sheetName) return [];
+
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval: "" });
+  if (!rows.length) return [];
+
+  // Construire une map d'entêtes logique
+  const first = rows[0];
+  const headerMap = {
+    title: findRapportHeaderKey(first, "title"),
+    date: findRapportHeaderKey(first, "date"),
+    fileUrl: findRapportHeaderKey(first, "fileUrl"),
+    category: findRapportHeaderKey(first, "category")
+  };
+
+  const out = [];
+  rows.forEach((r, i) => {
+    const rawTitle = String(headerMap.title ? r[headerMap.title] : r["Titre"] || r["Title"] || r["Nom"] || "").trim();
+    if (!rawTitle) return;
+
+    const rawDate = headerMap.date ? r[headerMap.date] : (r["Date"] || r["Date de publication"] || "");
+    const date = typeof rawDate === "number" ? excelDateToISO(rawDate) : parseDateLike(rawDate);
+
+    const fileUrl = String(headerMap.fileUrl ? r[headerMap.fileUrl] : (r["Lien"] || r["URL"] || r["Fichier"] || "")).trim() || null;
+    const category = String(headerMap.category ? r[headerMap.category] : (r["Categorie"] || r["Catégorie"] || r["Type"] || "")).trim() || null;
+
+    out.push({
+      id: i + 1,
+      title: rawTitle,
+      date: date || null,
+      fileUrl,
+      category
+    });
+  });
+
+  // Tri antichronologique si date dispo
+  out.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+  return out;
+}
+
+/* =========================
+ * 8) Split, IDs & Emission fichiers
  * ========================= */
 function toArraysSplitByStatus(projects) {
   const enCours = [];
@@ -453,7 +529,7 @@ function generateIds(projects, startAt = 1) {
   projects.forEach(p => { p.id = id++; });
 }
 
-function emitJS(outputPath, enCours, termines) {
+function emitJS(outputPath, enCours, termines, rapportsList) {
   const header = `// Auto-généré par scripts/migrate-projets.js – NE PAS ÉDITER À LA MAIN
 // Dernière mise à jour: ${new Date().toISOString()}
 `;
@@ -468,6 +544,12 @@ export const REGIONS_CANONIQUES = ${JSON.stringify(REGIONS_CANON.map(r => r.labe
 
 export const projetsTermines = ${JSON.stringify(termines, null, 2)};
 
+/**
+ * Liste des rapports. Si l’onglet "Rapports" est absent dans l’Excel,
+ * ce tableau est vide (et l’import dans RapportsPage reste valide).
+ */
+export const rapports = ${JSON.stringify(rapportsList || [], null, 2)};
+
 ${exportCanon}
 `;
 
@@ -477,7 +559,7 @@ ${exportCanon}
 }
 
 /* =========================
- * 7) Analytics JSON (zones & domaines)
+ * 9) Analytics (zones & domaines)
  * ========================= */
 function projectTouchesZone(p, zoneLabel) {
   const r = String(p.region || "");
@@ -499,7 +581,7 @@ function computeAnalytics(allProjects) {
   });
 
   const donorsByZone = {};
-  Object.keys(zones).forEach(k => donorsByZone[k] = new Set());
+  Object.keys(zones).forEach(k => (donorsByZone[k] = new Set()));
 
   const domains = {};
   DOMAIN_CANON_ORDER.forEach(d => {
@@ -579,7 +661,7 @@ function emitAnalyticsJSON(outputJSONPath, analytics) {
 }
 
 /* =========================
- * 8) Main
+ * 10) Main
  * ========================= */
 async function main() {
   const [, , input, output] = process.argv;
@@ -588,35 +670,40 @@ async function main() {
     process.exit(1);
   }
 
+  // Projets (première feuille)
   const rows = readRowsFromExcel(input);
   if (!rows.length) {
     console.error("Aucune ligne trouvée dans le fichier Excel.");
     process.exit(1);
   }
 
-  // construire une map d’entêtes
+  // Map d’entêtes pour la feuille Projets
   const first = rows[0];
   const headerMap = {};
   for (const logical of Object.keys(HEADER_ALIASES)) {
     headerMap[logical] = findHeaderKey(first, logical) || logical;
   }
 
-  // transformer
+  // Transformation projets
   const projects = rows
     .map((row, i) => rowToProject(row, i, headerMap))
     .filter(Boolean);
 
+  // IDs + split
   generateIds(projects, 1);
-
   const { enCours, termines } = toArraysSplitByStatus(projects);
 
-  // écrire JS
-  emitJS(output, enCours, termines);
+  // Rapports (facultatif) depuis l’onglet "Rapports"
+  const excelBuffer = readWorkbookBuffer(input);
+  const rapportsList = tryReadRapportsFromWorkbookBuffer(excelBuffer);
 
-  // analytics (basés sur tous les projets)
+  // Écriture JS
+  emitJS(output, enCours, termines, rapportsList);
+
+  // Analytics (basés sur tous les projets)
   const analytics = computeAnalytics([...enCours, ...termines]);
 
-  // même dossier que output -> fichier JSON à côté
+  // JSON analytics à côté du JS
   const outputJSON = path.join(path.dirname(output), "projetsAnalytics.json");
   emitAnalyticsJSON(outputJSON, analytics);
 }
