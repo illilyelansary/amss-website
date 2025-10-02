@@ -4,6 +4,14 @@ import { Link, useLocation } from 'react-router-dom'
 import { Clock, CheckCircle, FileText, ArrowRight, Handshake, Filter, Search, Users, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { projetsEnCours, projetsTermines, rapports } from '../data/projetsData'
+import { projetsEnCours, projetsTermines } from '../data/projetsData';
+
+if (import.meta.env.DEV) {
+  // Aide visuelle en dev
+  // eslint-disable-next-line no-console
+  console.log('projetsEnCours:', projetsEnCours?.length, 'projetsTermines:', projetsTermines?.length);
+}
+
 
 // --- Helpers ---
 const norm = (s) =>
