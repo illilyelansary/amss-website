@@ -1,6 +1,6 @@
 // src/pages/BadgeEmployePage.jsx
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Camera, Printer, Download, Hash, User, BadgeCheck, Building2, Briefcase, MapPin, CalendarDays, Phone, Mail } from 'lucide-react'
+import { Camera, Printer, Download, Hash, User, Building2, Briefcase, MapPin, CalendarDays, Phone, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import logoAmss from '@/assets/LogoAMSSFHD.png'
 
@@ -84,7 +84,6 @@ function buildQrVCard(form, displayName) {
 
 export default function BadgeEmployePage() {
   const qrReady = useQrLoaders()
-
   const qrImgRef = useRef(null)
 
   const [photoDataUrl, setPhotoDataUrl] = useState('')
@@ -107,7 +106,7 @@ export default function BadgeEmployePage() {
     return [p, n].filter(Boolean).join(' ')
   }, [form.prenom, form.nom])
 
-  /* ===== Génération QR (verso) : encode toutes les infos du recto en vCard ===== */
+  /* ===== Génération QR (verso) ===== */
   useEffect(() => {
     const value = buildQrVCard(form, displayName)
     if (!qrReady || !qrImgRef.current || !value) return
@@ -116,7 +115,7 @@ export default function BadgeEmployePage() {
       try {
         if (window.QRCode?.toDataURL) {
           const url = await window.QRCode.toDataURL(value, {
-            width: 120, // taille réduite pour éviter tout débordement
+            width: 120,
             margin: 0,
             errorCorrectionLevel: 'M',
             color: { dark: '#111827', light: '#FFFFFF' },
@@ -134,8 +133,7 @@ export default function BadgeEmployePage() {
           const qr = window.qrcode(0, 'M')
           qr.addData(value)
           qr.make()
-          // densité 3 ~ 105px
-          const dataUrl = qr.createDataURL(3)
+          const dataUrl = qr.createDataURL(3) // ~105px
           qrImgRef.current.src = dataUrl
           return true
         }
@@ -288,6 +286,16 @@ export default function BadgeEmployePage() {
                 className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
                 style={{ width: 336, height: 212 }}
               >
+                {/* Pastille verticale côté droit (lecture bas->haut) */}
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                  <div
+                    className="px-1 py-[2px] rounded border border-emerald-200 bg-emerald-50 text-emerald-700 font-medium tracking-tight"
+                    style={{ fontSize: '8px', writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                  >
+                    AMSS • Identification
+                  </div>
+                </div>
+
                 {/* Bande supérieure */}
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-primary to-accent rounded-t-xl" />
                 <div className="relative h-full p-3 grid grid-cols-[96px_1fr] gap-3">
@@ -312,13 +320,8 @@ export default function BadgeEmployePage() {
                       <div className="text-sm text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
                     </div>
 
-                    {/* ✅ Pastille AMSS remontée */}
-                    <div className="mt-1 mb-2 inline-flex items-center text-[9px] px-1.5 py-[2px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start">
-                      <BadgeCheck className="h-[10px] w-[10px] mr-1" /> AMSS • Identification
-                    </div>
-
-                    {/* Bloc infos : dates MM/AAAA ; labels complets non abrégés */}
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
+                    {/* Bloc infos : dates MM/AAAA ; labels complets */}
+                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
                       <div className="break-words">
                         <span className="font-medium">Département:</span> {form.departement || '—'}
                       </div>
@@ -368,7 +371,7 @@ export default function BadgeEmployePage() {
                       <div className="flex items-center justify-center w-[130px] h-[130px] bg-white rounded border border-border">
                         <img
                           ref={qrImgRef}
-                          alt="QR du matricule"
+                          alt="QR du badge"
                           className="block"
                           style={{ width: 120, height: 120, imageRendering: 'pixelated' }}
                         />
