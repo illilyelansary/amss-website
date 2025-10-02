@@ -52,6 +52,36 @@ function formatMonthYearNum(iso) {
   return `${mm}/${yyyy}`
 }
 
+/** Construit une vCard 3.0 avec les infos du recto */
+function buildQrVCard(form, displayName) {
+  const nLast = (form.nom || '').replace(/\r?\n/g, ' ').trim()
+  const nFirst = (form.prenom || '').replace(/\r?\n/g, ' ').trim()
+  const fn = (displayName || ' ').replace(/\r?\n/g, ' ').trim()
+  const title = (form.fonction || '').replace(/\r?\n/g, ' ').trim()
+  const email = (form.email || '').trim()
+  const tel = (form.telephone || '').trim()
+  const dept = (form.departement || '').replace(/\r?\n/g, ' ').trim()
+  const bureau = (form.bureau || '').replace(/\r?\n/g, ' ').trim()
+  const emb = formatMonthYearNum(form.dateEmbauche)
+  const val = formatMonthYearNum(form.dateValidite)
+  const mat = sanitizeMatricule(form.matricule)
+
+  const lines = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `N:${nLast};${nFirst};;;`,
+    `FN:${fn}`,
+    'ORG:Association Malienne pour la Survie au Sahel (AMSS)',
+    title ? `TITLE:${title}` : null,
+    email ? `EMAIL:${email}` : null,
+    tel ? `TEL:${tel}` : null,
+    `NOTE:Département=${dept || '—'}; Bureau=${bureau || '—'}; Embauche=${emb}; Validité=${val}; Matricule=${mat}`,
+    'END:VCARD',
+  ].filter(Boolean)
+
+  return lines.join('\n')
+}
+
 export default function BadgeEmployePage() {
   const qrReady = useQrLoaders()
 
@@ -77,16 +107,16 @@ export default function BadgeEmployePage() {
     return [p, n].filter(Boolean).join(' ')
   }, [form.prenom, form.nom])
 
-  /* ===== Génération QR (verso) ===== */
+  /* ===== Génération QR (verso) : encode toutes les infos du recto en vCard ===== */
   useEffect(() => {
-    const value = sanitizeMatricule(form.matricule)
+    const value = buildQrVCard(form, displayName)
     if (!qrReady || !qrImgRef.current || !value) return
 
     const drawWithQRCode = async () => {
       try {
         if (window.QRCode?.toDataURL) {
           const url = await window.QRCode.toDataURL(value, {
-            width: 120,          // ⬅️ réduit de 140 à 120px
+            width: 120, // taille réduite pour éviter tout débordement
             margin: 0,
             errorCorrectionLevel: 'M',
             color: { dark: '#111827', light: '#FFFFFF' },
@@ -104,8 +134,8 @@ export default function BadgeEmployePage() {
           const qr = window.qrcode(0, 'M')
           qr.addData(value)
           qr.make()
-          // densité 3 ~ 105px (au lieu de 4 ~ 140px)
-          const dataUrl = qr.createDataURL(3) // ⬅️ réduit
+          // densité 3 ~ 105px
+          const dataUrl = qr.createDataURL(3)
           qrImgRef.current.src = dataUrl
           return true
         }
@@ -117,7 +147,7 @@ export default function BadgeEmployePage() {
       const ok1 = await drawWithQRCode()
       if (!ok1) drawWithQrcodeGen()
     })()
-  }, [qrReady, form.matricule])
+  }, [qrReady, form, displayName])
 
   const onChange = (e) => {
     const { name, value } = e.target
@@ -282,8 +312,13 @@ export default function BadgeEmployePage() {
                       <div className="text-sm text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
                     </div>
 
+                    {/* ✅ Pastille AMSS remontée */}
+                    <div className="mt-1 mb-2 inline-flex items-center text-[9px] px-1.5 py-[2px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start">
+                      <BadgeCheck className="h-[10px] w-[10px] mr-1" /> AMSS • Identification
+                    </div>
+
                     {/* Bloc infos : dates MM/AAAA ; labels complets non abrégés */}
-                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
                       <div className="break-words">
                         <span className="font-medium">Département:</span> {form.departement || '—'}
                       </div>
@@ -305,11 +340,6 @@ export default function BadgeEmployePage() {
                       <div className="col-span-2 whitespace-nowrap">
                         <span className="font-medium">Matricule:</span> {sanitizeMatricule(form.matricule)}
                       </div>
-                    </div>
-
-                    {/* Pastille plus petite */}
-                    <div className="mt-2 inline-flex items-center text-[9px] px-1.5 py-[2px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start">
-                      <BadgeCheck className="h-[10px] w-[10px] mr-1" /> AMSS • Identification
                     </div>
                   </div>
                 </div>
@@ -340,7 +370,7 @@ export default function BadgeEmployePage() {
                           ref={qrImgRef}
                           alt="QR du matricule"
                           className="block"
-                          style={{ width: 120, height: 120, imageRendering: 'pixelated' }} // ⬅️ réduit
+                          style={{ width: 120, height: 120, imageRendering: 'pixelated' }}
                         />
                       </div>
                     </div>
