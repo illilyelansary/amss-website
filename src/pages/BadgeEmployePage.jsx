@@ -43,7 +43,7 @@ function addYearsISO(years = 3) {
   d.setFullYear(d.getFullYear() + years)
   return d.toISOString().slice(0, 10)
 }
-/** MM/AAAA (tout en chiffres) + non ambigu */
+/** MM/AAAA (tout en chiffres) */
 function formatMonthYearNum(iso) {
   const d = new Date(iso)
   if (isNaN(d)) return iso || '—'
@@ -84,12 +84,9 @@ export default function BadgeEmployePage() {
 
     const drawWithQRCode = async () => {
       try {
-        // eslint-disable-next-line no-undef
         if (window.QRCode?.toDataURL) {
-          // Méthode principale
-          // eslint-disable-next-line no-undef
           const url = await window.QRCode.toDataURL(value, {
-            width: 160,
+            width: 140,
             margin: 0,
             errorCorrectionLevel: 'M',
             color: { dark: '#111827', light: '#FFFFFF' },
@@ -103,14 +100,11 @@ export default function BadgeEmployePage() {
 
     const drawWithQrcodeGen = () => {
       try {
-        // Fallback qrcode-generator
-        // eslint-disable-next-line no-undef
         if (window.qrcode) {
-          // eslint-disable-next-line no-undef
           const qr = window.qrcode(0, 'M')
           qr.addData(value)
           qr.make()
-          // densité 4 => ~160px (selon moduleCount)
+          // densité 4 => ~140px (selon moduleCount)
           const dataUrl = qr.createDataURL(4)
           qrImgRef.current.src = dataUrl
           return true
@@ -159,7 +153,7 @@ export default function BadgeEmployePage() {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Générateur de Badge Employé</h1>
           <p className="text-muted-foreground mt-2">
             Saisissez les informations, importez une photo et imprimez un badge au format carte. 
-            Le <strong>QR code</strong> est désormais au <strong>verso</strong> (sans code-barres).
+            Le <strong>QR code</strong> est au <strong>verso</strong> (sans code-barres).
           </p>
         </div>
       </section>
@@ -267,7 +261,7 @@ export default function BadgeEmployePage() {
                 {/* Bande supérieure */}
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-primary to-accent rounded-t-xl" />
                 <div className="relative h-full p-3 grid grid-cols-[96px_1fr] gap-3">
-                  {/* Photo + logo (plus grand) */}
+                  {/* Photo + logo (agrandi) */}
                   <div className="flex flex-col items-center">
                     <div className="w-[96px] h-[116px] rounded-md overflow-hidden border border-border bg-muted">
                       {photoDataUrl ? (
@@ -278,7 +272,6 @@ export default function BadgeEmployePage() {
                         </div>
                       )}
                     </div>
-                    {/* ✅ Logo agrandi */}
                     <img src={logoAmss} alt="AMSS" className="h-20 mt-1" />
                   </div>
 
@@ -289,7 +282,7 @@ export default function BadgeEmployePage() {
                       <div className="text-sm text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
                     </div>
 
-                    {/* Bloc infos : dates en chiffres (MM/AAAA) non coupées ; libellés complets et non abrégés */}
+                    {/* Bloc infos : dates MM/AAAA ; labels complets non abrégés */}
                     <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
                       <div className="break-words">
                         <span className="font-medium">Département:</span> {form.departement || '—'}
@@ -314,9 +307,9 @@ export default function BadgeEmployePage() {
                       </div>
                     </div>
 
-                    {/* Pastille validation */}
-                    <div className="mt-2 inline-flex items-center text-[10.5px] px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start">
-                      <BadgeCheck className="h-3 w-3 mr-1" /> AMSS • Identification
+                    {/* ✅ Pastille plus petite */}
+                    <div className="mt-2 inline-flex items-center text-[9px] px-1.5 py-[2px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start">
+                      <BadgeCheck className="h-[10px] w-[10px] mr-1" /> AMSS • Identification
                     </div>
                   </div>
                 </div>
@@ -330,40 +323,41 @@ export default function BadgeEmployePage() {
                 {/* Bande supérieure */}
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-accent to-primary rounded-t-xl" />
                 <div className="relative h-full p-3">
-                  {/* Logo centré */}
-                  <div className="flex items-center justify-center mt-1 mb-1">
+                  {/* En-tête */}
+                  <div className="flex items-center justify-center mt-1 mb-2">
                     <img src={logoAmss} alt="AMSS" className="h-10" />
                   </div>
-
-                  <div className="text-center text-xs text-muted-foreground">
+                  <div className="text-center text-xs text-muted-foreground mb-1">
                     Badge Employé • {sanitizeMatricule(form.matricule)}
                   </div>
 
-                  {/* QR Code (image) — plus grand puisque plus de code-barres */}
-                  <div className="mt-2 flex items-center justify-center">
-                    <div className="flex items-center justify-center w-[170px] h-[170px] bg-white rounded border border-border">
-                      <img
-                        ref={qrImgRef}
-                        alt="QR du matricule"
-                        className="block"
-                        style={{ width: 160, height: 160, imageRendering: 'pixelated' }}
-                      />
+                  {/* ✅ Deux colonnes: QR à gauche, contacts à droite */}
+                  <div className="mt-2 grid grid-cols-2 gap-3 items-start">
+                    {/* Colonne QR */}
+                    <div className="flex items-center justify-center">
+                      <div className="flex items-center justify-center w-[150px] h-[150px] bg-white rounded border border-border">
+                        <img
+                          ref={qrImgRef}
+                          alt="QR du matricule"
+                          className="block"
+                          style={{ width: 140, height: 140, imageRendering: 'pixelated' }}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  {/* CONTACT AMSS (avec site web) */}
-                  <div className="mt-2 px-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <img src={logoAmss} alt="AMSS" className="h-6" />
-                      <div className="text-[11px] leading-tight text-center">
+                    {/* Colonne Contact */}
+                    <div className="flex flex-col items-center text-center px-1">
+                      <img src={logoAmss} alt="AMSS" className="h-7 mb-2" />
+                      <div className="text-[11px] leading-tight">
                         <div className="font-medium">Association Malienne pour la Survie au Sahel (AMSS)</div>
-                        <div>www.ong-amss.org • info@ong-amss.org</div>
+                        <div>www.ong-amss.org</div>
+                        <div>info@ong-amss.org</div>
                         <div>+223 21 92 10 48 • +223 20 20 27 28</div>
                         <div>BP 153 Bamako • BP 152 Tombouctou</div>
                       </div>
-                    </div>
-                    <div className="mt-1 text-center text-[10px] text-muted-foreground">
-                      En cas de perte, merci de contacter l’AMSS.
+                      <div className="mt-2 text-[10px] text-muted-foreground">
+                        En cas de perte, merci de contacter l’AMSS.
+                      </div>
                     </div>
                   </div>
                 </div>
