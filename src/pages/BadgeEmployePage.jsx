@@ -1,6 +1,6 @@
 // src/pages/BadgeEmployePage.jsx
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Camera, Printer, Download, Hash, User, BadgeCheck, Building2, Briefcase, MapPin, CalendarDays, Phone, QrCode, Barcode } from 'lucide-react'
+import { Camera, Printer, Download, Hash, User, BadgeCheck, Building2, Briefcase, MapPin, CalendarDays, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import logoAmss from '@/assets/LogoAMSSFHD.png'
 
@@ -47,7 +47,7 @@ function addYearsISO(years = 3) {
 function formatDateFR(iso) {
   const d = new Date(iso)
   if (isNaN(d)) return iso || '—'
-  return d.toLocaleDateString('fr-FR') // jj/mm/aaaa
+  return d.toLocaleDateString('fr-FR')
 }
 
 export default function BadgeEmployePage() {
@@ -56,9 +56,6 @@ export default function BadgeEmployePage() {
 
   const barcodeRef = useRef(null)
   const qrCanvasRef = useRef(null)
-
-  // QR par défaut (mieux pour smartphone)
-  const [codeType, setCodeType] = useState('qr') // 'qr' | 'barcode'
 
   const [photoDataUrl, setPhotoDataUrl] = useState('')
   const [form, setForm] = useState({
@@ -79,12 +76,12 @@ export default function BadgeEmployePage() {
     return [p, n].filter(Boolean).join(' ')
   }, [form.prenom, form.nom])
 
-  /* ===== Génération codes ===== */
+  /* ===== Génération codes (verso) ===== */
   useEffect(() => {
     const value = sanitizeMatricule(form.matricule)
     if (!value) return
 
-    if (codeType === 'barcode' && jsbReady && barcodeRef.current) {
+    if (jsbReady && barcodeRef.current) {
       try {
         // eslint-disable-next-line no-undef
         window.JsBarcode(barcodeRef.current, value, {
@@ -92,11 +89,11 @@ export default function BadgeEmployePage() {
           displayValue: true,
           textPosition: 'bottom',
           textAlign: 'center',
-          fontSize: 10,          // ✅ texte plus petit
+          fontSize: 10,       // texte contenu
           textMargin: 2,
           lineColor: '#111827',
-          width: 1.6,            // ✅ un peu plus fin
-          height: 42,            // ✅ moins haut pour garder le texte dedans
+          width: 1.6,         // traits fins
+          height: 42,         // hauteur maîtrisée
           margin: 0,
           marginTop: 0,
           marginBottom: 0,
@@ -104,17 +101,17 @@ export default function BadgeEmployePage() {
       } catch {}
     }
 
-    if (codeType === 'qr' && qrReady && qrCanvasRef.current) {
+    if (qrReady && qrCanvasRef.current) {
       try {
         // eslint-disable-next-line no-undef
         window.QRCode.toCanvas(qrCanvasRef.current, value, {
-          width: 108,               // ✅ QR un peu plus grand
-          margin: 1,                // petit bord blanc
+          width: 120,               // QR net et lisible
+          margin: 1,
           errorCorrectionLevel: 'M',
         })
       } catch {}
     }
-  }, [codeType, jsbReady, qrReady, form.matricule])
+  }, [jsbReady, qrReady, form.matricule])
 
   const onChange = (e) => {
     const { name, value } = e.target
@@ -133,12 +130,14 @@ export default function BadgeEmployePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Impression : on ne sort que la carte */}
+      {/* Impression : on ne sort que les deux cartes (recto puis verso) */}
       <style>{`
         @media print {
           body * { visibility: hidden !important; }
           #badge-print, #badge-print * { visibility: visible !important; }
-          #badge-print { position: fixed; inset: 0; margin: auto; }
+          #badge-print { position: fixed; inset: 0; margin: 0 auto; }
+          .print-card { page-break-after: always; }
+          .print-card:last-child { page-break-after: auto; }
         }
       `}</style>
 
@@ -147,7 +146,8 @@ export default function BadgeEmployePage() {
         <div className="container mx-auto px-4">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Générateur de Badge Employé</h1>
           <p className="text-muted-foreground mt-2">
-            Saisissez les informations, importez une photo et imprimez un badge au format carte. QR code par défaut (scannable).
+            Saisissez les informations, importez une photo et imprimez un badge au format carte. 
+            Le <strong>QR code</strong> et le <strong>code-barres</strong> sont désormais placés <strong>au verso</strong>.
           </p>
         </div>
       </section>
@@ -214,33 +214,18 @@ export default function BadgeEmployePage() {
                 <label className="block text-sm font-medium mb-1"><Hash className="inline h-4 w-4 mr-1" />Matricule</label>
                 <input name="matricule" value={form.matricule} onChange={(e)=>setForm(f=>({...f, matricule: sanitizeMatricule(e.target.value)}))}
                   className="w-full px-3 py-2 border border-border rounded-md" placeholder="AMSS-2025-0001" />
-                <p className="text-xs text-muted-foreground mt-1">Servira dans le code (espaces supprimés).</p>
+                <p className="text-xs text-muted-foreground mt-1">Servira dans les codes (espaces supprimés).</p>
               </div>
 
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium mb-1"><Camera className="inline h-4 w-4 mr-1" />Photo</label>
                 <input type="file" accept="image/*" onChange={onPhoto} className="block w-full text-sm" />
-                <p className="text-xs text-muted-foreground mt-1">Utilisez une photo cadrée (buste), fond neutre si possible.</p>
-              </div>
-
-              {/* Choix type de code */}
-              <div className="sm:col-span-2">
-                <div className="mt-2 flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">Type de code :</span>
-                  <label className="inline-flex items-center gap-1 text-sm">
-                    <input type="radio" name="codetype" checked={codeType==='qr'} onChange={()=>setCodeType('qr')} />
-                    <QrCode className="h-4 w-4" /> QR
-                  </label>
-                  <label className="inline-flex items-center gap-1 text-sm">
-                    <input type="radio" name="codetype" checked={codeType==='barcode'} onChange={()=>setCodeType('barcode')} />
-                    <Barcode className="h-4 w-4" /> Code-barres
-                  </label>
-                </div>
+                <p className="text-xs text-muted-foreground mt-1">Photo cadrée (buste), fond neutre si possible.</p>
               </div>
             </div>
           </div>
 
-          {/* Aperçu Badge */}
+          {/* Aperçu Recto + Verso */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold">Aperçu du badge</h2>
@@ -254,79 +239,100 @@ export default function BadgeEmployePage() {
               </div>
             </div>
 
-            {/* Format carte (≈ 85.6 × 54 mm) */}
-            <div
-              id="badge-print"
-              className="relative mx-auto bg-white rounded-xl border border-border shadow-sm"
-              style={{ width: 336, height: 212 }}
-            >
-              {/* Bande supérieure */}
-              <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-primary to-accent rounded-t-xl" />
-              <div className="relative h-full p-3 grid grid-cols-[96px_1fr] gap-3">
-                {/* Photo + logo (logo agrandi) */}
-                <div className="flex flex-col items-center">
-                  <div className="w-[96px] h-[116px] rounded-md overflow-hidden border border-border bg-muted">
-                    {photoDataUrl ? (
-                      <img src={photoDataUrl} alt="Employé" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
-                        Photo
+            {/* Aperçu côte à côte à l’écran, 2 pages à l’impression */}
+            <div id="badge-print" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* ====== RECTO ====== */}
+              <div
+                className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
+                style={{ width: 336, height: 212 }}
+              >
+                {/* Bande supérieure */}
+                <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-primary to-accent rounded-t-xl" />
+                <div className="relative h-full p-3 grid grid-cols-[96px_1fr] gap-3">
+                  {/* Photo + logo (agrandi) */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-[96px] h-[116px] rounded-md overflow-hidden border border-border bg-muted">
+                      {photoDataUrl ? (
+                        <img src={photoDataUrl} alt="Employé" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                          Photo
+                        </div>
+                      )}
+                    </div>
+                    {/* ✅ Logo bien visible */}
+                    <img src={logoAmss} alt="AMSS" className="h-12 mt-2" />
+                  </div>
+
+                  {/* Infos */}
+                  <div className="flex flex-col">
+                    <div className="mt-1">
+                      <div className="text-lg font-semibold leading-tight">{displayName || 'Nom Prénom'}</div>
+                      <div className="text-sm text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
+                    </div>
+
+                    {/* Bloc infos : plus lisible, pas de chevauchement */}
+                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[12px] leading-5">
+                      <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="font-medium">Dept:</span> {form.departement || '—'}
                       </div>
-                    )}
-                  </div>
-                  {/* ✅ Logo plus grand */}
-                  <img src={logoAmss} alt="AMSS" className="h-12 mt-2" />
-                </div>
-
-                {/* Infos */}
-                <div className="flex flex-col">
-                  <div className="mt-1">
-                    <div className="text-base font-semibold leading-tight">{displayName || 'Nom Prénom'}</div>
-                    <div className="text-xs text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
-                  </div>
-
-                  {/* Bloc infos compact : lignes séparées, pas de chevauchement */}
-                  <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[10.5px] leading-4">
-                    <div className="whitespace-nowrap overflow-hidden text-ellipsis">
-                      <span className="font-medium">Dept:</span> {form.departement || '—'}
-                    </div>
-                    <div className="whitespace-nowrap overflow-hidden text-ellipsis">
-                      <span className="font-medium">Bureau:</span> {form.bureau}
-                    </div>
-                    <div className="whitespace-nowrap overflow-hidden text-ellipsis">
-                      <span className="font-medium">Embauche:</span> {formatDateFR(form.dateEmbauche)}
-                    </div>
-                    <div className="whitespace-nowrap overflow-hidden text-ellipsis">
-                      <span className="font-medium">Valide:</span> {formatDateFR(form.dateValidite)}
-                    </div>
-                    {form.telephone ? (
+                      <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="font-medium">Bureau:</span> {form.bureau}
+                      </div>
+                      <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="font-medium">Embauche:</span> {formatDateFR(form.dateEmbauche)}
+                      </div>
+                      <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="font-medium">Valide:</span> {formatDateFR(form.dateValidite)}
+                      </div>
+                      {form.telephone ? (
+                        <div className="col-span-2 whitespace-nowrap overflow-hidden text-ellipsis">
+                          <span className="font-medium">Tél:</span> {form.telephone}
+                        </div>
+                      ) : null}
                       <div className="col-span-2 whitespace-nowrap overflow-hidden text-ellipsis">
-                        <span className="font-medium">Tél:</span> {form.telephone}
+                        <span className="font-medium">Matricule:</span> {sanitizeMatricule(form.matricule)}
                       </div>
-                    ) : null}
-                    <div className="col-span-2 whitespace-nowrap overflow-hidden text-ellipsis">
-                      <span className="font-medium">Matricule:</span> {sanitizeMatricule(form.matricule)}
+                    </div>
+
+                    {/* Pastille validation – rien ne chevauche les codes (qui sont au verso) */}
+                    <div className="mt-2 inline-flex items-center text-[10.5px] px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start">
+                      <BadgeCheck className="h-3 w-3 mr-1" /> AMSS • Identification
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  {/* Pastille validation – au-dessus de la zone code */}
-                  <div className="mt-2 inline-flex items-center text-[10px] px-2 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start">
-                    <BadgeCheck className="h-3 w-3 mr-1" /> AMSS • Identification
+              {/* ====== VERSO ====== */}
+              <div
+                className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
+                style={{ width: 336, height: 212 }}
+              >
+                {/* Bande supérieure */}
+                <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-accent to-primary rounded-t-xl" />
+                <div className="relative h-full p-3">
+                  {/* Logo centré */}
+                  <div className="flex items-center justify-center mt-1 mb-1">
+                    <img src={logoAmss} alt="AMSS" className="h-10" />
                   </div>
 
-                  {/* Zone code */}
-                  <div className="mt-auto flex items-end justify-between gap-2">
-                    {/* QR (boîte dédiée pour un rendu propre) */}
-                    <div className={`${codeType==='qr' ? 'flex' : 'hidden'} items-center justify-center w-[110px] h-[110px] bg-white rounded border border-border`}>
+                  <div className="text-center text-xs text-muted-foreground">
+                    Badge Employé • {sanitizeMatricule(form.matricule)}
+                  </div>
+
+                  {/* Zone codes : QR à gauche, Code-barres à droite */}
+                  <div className="mt-2 grid grid-cols-[130px_1fr] gap-3 items-center">
+                    {/* QR Code dans une boîte dédiée (net et centré) */}
+                    <div className="flex items-center justify-center w-[130px] h-[130px] bg-white rounded border border-border mx-auto">
                       <canvas
                         ref={qrCanvasRef}
                         className="block"
-                        style={{ width: 108, height: 108 }}
+                        style={{ width: 120, height: 120 }}
                       />
                     </div>
 
                     {/* Code-barres dans un cadre fixe pour éviter tout débordement */}
-                    <div className={`${codeType==='barcode' ? 'flex' : 'hidden'} items-end w-[180px] h-[64px] overflow-hidden`}>
+                    <div className="flex items-end w-[190px] h-[70px] overflow-hidden mx-auto">
                       <svg
                         ref={barcodeRef}
                         className="w-full h-full"
@@ -336,12 +342,18 @@ export default function BadgeEmployePage() {
                       />
                     </div>
                   </div>
+
+                  {/* Petit rappel en bas */}
+                  <div className="absolute inset-x-0 bottom-2 text-center text-[10px] text-muted-foreground">
+                    En cas de perte, merci de contacter l’AMSS.
+                  </div>
                 </div>
               </div>
             </div>
 
             <p className="text-xs text-muted-foreground mt-3">
-              Astuce : choisissez <strong>Imprimer</strong> puis “Enregistrer en PDF” pour générer un fichier.
+              Astuce : dans la boîte de dialogue d’impression, activez le <strong>recto-verso</strong> (retournement <em>grand bord</em>)
+              pour aligner recto et verso.
             </p>
           </div>
         </div>
