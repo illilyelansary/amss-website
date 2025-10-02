@@ -6,6 +6,7 @@ import './App.css'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
+import HashContactRedirect from './components/HashContactRedirect' // ⬅️ NEW
 
 // Pages
 import HomePage from './pages/HomePage'
@@ -46,6 +47,9 @@ function RedirectActuById() {
 function App() {
   return (
     <Router>
+      {/* Redirection auto /#contact → /contact (et ...#contact depuis n'importe quelle page) */}
+      <HashContactRedirect />
+
       {/* Remonter automatiquement en haut à chaque navigation */}
       <ScrollToTop />
 
@@ -85,11 +89,10 @@ function App() {
             {/* Recrutement & Contact */}
             <Route path="/recrutement" element={<RecrutementPage />} />
             <Route path="/contact" element={<ContactPage />} />
-              <Route path="/don" element={<DonPage />} />
-             <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
-  <Route path="/politique-confidentialite" element={<PolitiqueConfidentialitePage />} />
-  <Route path="/transparence" element={<TransparencePage />} />
-
+            <Route path="/don" element={<DonPage />} />
+            <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
+            <Route path="/politique-confidentialite" element={<PolitiqueConfidentialitePage />} />
+            <Route path="/transparence" element={<TransparencePage />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
