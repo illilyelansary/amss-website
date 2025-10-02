@@ -86,7 +86,7 @@ export default function BadgeEmployePage() {
       try {
         if (window.QRCode?.toDataURL) {
           const url = await window.QRCode.toDataURL(value, {
-            width: 140,
+            width: 120,          // ⬅️ réduit de 140 à 120px
             margin: 0,
             errorCorrectionLevel: 'M',
             color: { dark: '#111827', light: '#FFFFFF' },
@@ -104,8 +104,8 @@ export default function BadgeEmployePage() {
           const qr = window.qrcode(0, 'M')
           qr.addData(value)
           qr.make()
-          // densité 4 => ~140px (selon moduleCount)
-          const dataUrl = qr.createDataURL(4)
+          // densité 3 ~ 105px (au lieu de 4 ~ 140px)
+          const dataUrl = qr.createDataURL(3) // ⬅️ réduit
           qrImgRef.current.src = dataUrl
           return true
         }
@@ -307,7 +307,7 @@ export default function BadgeEmployePage() {
                       </div>
                     </div>
 
-                    {/* ✅ Pastille plus petite */}
+                    {/* Pastille plus petite */}
                     <div className="mt-2 inline-flex items-center text-[9px] px-1.5 py-[2px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start">
                       <BadgeCheck className="h-[10px] w-[10px] mr-1" /> AMSS • Identification
                     </div>
@@ -331,21 +331,21 @@ export default function BadgeEmployePage() {
                     Badge Employé • {sanitizeMatricule(form.matricule)}
                   </div>
 
-                  {/* ✅ Deux colonnes: QR à gauche, contacts à droite */}
+                  {/* Deux colonnes: QR à gauche, contacts à droite */}
                   <div className="mt-2 grid grid-cols-2 gap-3 items-start">
                     {/* Colonne QR */}
                     <div className="flex items-center justify-center">
-                      <div className="flex items-center justify-center w-[150px] h-[150px] bg-white rounded border border-border">
+                      <div className="flex items-center justify-center w-[130px] h-[130px] bg-white rounded border border-border">
                         <img
                           ref={qrImgRef}
                           alt="QR du matricule"
                           className="block"
-                          style={{ width: 140, height: 140, imageRendering: 'pixelated' }}
+                          style={{ width: 120, height: 120, imageRendering: 'pixelated' }} // ⬅️ réduit
                         />
                       </div>
                     </div>
 
-                    {/* Colonne Contact */}
+                    {/* Colonne Contact (texte seul) */}
                     <div className="flex flex-col items-center text-center px-1">
                       <div className="text-[11px] leading-tight">
                         <div className="font-medium">Association Malienne pour la Survie au Sahel (AMSS)</div>
