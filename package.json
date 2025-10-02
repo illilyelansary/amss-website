@@ -7,6 +7,7 @@
     "node": "20.x"
   },
   "scripts": {
+    "prepare": "corepack enable",
     "dev": "vite",
     "prebuild": "node -e \"process.exit(process.env.SKIP_MIGRATION?0:1)\" || node scripts/migrate-projets.js data/Cartographie_Projets_AMSS.xlsx src/data/projetsData.js",
     "build": "vite build",
