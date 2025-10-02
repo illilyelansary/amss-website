@@ -4,31 +4,30 @@ import { Camera, Printer, Download, Hash, User, BadgeCheck, Building2, Briefcase
 import { Button } from '@/components/ui/button'
 import logoAmss from '@/assets/LogoAMSSFHD.png'
 
-/* ========= Chargement libs via CDN (aucune install) ========= */
-function useJsBarcodeLoader() {
-  const [loaded, setLoaded] = useState(!!window.JsBarcode)
-  useEffect(() => {
-    if (window.JsBarcode) return
-    const s = document.createElement('script')
-    s.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js'
-    s.async = true
-    s.onload = () => setLoaded(true)
-    document.head.appendChild(s)
-  }, [])
-  return loaded || !!window.JsBarcode
-}
+/* ========= Chargement libs QR via CDN (aucune install) =========
+   1) qrcode (QRCode.*) – priorité
+   2) qrcode-generator (qrcode()) – fallback
+*/
+function useQrLoaders() {
+  const [ready, setReady] = useState(!!window.QRCode || !!window.qrcode)
 
-function useQrLoader() {
-  const [ready, setReady] = useState(!!window.QRCode)
   useEffect(() => {
-    if (window.QRCode) return
-    const s = document.createElement('script')
-    s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js'
-    s.async = true
-    s.onload = () => setReady(true)
-    document.head.appendChild(s)
+    if (window.QRCode || window.qrcode) return
+
+    const s1 = document.createElement('script')
+    s1.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js'
+    s1.async = true
+    s1.onload = () => setReady(true)
+    document.head.appendChild(s1)
+
+    const s2 = document.createElement('script')
+    s2.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'
+    s2.async = true
+    s2.onload = () => setReady(true)
+    document.head.appendChild(s2)
   }, [])
-  return ready || !!window.QRCode
+
+  return ready || !!window.QRCode || !!window.qrcode
 }
 
 /* ====================== Helpers ====================== */
@@ -44,18 +43,19 @@ function addYearsISO(years = 3) {
   d.setFullYear(d.getFullYear() + years)
   return d.toISOString().slice(0, 10)
 }
-function formatMonthYearFR(iso) {
+/** MM/AAAA (tout en chiffres) + non ambigu */
+function formatMonthYearNum(iso) {
   const d = new Date(iso)
   if (isNaN(d)) return iso || '—'
-  return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' })
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  return `${mm}/${yyyy}`
 }
 
 export default function BadgeEmployePage() {
-  const jsbReady = useJsBarcodeLoader()
-  const qrReady = useQrLoader()
+  const qrReady = useQrLoaders()
 
-  const barcodeRef = useRef(null)
-  const qrCanvasRef = useRef(null)
+  const qrImgRef = useRef(null)
 
   const [photoDataUrl, setPhotoDataUrl] = useState('')
   const [form, setForm] = useState({
@@ -77,46 +77,53 @@ export default function BadgeEmployePage() {
     return [p, n].filter(Boolean).join(' ')
   }, [form.prenom, form.nom])
 
-  /* ===== Génération codes (verso) ===== */
+  /* ===== Génération QR (verso) ===== */
   useEffect(() => {
     const value = sanitizeMatricule(form.matricule)
-    if (!value) return
+    if (!qrReady || !qrImgRef.current || !value) return
 
-    if (jsbReady && barcodeRef.current) {
+    const drawWithQRCode = async () => {
       try {
         // eslint-disable-next-line no-undef
-        window.JsBarcode(barcodeRef.current, value, {
-          format: 'CODE128',
-          displayValue: true,
-          textPosition: 'bottom',
-          textAlign: 'center',
-          fontSize: 10,
-          textMargin: 2,
-          lineColor: '#111827',
-          width: 1.6,
-          height: 42,
-          margin: 0,
-          marginTop: 0,
-          marginBottom: 0,
-        })
+        if (window.QRCode?.toDataURL) {
+          // Méthode principale
+          // eslint-disable-next-line no-undef
+          const url = await window.QRCode.toDataURL(value, {
+            width: 160,
+            margin: 0,
+            errorCorrectionLevel: 'M',
+            color: { dark: '#111827', light: '#FFFFFF' },
+          })
+          qrImgRef.current.src = url
+          return true
+        }
       } catch {}
+      return false
     }
 
-    if (qrReady && qrCanvasRef.current) {
+    const drawWithQrcodeGen = () => {
       try {
+        // Fallback qrcode-generator
         // eslint-disable-next-line no-undef
-        window.QRCode.toCanvas(qrCanvasRef.current, value, {
-          width: 120,
-          margin: 1,
-          errorCorrectionLevel: 'M',
-          color: {
-            dark: '#111827',   // ✅ noir
-            light: '#FFFFFF',  // ✅ fond blanc
-          },
-        })
+        if (window.qrcode) {
+          // eslint-disable-next-line no-undef
+          const qr = window.qrcode(0, 'M')
+          qr.addData(value)
+          qr.make()
+          // densité 4 => ~160px (selon moduleCount)
+          const dataUrl = qr.createDataURL(4)
+          qrImgRef.current.src = dataUrl
+          return true
+        }
       } catch {}
+      return false
     }
-  }, [jsbReady, qrReady, form.matricule])
+
+    ;(async () => {
+      const ok1 = await drawWithQRCode()
+      if (!ok1) drawWithQrcodeGen()
+    })()
+  }, [qrReady, form.matricule])
 
   const onChange = (e) => {
     const { name, value } = e.target
@@ -152,7 +159,7 @@ export default function BadgeEmployePage() {
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Générateur de Badge Employé</h1>
           <p className="text-muted-foreground mt-2">
             Saisissez les informations, importez une photo et imprimez un badge au format carte. 
-            Le <strong>QR code</strong> et le <strong>code-barres</strong> sont placés <strong>au verso</strong>.
+            Le <strong>QR code</strong> est désormais au <strong>verso</strong> (sans code-barres).
           </p>
         </div>
       </section>
@@ -190,7 +197,7 @@ export default function BadgeEmployePage() {
               <div>
                 <label className="block text-sm font-medium mb-1"><Building2 className="inline h-4 w-4 mr-1" />Département</label>
                 <input name="departement" value={form.departement} onChange={onChange}
-                  className="w-full px-3 py-2 border border-border rounded-md" placeholder="Ex. Programmes" />
+                  className="w-full px-3 py-2 border border-border rounded-md" placeholder="Ex. Direction des Programmes" />
               </div>
 
               <div>
@@ -225,7 +232,7 @@ export default function BadgeEmployePage() {
                 <label className="block text-sm font-medium mb-1"><Hash className="inline h-4 w-4 mr-1" />Matricule</label>
                 <input name="matricule" value={form.matricule} onChange={(e)=>setForm(f=>({...f, matricule: sanitizeMatricule(e.target.value)}))}
                   className="w-full px-3 py-2 border border-border rounded-md" placeholder="AMSS-2025-0001" />
-                <p className="text-xs text-muted-foreground mt-1">Servira dans les codes (espaces supprimés).</p>
+                <p className="text-xs text-muted-foreground mt-1">Servira dans le QR code (espaces supprimés).</p>
               </div>
 
               <div className="sm:col-span-2">
@@ -272,7 +279,7 @@ export default function BadgeEmployePage() {
                       )}
                     </div>
                     {/* ✅ Logo agrandi */}
-                    <img src={logoAmss} alt="AMSS" className="h-16 mt-1" />
+                    <img src={logoAmss} alt="AMSS" className="h-20 mt-1" />
                   </div>
 
                   {/* Infos */}
@@ -282,31 +289,27 @@ export default function BadgeEmployePage() {
                       <div className="text-sm text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
                     </div>
 
-                    {/* Bloc infos compact : dates = mois + année ; email avant téléphone */}
+                    {/* Bloc infos : dates en chiffres (MM/AAAA) non coupées ; libellés complets et non abrégés */}
                     <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
-                      <div className="whitespace-nowrap overflow-hidden text-ellipsis">
-                        <span className="font-medium">Dept:</span> {form.departement || '—'}
+                      <div className="break-words">
+                        <span className="font-medium">Département:</span> {form.departement || '—'}
                       </div>
-                      <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+                      <div className="break-words">
                         <span className="font-medium">Bureau:</span> {form.bureau}
                       </div>
-                      <div className="whitespace-nowrap overflow-hidden text-ellipsis">
-                        <span className="font-medium">Embauche:</span> {formatMonthYearFR(form.dateEmbauche)}
+                      <div className="whitespace-nowrap">
+                        <span className="font-medium">Embauche:</span> {formatMonthYearNum(form.dateEmbauche)}
                       </div>
-                      <div className="whitespace-nowrap overflow-hidden text-ellipsis">
-                        <span className="font-medium">Validité:</span> {formatMonthYearFR(form.dateValidite)}
+                      <div className="whitespace-nowrap">
+                        <span className="font-medium">Validité:</span> {formatMonthYearNum(form.dateValidite)}
                       </div>
-                      {form.email ? (
-                        <div className="col-span-2 whitespace-nowrap overflow-hidden text-ellipsis">
-                          <span className="font-medium">Email:</span> {form.email}
-                        </div>
-                      ) : null}
-                      {form.telephone ? (
-                        <div className="col-span-2 whitespace-nowrap overflow-hidden text-ellipsis">
-                          <span className="font-medium">Tél:</span> {form.telephone}
-                        </div>
-                      ) : null}
-                      <div className="col-span-2 whitespace-nowrap overflow-hidden text-ellipsis">
+                      <div className="col-span-2 break-words">
+                        <span className="font-medium">Email:</span> {form.email || '—'}
+                      </div>
+                      <div className="col-span-2 whitespace-nowrap">
+                        <span className="font-medium">Tél:</span> {form.telephone || '—'}
+                      </div>
+                      <div className="col-span-2 whitespace-nowrap">
                         <span className="font-medium">Matricule:</span> {sanitizeMatricule(form.matricule)}
                       </div>
                     </div>
@@ -336,30 +339,19 @@ export default function BadgeEmployePage() {
                     Badge Employé • {sanitizeMatricule(form.matricule)}
                   </div>
 
-                  {/* Zone codes : QR à gauche (corrigé), Code-barres à droite */}
-                  <div className="mt-2 grid grid-cols-[130px_1fr] gap-3 items-center">
-                    {/* QR Code (noir sur fond blanc) */}
-                    <div className="flex items-center justify-center w-[130px] h-[130px] bg-white rounded border border-border mx-auto">
-                      <canvas
-                        ref={qrCanvasRef}
+                  {/* QR Code (image) — plus grand puisque plus de code-barres */}
+                  <div className="mt-2 flex items-center justify-center">
+                    <div className="flex items-center justify-center w-[170px] h-[170px] bg-white rounded border border-border">
+                      <img
+                        ref={qrImgRef}
+                        alt="QR du matricule"
                         className="block"
-                        style={{ width: 120, height: 120, backgroundColor: '#FFFFFF' }}
-                      />
-                    </div>
-
-                    {/* Code-barres */}
-                    <div className="flex items-end w-[190px] h-[70px] overflow-hidden mx-auto">
-                      <svg
-                        ref={barcodeRef}
-                        className="w-full h-full"
-                        role="img"
-                        aria-label="Code-barres du matricule"
-                        preserveAspectRatio="xMidYMid meet"
+                        style={{ width: 160, height: 160, imageRendering: 'pixelated' }}
                       />
                     </div>
                   </div>
 
-                  {/* CONTACT AMSS (avec site web + logo) */}
+                  {/* CONTACT AMSS (avec site web) */}
                   <div className="mt-2 px-2">
                     <div className="flex items-center justify-center gap-2">
                       <img src={logoAmss} alt="AMSS" className="h-6" />
