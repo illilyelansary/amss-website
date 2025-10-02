@@ -1,6 +1,17 @@
 // src/pages/RecrutementPage.jsx
 import React, { useEffect, useMemo, useState } from 'react'
-import { Calendar, MapPin, Users, Briefcase, Archive, Search, Filter, Clock, FileDown, FileSpreadsheet } from 'lucide-react'
+import {
+  Calendar,
+  MapPin,
+  Users,
+  Briefcase,
+  Archive,
+  Search,
+  Filter,
+  Clock,
+  FileDown,
+  FileSpreadsheet,
+} from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import recrutementData from '../data/recrutementsData'
 
@@ -112,7 +123,7 @@ const domainesFixes = [
  * Page
  * =========================================================== */
 const RecrutementPage = () => {
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
 
   const [data, setData] = useState({ enCours: [], archives: [] })
   const [activeTab, setActiveTab] = useState('enCours') // 'enCours' | 'archives'
@@ -146,12 +157,24 @@ const RecrutementPage = () => {
     setData({ enCours: stillOpen, archives: Array.from(archiveMap.values()) })
   }, [])
 
-  // Catégorie depuis l'URL (nécessite que les routes /recrutement/emplois et /recrutement/marches existent)
+  // Synchronisation catégorie + onglet avec l’URL (sous-menus + ancre)
   useEffect(() => {
+    // Catégorie via le chemin
     if (pathname.endsWith('/marches')) setCategoryFilter('marche')
     else if (pathname.endsWith('/emplois')) setCategoryFilter('emploi')
     else setCategoryFilter('tous')
-  }, [pathname])
+
+    // Onglet via l’ancre (#en-cours | #archives)
+    if (hash === '#archives') setActiveTab('archives')
+    else setActiveTab('enCours')
+
+    // Scroll vers l’ancre (ou vers "en-cours" par défaut)
+    const id = (hash && hash.slice(1)) || 'en-cours'
+    setTimeout(() => {
+      const el = document.getElementById(id)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 0)
+  }, [pathname, hash])
 
   const domaines = useMemo(() => {
     const dyn = new Set(domainesFixes)
@@ -200,9 +223,10 @@ const RecrutementPage = () => {
       <section className="py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Recrutement AMSS</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Recrutements & Appels d’offres</h1>
             <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-              Rejoignez notre équipe et contribuez à l'amélioration des conditions de vie des populations vulnérables du Mali.
+              Consultez nos <strong>offres d’emploi</strong> et nos <strong>appels d’offres & prestations</strong>.
+              Les avis expirés sont automatiquement archivés.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <div className="flex items-center text-muted-foreground">
@@ -229,7 +253,7 @@ const RecrutementPage = () => {
             {/* Catégories synchronisées à l’URL */}
             <div className="flex flex-wrap gap-2 mb-6">
               <Link
-                to="/recrutement"
+                to="/recrutement#en-cours"
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors border ${
                   categoryFilter === 'tous' ? 'bg-primary text-white border-primary' : 'bg-white text-foreground hover:bg-muted/60 border-border'
                 }`}
@@ -237,38 +261,40 @@ const RecrutementPage = () => {
                 Tous
               </Link>
               <Link
-                to="/recrutement/emplois"
+                to="/recrutement/emplois#en-cours"
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors border ${
                   categoryFilter === 'emploi' ? 'bg-primary text-white border-primary' : 'bg-white text-foreground hover:bg-muted/60 border-border'
                 }`}
               >
                 <Briefcase className="h-4 w-4 inline mr-2" />
-                Emplois
+                Offres d’emploi
               </Link>
               <Link
-                to="/recrutement/marches"
+                to="/recrutrement/marches#en-cours"
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors border ${
                   categoryFilter === 'marche' ? 'bg-primary text-white border-primary' : 'bg-white text-foreground hover:bg-muted/60 border-border'
                 }`}
               >
                 <FileSpreadsheet className="h-4 w-4 inline mr-2" />
-                Marchés & Prestations
+                Appels d’offres & Prestations
               </Link>
             </div>
 
             {/* Onglets en cours / archives */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div className="flex space-x-1 bg-muted p-1 rounded-lg">
-                <button
+                <Link
+                  to={`${pathname.replace(/#.*$/, '')}#en-cours`}
                   onClick={() => setActiveTab('enCours')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'enCours' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   <Briefcase className="h-4 w-4 inline mr-2" />
-                  Offres en cours ({filteredEnCours.length})
-                </button>
-                <button
+                  En cours ({filteredEnCours.length})
+                </Link>
+                <Link
+                  to={`${pathname.replace(/#.*$/, '')}#archives`}
                   onClick={() => setActiveTab('archives')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'archives' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
@@ -276,7 +302,7 @@ const RecrutementPage = () => {
                 >
                   <Archive className="h-4 w-4 inline mr-2" />
                   Archives ({filteredArchives.length})
-                </button>
+                </Link>
               </div>
 
               {/* Filtres recherche + domaine */}
@@ -311,7 +337,9 @@ const RecrutementPage = () => {
             {/* Alerte d'auto-archivage */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>Les offres sont <strong>archivées automatiquement</strong> dès le lendemain de la date limite (heure locale).</span>
+              <span>
+                Les offres sont <strong>archivées automatiquement</strong> dès le lendemain de la date limite (heure locale).
+              </span>
             </div>
           </div>
         </div>
@@ -321,12 +349,15 @@ const RecrutementPage = () => {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
+            {/* Ancre "en-cours" toujours présente */}
+            <span id="en-cours" />
+
             {activeTab === 'enCours' && (
               <div className="space-y-6">
                 {filteredEnCours.length === 0 ? (
                   <div className="text-center py-12">
                     <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Aucune offre ne correspond à vos critères de recherche.</p>
+                    <p className="text-muted-foreground">Aucun avis ne correspond à vos critères de recherche.</p>
                   </div>
                 ) : (
                   filteredEnCours.map((offre) => {
@@ -340,7 +371,10 @@ const RecrutementPage = () => {
                     const cat = inferCategory(offre)
 
                     return (
-                      <div key={offre.id} className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
+                      <div
+                        key={offre.id}
+                        className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow"
+                      >
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -350,13 +384,21 @@ const RecrutementPage = () => {
                               <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 {offre.domaine || (cat === CATEGORIES.MARCHE ? 'Marché' : 'Emploi')}
                               </span>
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${cat === CATEGORIES.MARCHE ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                                {cat === CATEGORIES.MARCHE ? 'Marché / Prestation' : 'Emploi'}
+                              <span
+                                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                  cat === CATEGORIES.MARCHE ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                              >
+                                {cat === CATEGORIES.MARCHE ? 'Appel d’offres / Prestation' : 'Offre d’emploi'}
                               </span>
                               {badge && (
                                 <span
                                   className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                    dleft < 0 ? 'bg-red-100 text-red-700' : dleft === 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                                    dleft < 0
+                                      ? 'bg-red-100 text-red-700'
+                                      : dleft === 0
+                                        ? 'bg-amber-100 text-amber-800'
+                                        : 'bg-emerald-100 text-emerald-800'
                                   }`}
                                 >
                                   {badge}
@@ -389,7 +431,9 @@ const RecrutementPage = () => {
                               <div className="mb-4">
                                 <h4 className="font-medium text-foreground mb-2">Compétences requises :</h4>
                                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                  {offre.competences.map((c, i) => <li key={i}>{c}</li>)}
+                                  {offre.competences.map((c, i) => (
+                                    <li key={i}>{c}</li>
+                                  ))}
                                 </ul>
                               </div>
                             )}
@@ -432,6 +476,9 @@ const RecrutementPage = () => {
               </div>
             )}
 
+            {/* Ancre "archives" toujours présente */}
+            <span id="archives" />
+
             {activeTab === 'archives' && (
               <div className="space-y-4">
                 {filteredArchives.length === 0 ? (
@@ -453,8 +500,12 @@ const RecrutementPage = () => {
                               <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 {offre.domaine || (cat === CATEGORIES.MARCHE ? 'Marché' : 'Emploi')}
                               </span>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${cat === CATEGORIES.MARCHE ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                                {cat === CATEGORIES.MARCHE ? 'Marché / Prestation' : 'Emploi'}
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  cat === CATEGORIES.MARCHE ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                              >
+                                {cat === CATEGORIES.MARCHE ? 'Appel d’offres / Prestation' : 'Offre d’emploi'}
                               </span>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(offre.statut || 'Clôturé')}`}>
                                 {offre.statut || 'Clôturé'}
@@ -484,9 +535,7 @@ const RecrutementPage = () => {
                               )}
                             </div>
 
-                            {offre.description && (
-                              <p className="text-sm text-muted-foreground">{offre.description}</p>
-                            )}
+                            {offre.description && <p className="text-sm text-muted-foreground">{offre.description}</p>}
 
                             {offre.pdfUrl && (
                               <div className="mt-3">
