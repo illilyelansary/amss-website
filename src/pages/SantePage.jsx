@@ -127,7 +127,7 @@ const SantePage = () => {
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-3">Nutrition Communautaire</h3>
                 <p className="text-muted-foreground text-sm mb-4">
-                  Prévention et PEC de la malnutrition aiguë et chronique chez les <5 ans.
+                  Prévention et PEC de la malnutrition aiguë et chronique chez les moins de 5 ans.
                 </p>
                 <div className="text-sm text-orange-600 font-medium">Cible: Enfants 0–5 ans</div>
               </div>
