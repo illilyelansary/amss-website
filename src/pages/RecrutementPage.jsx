@@ -1,13 +1,18 @@
 // src/pages/RecrutementPage.jsx
 import React, { useEffect, useMemo, useState } from 'react'
-import { Calendar, MapPin, Users, Briefcase, Archive, Search, Filter, Clock, FileDown } from 'lucide-react'
+import { Calendar, MapPin, Users, Briefcase, Archive, Search, Filter, Clock, FileDown, FileText } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-// --- Données source (exemple; vous pouvez ajouter pdfUrl sur une offre) ---
+/**
+ * Données source
+ * - Ajoute `category: "emploi" | "marche"` pour piloter les onglets.
+ * - Ajoute `pdfUrl` si un PDF est disponible (déposé dans public/recrutements/…).
+ */
 const recrutementData = {
   enCours: [
     {
       id: 1,
+      category: 'emploi',
       titre: "Un Superviseur en Agriculture",
       lieu: "Mountoungoula, Mali",
       datePublication: "13 mai 2025",
@@ -17,10 +22,11 @@ const recrutementData = {
         "Recherche d'un superviseur expérimenté pour superviser les activités agricoles dans le cadre du projet Sécurité Alimentaire financé par la Fondation Stromme.",
       competences: ["Diplôme en agronomie", "5 ans d'expérience minimum", "Maîtrise du français et langues locales"],
       dateExpiration: "30 septembre 2025",
-      // pdfUrl: "/docs/offres/superviseur-agriculture.pdf",
+      // pdfUrl: "/recrutements/2025-05-13-superviseur-agriculture.pdf",
     },
     {
       id: 2,
+      category: 'emploi',
       titre: "Avis de recrutement de (90) Animateurs/trices de centres d'Alphabétisation",
       lieu: "Mali (plusieurs régions)",
       datePublication: "6 janvier 2025",
@@ -30,35 +36,49 @@ const recrutementData = {
         "Recrutement massif d'animateurs pour les centres d'alphabétisation dans le cadre de l'expansion des programmes éducatifs de l'AMSS.",
       competences: ["DEF minimum", "Expérience en alphabétisation", "Connaissance des langues locales"],
       dateExpiration: "15 octobre 2025",
-      // pdfUrl: "/docs/offres/animateurs-alphabetisation.pdf",
+      // pdfUrl: "/recrutements/2025-01-06-animateurs-alphabetisation.pdf",
     },
+    // Exemple marché/prestations actif
+    // {
+    //   id: 13,
+    //   category: 'marche',
+    //   titre: "Appel d’offres – Réhabilitation de forages (Région de Ségou)",
+    //   lieu: "Ségou",
+    //   datePublication: "1 mars 2025",
+    //   type: "Prestation",
+    //   domaine: "WASH",
+    //   description: "Sélection d’un prestataire pour réhabiliter 10 forages et latrines.",
+    //   dateExpiration: "20 mars 2025",
+    //   pdfUrl: "/recrutements/2025-03-01-ao-forages.pdf",
+    // },
   ],
   archives: [
     {
       id: 3,
+      category: 'emploi',
       titre: "Six (06) Conseillers(ères) en Education",
       lieu: "Sikasso, Mali",
       datePublication: "18 décembre 2024",
       type: "CDD",
       domaine: "Éducation",
       statut: "Clôturé",
-      description:
-        "Conseillers pédagogiques pour l'amélioration de la qualité de l'éducation dans la région de Sikasso.",
-      // pdfUrl: "/docs/offres/conseillers-education.pdf",
+      description: "Conseillers pédagogiques pour l'amélioration de la qualité de l'éducation dans la région de Sikasso.",
+      // pdfUrl: "/recrutements/2024-12-18-conseillers-education.pdf",
     },
     {
       id: 4,
+      category: 'emploi',
       titre: "COORDINATEUR/TRICE EDUCATION",
       lieu: "Mountoungoula, Mali",
       datePublication: "15 août 2024",
       type: "CDI",
       domaine: "Éducation",
       statut: "Pourvu",
-      description:
-        "Coordination des activités éducatives et supervision des équipes pédagogiques.",
+      description: "Coordination des activités éducatives et supervision des équipes pédagogiques.",
     },
     {
       id: 5,
+      category: 'marche',
       titre: "TROIS (3) PRESTATAIRES AU COMPTE DU PROJET PARTAGE",
       lieu: "GAO, MOPTI, SEGOU",
       datePublication: "19 juin 2024",
@@ -70,6 +90,7 @@ const recrutementData = {
     },
     {
       id: 6,
+      category: 'emploi',
       titre: "30 ADC pour les antennes AMSS",
       lieu: "Bamako (06), Ségou (12) et Mopti (12)",
       datePublication: "23 avril 2024",
@@ -81,6 +102,7 @@ const recrutementData = {
     },
     {
       id: 7,
+      category: 'emploi',
       titre: "03 coordinateurs régionaux",
       lieu: "Bamako, Ségou et Mopti",
       datePublication: "23 avril 2024",
@@ -92,6 +114,7 @@ const recrutementData = {
     },
     {
       id: 8,
+      category: 'emploi',
       titre: "Un (01) Responsable du CURRICULUM",
       lieu: "Mali",
       datePublication: "23 avril 2024",
@@ -103,6 +126,7 @@ const recrutementData = {
     },
     {
       id: 9,
+      category: 'emploi',
       titre: "Un (01) Spécialiste de l'entrepreneuriat",
       lieu: "Bamako, Mali",
       datePublication: "23 avril 2024",
@@ -114,6 +138,7 @@ const recrutementData = {
     },
     {
       id: 10,
+      category: 'emploi',
       titre: "16 Superviseurs Alpha",
       lieu: "Bamako (04), Ségou (07) et Mopti (05)",
       datePublication: "23 avril 2024",
@@ -125,6 +150,7 @@ const recrutementData = {
     },
     {
       id: 11,
+      category: 'emploi',
       titre: "Deux (02) Comptables",
       lieu: "Ségou (01) et Mopti (01)",
       datePublication: "23 avril 2024",
@@ -136,6 +162,7 @@ const recrutementData = {
     },
     {
       id: 12,
+      category: 'emploi',
       titre: "Un(e) Gestionnaire de l'information",
       lieu: "Bamako, Mali",
       datePublication: "2 avril 2024",
@@ -229,11 +256,12 @@ const domainesFixes = [
   'Entrepreneuriat',
   'Finance',
   'Information',
+  'WASH',
 ]
 
 const RecrutementPage = () => {
   const [data, setData] = useState({ enCours: [], archives: [] })
-  const [activeTab, setActiveTab] = useState('enCours')
+  const [activeTab, setActiveTab] = useState('emploi') // "emploi" | "marche" | "archives"
   const [searchTerm, setSearchTerm] = useState('')
   const [filterDomaine, setFilterDomaine] = useState('')
 
@@ -257,6 +285,13 @@ const RecrutementPage = () => {
     setData({ enCours: stillOpen, archives: Array.from(archiveMap.values()) })
   }, [])
 
+  // Comptages par catégorie
+  const counts = useMemo(() => {
+    const emploi = data.enCours.filter(o => (o.category || 'emploi') === 'emploi').length
+    const marche = data.enCours.filter(o => o.category === 'marche').length
+    return { emploi, marche, archives: data.archives.length }
+  }, [data])
+
   const domaines = useMemo(() => {
     const dyn = new Set(domainesFixes)
     data.enCours.forEach((o) => dyn.add(o.domaine))
@@ -264,25 +299,33 @@ const RecrutementPage = () => {
     return Array.from(dyn)
   }, [data])
 
-  const filteredData = (arr) =>
+  const filtered = (arr) =>
     arr.filter((item) => {
       const q = strip(searchTerm)
       const matchSearch =
         !q ||
         strip(item.titre).includes(q) ||
         strip(item.lieu).includes(q) ||
-        strip(item.domaine).includes(q)
+        strip(item.domaine).includes(q) ||
+        strip(item.type).includes(q)
       const matchDomaine = !filterDomaine || filterDomaine === 'Tous' || item.domaine === filterDomaine
       return matchSearch && matchDomaine
     })
 
-  const buildMailto = (titre) => {
-    const subject = encodeURIComponent(`Candidature – ${titre}`)
+  const buildMailto = (titre, id) => {
+    const subject = encodeURIComponent(`Candidature – ${titre}${id ? ` (${id})` : ''}`)
     const body = encodeURIComponent(
-      `Bonjour,\n\nJe souhaite postuler au poste « ${titre} ».\n\nNom :\nTéléphone :\nLien CV (ou pièce jointe) :\nMessage :\n\nCordialement,`
+      `Bonjour,\n\nJe souhaite postuler à l'avis « ${titre} »${id ? ` (${id})` : ''}.\n\nNom :\nTéléphone :\nLien CV (ou pièce jointe) :\nMessage :\n\nCordialement,`
     )
     return `mailto:recrutement@ong-amss.org?subject=${subject}&body=${body}`
   }
+
+  // Liste à afficher selon l’onglet
+  const list = useMemo(() => {
+    if (activeTab === 'archives') return filtered(data.archives)
+    if (activeTab === 'marche') return filtered(data.enCours.filter(o => o.category === 'marche'))
+    return filtered(data.enCours.filter(o => (o.category || 'emploi') === 'emploi'))
+  }, [activeTab, data, searchTerm, filterDomaine])
 
   return (
     <div className="min-h-screen bg-background">
@@ -290,10 +333,10 @@ const RecrutementPage = () => {
       <section className="py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Recrutement AMSS</h1>
+            <Briefcase className="h-16 w-16 text-primary mx-auto mb-4" />
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Recrutements & Avis</h1>
             <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-              Rejoignez notre équipe et contribuez à l'amélioration des conditions de vie des populations
-              vulnérables du Mali.
+              Consultez nos offres d’emploi et nos avis de marchés / prestations. Les avis expirés sont automatiquement archivés.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <div className="flex items-center text-muted-foreground">
@@ -304,29 +347,32 @@ const RecrutementPage = () => {
                 <MapPin className="h-5 w-5 mr-2" />
                 <span>8 régions</span>
               </div>
-              <div className="flex items-center text-muted-foreground">
-                <Briefcase className="h-5 w-5 mr-2" />
-                <span>Opportunités variées</span>
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Tabs + Filtres */}
+      {/* Onglets + Filtres */}
       <section className="py-8 bg-white border-b">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div className="flex space-x-1 bg-muted p-1 rounded-lg">
+              <div className="flex flex-wrap gap-2 bg-muted p-1 rounded-lg">
                 <button
-                  onClick={() => setActiveTab('enCours')}
+                  onClick={() => setActiveTab('emploi')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === 'enCours' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    activeTab === 'emploi' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Briefcase className="h-4 w-4 inline mr-2" />
-                  Offres en cours ({data.enCours.length})
+                  Offres d’emploi ({counts.emploi})
+                </button>
+                <button
+                  onClick={() => setActiveTab('marche')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'marche' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Marchés & Prestations ({counts.marche})
                 </button>
                 <button
                   onClick={() => setActiveTab('archives')}
@@ -334,8 +380,7 @@ const RecrutementPage = () => {
                     activeTab === 'archives' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Archive className="h-4 w-4 inline mr-2" />
-                  Archives ({data.archives.length})
+                  Avis terminés ({counts.archives})
                 </button>
               </div>
 
@@ -345,7 +390,7 @@ const RecrutementPage = () => {
                   <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="text"
-                    placeholder="Rechercher un poste…"
+                    placeholder="Rechercher (titre, lieu, type, domaine)…"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 pr-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
@@ -371,183 +416,133 @@ const RecrutementPage = () => {
             {/* Alerte d'auto-archivage */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>Les offres sont <strong>archivées automatiquement</strong> dès le lendemain de la date limite (local).</span>
+              <span>Les offres sont <strong>archivées automatiquement</strong> dès le lendemain de la date limite (heure locale).</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Liste des offres */}
+      {/* Liste */}
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            {activeTab === 'enCours' && (
+            {list.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Aucun avis à afficher.</p>
+              </div>
+            ) : (
               <div className="space-y-6">
-                {filteredData(data.enCours).length === 0 ? (
-                  <div className="text-center py-12">
-                    <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Aucune offre ne correspond à vos critères de recherche.</p>
-                  </div>
-                ) : (
-                  filteredData(data.enCours).map((offre) => {
-                    const dleft = daysLeft(offre.dateExpiration)
-                    let badge = null
-                    if (dleft != null) {
-                      if (dleft > 0) badge = `J-${dleft}`
-                      else if (dleft === 0) badge = `Aujourd'hui`
-                      else badge = `Expiré`
-                    }
+                {list.map((offre) => {
+                  const dleft = daysLeft(offre.dateExpiration)
+                  let badge = null
+                  if (dleft != null) {
+                    if (dleft > 0) badge = `J-${dleft}`
+                    else if (dleft === 0) badge = `Aujourd'hui`
+                    else badge = `Expiré`
+                  }
 
-                    return (
-                      <div
-                        key={offre.id}
-                        className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex flex-wrap items-center gap-2 mb-3">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(offre.type)}`}>
-                                {offre.type}
+                  const isArchiveTab = activeTab === 'archives'
+                  const expired = isArchiveTab || (dleft != null && dleft < 0)
+
+                  return (
+                    <div
+                      key={offre.id}
+                      className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(offre.type)}`}>
+                              {offre.type || (offre.category === 'marche' ? 'Prestation' : 'Emploi')}
+                            </span>
+                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {offre.domaine || (offre.category === 'marche' ? 'Marché' : 'Emploi')}
+                            </span>
+                            {badge && (
+                              <span
+                                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                  expired ? 'bg-red-100 text-red-700' : dleft === 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                              >
+                                {badge}
                               </span>
-                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {offre.domaine}
+                            )}
+                            {isArchiveTab && (
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatutColor(offre.statut || 'Clôturé')}`}>
+                                {offre.statut || 'Clôturé'}
                               </span>
-                              {badge && (
-                                <span
-                                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                    dleft < 0 ? 'bg-red-100 text-red-700' : dleft === 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
-                                  }`}
-                                >
-                                  {badge}
-                                </span>
-                              )}
-                            </div>
+                            )}
+                          </div>
 
-                            <h3 className="text-xl font-semibold text-foreground mb-2">{offre.titre}</h3>
+                          <h3 className="text-xl font-semibold text-foreground mb-2">{offre.titre}</h3>
 
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
+                            {offre.lieu && (
                               <div className="flex items-center">
                                 <MapPin className="h-4 w-4 mr-1" />
                                 <span>{offre.lieu}</span>
                               </div>
+                            )}
+                            {offre.datePublication && (
                               <div className="flex items-center">
                                 <Calendar className="h-4 w-4 mr-1" />
                                 <span>Publié le {offre.datePublication}</span>
                               </div>
-                            </div>
-
-                            <p className="text-muted-foreground mb-4 leading-relaxed">{offre.description}</p>
-
-                            {offre.competences && (
-                              <div className="mb-4">
-                                <h4 className="font-medium text-foreground mb-2">Compétences requises :</h4>
-                                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                  {offre.competences.map((competence, index) => (
-                                    <li key={index}>{competence}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                            {/* Bouton PDF si disponible */}
-                            {offre.pdfUrl && (
-                              <a
-                                href={offre.pdfUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center px-4 py-2 text-sm rounded-md border border-border hover:bg-muted/50 transition-colors"
-                              >
-                                <FileDown className="h-4 w-4 mr-2" />
-                                Télécharger l’avis (PDF)
-                              </a>
                             )}
                           </div>
 
-                          <div className="lg:text-right">
-                            <div className="mb-4">
-                              <p className="text-sm text-muted-foreground mb-1">Date limite :</p>
-                              <p className={`font-medium ${dleft < 0 ? 'text-red-600' : 'text-accent'}`}>
-                                {offre.dateExpiration || 'N/D'}
-                              </p>
-                            </div>
+                          {offre.description && (
+                            <p className="text-muted-foreground mb-4 leading-relaxed">{offre.description}</p>
+                          )}
 
-                            {/* Postuler -> recrutement@ong-amss.org */}
+                          {offre.competences && (
+                            <div className="mb-4">
+                              <h4 className="font-medium text-foreground mb-2">Compétences requises :</h4>
+                              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                {offre.competences.map((competence, index) => (
+                                  <li key={index}>{competence}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Bouton PDF si disponible */}
+                          {offre.pdfUrl && (
                             <a
-                              href={buildMailto(offre.titre)}
+                              href={offre.pdfUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-4 py-2 text-sm rounded-md border border-border hover:bg-muted/50 transition-colors"
+                            >
+                              <FileDown className="h-4 w-4 mr-2" />
+                              Télécharger l’avis (PDF)
+                            </a>
+                          )}
+                        </div>
+
+                        <div className="lg:text-right">
+                          <div className="mb-4">
+                            <p className="text-sm text-muted-foreground mb-1">Date limite :</p>
+                            <p className={`font-medium ${expired ? 'text-red-600' : 'text-accent'}`}>
+                              {offre.dateExpiration || 'N/D'}
+                            </p>
+                          </div>
+
+                          {/* Postuler -> recrutement@ong-amss.org (pas pour archives) */}
+                          {!isArchiveTab && (
+                            <a
+                              href={buildMailto(offre.titre, offre.id)}
                               className="w-full lg:w-auto inline-block px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
                             >
                               Postuler
                             </a>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })
-                )}
-              </div>
-            )}
-
-            {activeTab === 'archives' && (
-              <div className="space-y-4">
-                {filteredData(data.archives).length === 0 ? (
-                  <div className="text-center py-12">
-                    <Archive className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Aucune archive ne correspond à vos critères de recherche.</p>
-                  </div>
-                ) : (
-                  filteredData(data.archives).map((offre) => (
-                    <div key={offre.id} className="bg-white rounded-lg p-4 shadow-sm border border-border">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(offre.type)}`}>
-                              {offre.type}
-                            </span>
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {offre.domaine}
-                            </span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(offre.statut || 'Clôturé')}`}>
-                              {offre.statut || 'Clôturé'}
-                            </span>
-                          </div>
-                          <h3 className="font-semibold text-foreground mb-1">{offre.titre}</h3>
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
-                            <div className="flex items-center">
-                              <MapPin className="h-3 w-3 mr-1" />
-                              <span>{offre.lieu}</span>
-                            </div>
-                            <div className="flex items-center">
-                              <Calendar className="h-3 w-3 mr-1" />
-                              <span>{offre.datePublication}</span>
-                            </div>
-                            {offre.dateCloture && (
-                              <div className="flex items-center">
-                                <Calendar className="h-3 w-3 mr-1" />
-                                <span>Clôturé le {offre.dateCloture}</span>
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">{offre.description}</p>
-
-                          {/* PDF en archive si présent */}
-                          {offre.pdfUrl && (
-                            <div className="mt-3">
-                              <a
-                                href={offre.pdfUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted/50 transition-colors"
-                              >
-                                <FileDown className="h-3 w-3 mr-2" />
-                                Télécharger l’avis (PDF)
-                              </a>
-                            </div>
                           )}
                         </div>
                       </div>
                     </div>
-                  ))
-                )}
+                  )
+                })}
               </div>
             )}
           </div>
@@ -578,8 +573,7 @@ const RecrutementPage = () => {
             </div>
             <div className="mt-8 text-sm text-muted-foreground">
               <p className="mb-2">
-                <strong>Important :</strong> Merci de spécifier le titre du poste dans l'objet du message lors de votre
-                candidature.
+                <strong>Important :</strong> Merci de spécifier le titre du poste dans l'objet du message lors de votre candidature.
               </p>
               <p>
                 Email :{' '}
