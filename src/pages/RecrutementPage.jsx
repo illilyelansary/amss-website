@@ -1,9 +1,9 @@
 // src/pages/RecrutementPage.jsx
 import React, { useEffect, useMemo, useState } from 'react'
-import { Calendar, MapPin, Users, Briefcase, Archive, Search, Filter, Clock } from 'lucide-react'
+import { Calendar, MapPin, Users, Briefcase, Archive, Search, Filter, Clock, FileDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-// --- Données source (inchangées) ---
+// --- Données source (exemple; vous pouvez ajouter pdfUrl sur une offre) ---
 const recrutementData = {
   enCours: [
     {
@@ -17,6 +17,7 @@ const recrutementData = {
         "Recherche d'un superviseur expérimenté pour superviser les activités agricoles dans le cadre du projet Sécurité Alimentaire financé par la Fondation Stromme.",
       competences: ["Diplôme en agronomie", "5 ans d'expérience minimum", "Maîtrise du français et langues locales"],
       dateExpiration: "30 septembre 2025",
+      // pdfUrl: "/docs/offres/superviseur-agriculture.pdf",
     },
     {
       id: 2,
@@ -29,6 +30,7 @@ const recrutementData = {
         "Recrutement massif d'animateurs pour les centres d'alphabétisation dans le cadre de l'expansion des programmes éducatifs de l'AMSS.",
       competences: ["DEF minimum", "Expérience en alphabétisation", "Connaissance des langues locales"],
       dateExpiration: "15 octobre 2025",
+      // pdfUrl: "/docs/offres/animateurs-alphabetisation.pdf",
     },
   ],
   archives: [
@@ -42,6 +44,7 @@ const recrutementData = {
       statut: "Clôturé",
       description:
         "Conseillers pédagogiques pour l'amélioration de la qualité de l'éducation dans la région de Sikasso.",
+      // pdfUrl: "/docs/offres/conseillers-education.pdf",
     },
     {
       id: 4,
@@ -151,7 +154,6 @@ const MONTHS_FR = {
   juillet: 6, aout: 7, août: 7, septembre: 8, octobre: 9, novembre: 10, decembre: 11, décembre: 11,
 }
 
-// retire accents / minuscule
 const strip = (s) =>
   String(s || '')
     .normalize('NFD')
@@ -161,11 +163,8 @@ const strip = (s) =>
 
 function parseFRDate(input) {
   if (!input) return null
-  // format ISO ou Date valide
   const iso = new Date(input)
   if (!isNaN(iso.getTime())) return iso
-
-  // ex: "30 septembre 2025"
   const m = String(input).match(/^\s*(\d{1,2})\s+([A-Za-zÀ-ÿ]+)\s+(\d{4})\s*$/i)
   if (!m) return null
   const day = parseInt(m[1], 10)
@@ -173,11 +172,10 @@ function parseFRDate(input) {
   const year = parseInt(m[3], 10)
   const month = MONTHS_FR[monthKey]
   if (month == null) return null
-  const d = new Date(Date.UTC(year, month, day)) // éviter TZ
-  return d
+  return new Date(Date.UTC(year, month, day))
 }
 
-// renvoie true si la date est strictement avant aujourd'hui (à 00:00)
+// true si date < aujourd'hui (00:00)
 function isExpired(dateStr) {
   const d = parseFRDate(dateStr)
   if (!d) return false
@@ -191,7 +189,6 @@ function daysLeft(dateStr) {
   const d = parseFRDate(dateStr)
   if (!d) return null
   const now = new Date()
-  // tronquer à minuit local pour éviter les demi-journées
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const end = new Date(d.getFullYear(), d.getMonth(), d.getDate())
   const diff = Math.round((end - start) / (1000 * 60 * 60 * 24))
@@ -235,42 +232,29 @@ const domainesFixes = [
 ]
 
 const RecrutementPage = () => {
-  // --- État maître (après auto-archivage) ---
   const [data, setData] = useState({ enCours: [], archives: [] })
-
-  // --- Filtres UI ---
   const [activeTab, setActiveTab] = useState('enCours')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterDomaine, setFilterDomaine] = useState('')
 
-  // Au montage : archiver automatiquement les offres expirées
+  // Auto-archivage à l'affichage
   useEffect(() => {
     const expired = []
     const stillOpen = []
-
     for (const off of recrutementData.enCours) {
       if (off.dateExpiration && isExpired(off.dateExpiration)) {
         expired.push({
           ...off,
           statut: 'Clôturé',
-          // pour trace : on conserve la date d’expiration
           dateCloture: off.dateExpiration,
         })
       } else {
         stillOpen.push(off)
       }
     }
-
-    // éviter les doublons par id dans les archives (si déjà présent)
     const archiveMap = new Map()
-    ;[...recrutementData.archives, ...expired].forEach((a) => {
-      archiveMap.set(a.id, a)
-    })
-
-    setData({
-      enCours: stillOpen,
-      archives: Array.from(archiveMap.values()),
-    })
+    ;[...recrutementData.archives, ...expired].forEach((a) => archiveMap.set(a.id, a))
+    setData({ enCours: stillOpen, archives: Array.from(archiveMap.values()) })
   }, [])
 
   const domaines = useMemo(() => {
@@ -292,9 +276,17 @@ const RecrutementPage = () => {
       return matchSearch && matchDomaine
     })
 
+  const buildMailto = (titre) => {
+    const subject = encodeURIComponent(`Candidature – ${titre}`)
+    const body = encodeURIComponent(
+      `Bonjour,\n\nJe souhaite postuler au poste « ${titre} ».\n\nNom :\nTéléphone :\nLien CV (ou pièce jointe) :\nMessage :\n\nCordialement,`
+    )
+    return `mailto:recrutement@ong-amss.org?subject=${subject}&body=${body}`
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
+      {/* Hero */}
       <section className="py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -379,9 +371,7 @@ const RecrutementPage = () => {
             {/* Alerte d'auto-archivage */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>
-                Les offres sont <strong>archivées automatiquement</strong> dès le lendemain de la date limite.
-              </span>
+              <span>Les offres sont <strong>archivées automatiquement</strong> dès le lendemain de la date limite (local).</span>
             </div>
           </div>
         </div>
@@ -458,6 +448,19 @@ const RecrutementPage = () => {
                                 </ul>
                               </div>
                             )}
+
+                            {/* Bouton PDF si disponible */}
+                            {offre.pdfUrl && (
+                              <a
+                                href={offre.pdfUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center px-4 py-2 text-sm rounded-md border border-border hover:bg-muted/50 transition-colors"
+                              >
+                                <FileDown className="h-4 w-4 mr-2" />
+                                Télécharger l’avis (PDF)
+                              </a>
+                            )}
                           </div>
 
                           <div className="lg:text-right">
@@ -467,8 +470,10 @@ const RecrutementPage = () => {
                                 {offre.dateExpiration || 'N/D'}
                               </p>
                             </div>
+
+                            {/* Postuler -> recrutement@ong-amss.org */}
                             <a
-                              href="mailto:info@ong-amss.org?subject=Candidature%20-%20AMSS"
+                              href={buildMailto(offre.titre)}
                               className="w-full lg:w-auto inline-block px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
                             >
                               Postuler
@@ -523,6 +528,21 @@ const RecrutementPage = () => {
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground">{offre.description}</p>
+
+                          {/* PDF en archive si présent */}
+                          {offre.pdfUrl && (
+                            <div className="mt-3">
+                              <a
+                                href={offre.pdfUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted/50 transition-colors"
+                              >
+                                <FileDown className="h-3 w-3 mr-2" />
+                                Télécharger l’avis (PDF)
+                              </a>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -544,12 +564,11 @@ const RecrutementPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:info@ong-amss.org?subject=Candidature%20spontan%C3%A9e%20-%20AMSS"
+                href="mailto:recrutement@ong-amss.org?subject=Candidature%20spontan%C3%A9e%20-%20AMSS"
                 className="px-8 py-3 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
               >
                 Candidature Spontanée
               </a>
-              {/* 🔗 Toujours vers la page Contact */}
               <Link
                 to="/contact"
                 className="px-8 py-3 border border-border text-foreground rounded-md hover:bg-muted/50 transition-colors"
@@ -564,8 +583,8 @@ const RecrutementPage = () => {
               </p>
               <p>
                 Email :{' '}
-                <a href="mailto:info@ong-amss.org" className="text-primary hover:underline">
-                  info@ong-amss.org
+                <a href="mailto:recrutement@ong-amss.org" className="text-primary hover:underline">
+                  recrutement@ong-amss.org
                 </a>
               </p>
             </div>
