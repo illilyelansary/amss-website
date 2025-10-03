@@ -1,13 +1,10 @@
 // src/pages/BadgeEmployePage.jsx
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  Camera, Printer, Download, Hash, User, BadgeCheck,
-  Building2, Briefcase, MapPin, CalendarDays, Phone, Mail
-} from 'lucide-react'
+import { Camera, Printer, Download, Hash, User, Building2, Briefcase, MapPin, CalendarDays, Phone, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import logoAmss from '@/assets/LogoAMSSFHD.png'
 
-/* ========= Chargeurs QR via CDN =========
+/* ========= Chargement libs QR via CDN (aucune install) =========
    1) qrcode (QRCode.*) – priorité
    2) qrcode-generator (qrcode()) – fallback
 */
@@ -16,6 +13,7 @@ function useQrLoaders() {
 
   useEffect(() => {
     if (window.QRCode || window.qrcode) return
+
     const s1 = document.createElement('script')
     s1.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js'
     s1.async = true
@@ -45,7 +43,7 @@ function addYearsISO(years = 3) {
   d.setFullYear(d.getFullYear() + years)
   return d.toISOString().slice(0, 10)
 }
-/** MM/AAAA (chiffres) */
+/** MM/AAAA (tout en chiffres) */
 function formatMonthYearNum(iso) {
   const d = new Date(iso)
   if (isNaN(d)) return iso || '—'
@@ -53,31 +51,42 @@ function formatMonthYearNum(iso) {
   const yyyy = d.getFullYear()
   return `${mm}/${yyyy}`
 }
-async function makeQrDataUrl(value, size = 110) {
-  if (window.QRCode?.toDataURL) {
-    return await window.QRCode.toDataURL(value, {
-      width: size,
-      margin: 0,
-      errorCorrectionLevel: 'M',
-      color: { dark: '#111827', light: '#FFFFFF' },
-    })
-  }
-  if (window.qrcode) {
-    const qr = window.qrcode(0, 'M')
-    qr.addData(value)
-    qr.make()
-    return qr.createDataURL(3.5) // ~110px
-  }
-  return ''
-}
 
-/* ===================================================== */
+/** Construit une vCard 3.0 avec les infos du recto */
+function buildQrVCard(form, displayName) {
+  const nLast = (form.nom || '').replace(/\r?\n/g, ' ').trim()
+  const nFirst = (form.prenom || '').replace(/\r?\n/g, ' ').trim()
+  const fn = (displayName || ' ').replace(/\r?\n/g, ' ').trim()
+  const title = (form.fonction || '').replace(/\r?\n/g, ' ').trim()
+  const email = (form.email || '').trim()
+  const tel = (form.telephone || '').trim()
+  const dept = (form.departement || '').replace(/\r?\n/g, ' ').trim()
+  const bureau = (form.bureau || '').replace(/\r?\n/g, ' ').trim()
+  const emb = formatMonthYearNum(form.dateEmbauche)
+  const val = formatMonthYearNum(form.dateValidite)
+  const mat = sanitizeMatricule(form.matricule)
+
+  const lines = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `N:${nLast};${nFirst};;;`,
+    `FN:${fn}`,
+    'ORG:Association Malienne pour la Survie au Sahel (AMSS)',
+    title ? `TITLE:${title}` : null,
+    email ? `EMAIL:${email}` : null,
+    tel ? `TEL:${tel}` : null,
+    `NOTE:Département=${dept || '—'}; Bureau=${bureau || '—'}; Embauche=${emb}; Validité=${val}; Matricule=${mat}`,
+    'END:VCARD',
+  ].filter(Boolean)
+
+  return lines.join('\n')
+}
 
 export default function BadgeEmployePage() {
   const qrReady = useQrLoaders()
+  const qrImgRef = useRef(null)
 
   const [photoDataUrl, setPhotoDataUrl] = useState('')
-  const [qrDataUrl, setQrDataUrl] = useState('') // ✅ DataURL unique pour tous les rendus
   const [form, setForm] = useState({
     nom: '',
     prenom: '',
@@ -97,34 +106,46 @@ export default function BadgeEmployePage() {
     return [p, n].filter(Boolean).join(' ')
   }, [form.prenom, form.nom])
 
-  /* ===== Génération QR (verso) – 1 seule DataURL ===== */
+  /* ===== Génération QR (verso) ===== */
   useEffect(() => {
-    const matricule = sanitizeMatricule(form.matricule)
-    if (!qrReady || !matricule) return
+    const value = buildQrVCard(form, displayName)
+    if (!qrReady || !qrImgRef.current || !value) return
 
-    const payload = {
-      type: 'AMSS_EMPLOYE',
-      matricule,
-      nom: form.nom || '',
-      prenom: form.prenom || '',
-      fonction: form.fonction || '',
-      departement: form.departement || '',
-      bureau: form.bureau || '',
-      email: form.email || '',
-      telephone: form.telephone || '',
-      dateEmbauche: formatMonthYearNum(form.dateEmbauche),
-      dateValidite: formatMonthYearNum(form.dateValidite),
+    const drawWithQRCode = async () => {
+      try {
+        if (window.QRCode?.toDataURL) {
+          const url = await window.QRCode.toDataURL(value, {
+            width: 120,
+            margin: 0,
+            errorCorrectionLevel: 'M',
+            color: { dark: '#111827', light: '#FFFFFF' },
+          })
+          qrImgRef.current.src = url
+          return true
+        }
+      } catch {}
+      return false
+    }
+
+    const drawWithQrcodeGen = () => {
+      try {
+        if (window.qrcode) {
+          const qr = window.qrcode(0, 'M')
+          qr.addData(value)
+          qr.make()
+          const dataUrl = qr.createDataURL(3) // ~105px
+          qrImgRef.current.src = dataUrl
+          return true
+        }
+      } catch {}
+      return false
     }
 
     ;(async () => {
-      try {
-        const url = await makeQrDataUrl(JSON.stringify(payload), 110)
-        if (url) setQrDataUrl(url)
-      } catch (e) {
-        // ignore
-      }
+      const ok1 = await drawWithQRCode()
+      if (!ok1) drawWithQrcodeGen()
     })()
-  }, [qrReady, form])
+  }, [qrReady, form, displayName])
 
   const onChange = (e) => {
     const { name, value } = e.target
@@ -139,171 +160,28 @@ export default function BadgeEmployePage() {
   }
 
   const handlePrint = () => window.print()
-  const handleDownload = () => window.print()
-
-  // Couleurs charte (marron foncé dégradé)
-  const BROWN_START = '#5C3A21'
-  const BROWN_END   = '#B07B4C'
-
-  /* ======================== Composants de carte ======================== */
-  const Recto = ({ forPrint = false }) => (
-    <div
-      className="relative mx-auto bg-white rounded-xl border border-border shadow-sm overflow-hidden"
-      style={{ width: 336, height: 212 }}
-    >
-      {/* Bande supérieure (dégradé) */}
-      <div
-        className="absolute inset-x-0 top-0 h-10 rounded-t-xl"
-        style={{ background: `linear-gradient(90deg, ${BROWN_START} 0%, ${BROWN_END} 100%)` }}
-      />
-      <div className="relative h-full p-[10px] grid grid-cols-[98px_1fr] gap-2">
-        {/* Colonne photo + logo (logo agrandi) */}
-        <div className="flex flex-col items-center">
-          <div className="w-[94px] h-[114px] rounded-md overflow-hidden border border-border bg-muted">
-            {photoDataUrl ? (
-              <img src={photoDataUrl} alt="Employé" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Photo</div>
-            )}
-          </div>
-          <img src={logoAmss} alt="AMSS" className="h-[82px] mt-[2px]" />
-        </div>
-
-        {/* Infos */}
-        <div className="flex flex-col">
-          <div className="mt-0.5">
-            <div className="text-[15px] font-semibold leading-tight">{displayName || 'Nom Prénom'}</div>
-            <div className="text-[12px] text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
-          </div>
-
-          {/* Grille infos – dates au format MM/AAAA, labels entiers */}
-          <div className="mt-1.5 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] leading-[1.2] text-foreground/90">
-            <div className="break-words">
-              <span className="font-medium text-foreground">Département:</span> {form.departement || '—'}
-            </div>
-            <div className="break-words">
-              <span className="font-medium text-foreground">Bureau:</span> {form.bureau}
-            </div>
-            <div className="whitespace-nowrap">
-              <span className="font-medium text-foreground">Embauche:</span> {formatMonthYearNum(form.dateEmbauche)}
-            </div>
-            <div className="whitespace-nowrap">
-              <span className="font-medium text-foreground">Validité:</span> {formatMonthYearNum(form.dateValidite)}
-            </div>
-            <div className="col-span-2 break-words">
-              <span className="font-medium text-foreground">Email:</span> {form.email || '—'}
-            </div>
-            <div className="col-span-2 whitespace-nowrap">
-              <span className="font-medium text-foreground">Tél:</span> {form.telephone || '—'}
-            </div>
-            <div className="col-span-2 whitespace-nowrap">
-              <span className="font-medium text-foreground">Matricule:</span> {sanitizeMatricule(form.matricule)}
-            </div>
-          </div>
-        </div>
-
-        {/* ✅ Pastille verticale à gauche, compacte, jamais débordante */}
-        <div
-          className="inline-flex items-center px-[3px] py-[2px] text-[7.5px] rounded border absolute"
-          style={{
-            borderColor: '#a7f3d0',
-            background: '#ecfdf5',
-            color: '#065f46',
-            position: 'absolute',
-            left: 2,
-            top: 44,                           // un peu plus haut
-            writingMode: 'vertical-rl',
-            transform: 'rotate(180deg)',
-            transformOrigin: 'left top',
-            maxHeight: 110,
-            overflow: 'hidden',
-            pointerEvents: 'none',
-          }}
-        >
-          <span
-            className="inline-block rounded-full mr-1"
-            style={{ width: 5, height: 5, background: '#10b981' }}
-          />
-          AMSS • Identification
-        </div>
-      </div>
-    </div>
-  )
-
-  const Verso = ({ forPrint = false }) => (
-    <div
-      className="relative mx-auto bg-white rounded-xl border border-border shadow-sm overflow-hidden"
-      style={{ width: 336, height: 212 }}
-    >
-      {/* Bande supérieure (dégradé inverse) */}
-      <div
-        className="absolute inset-x-0 top-0 h-10 rounded-t-xl"
-        style={{ background: `linear-gradient(90deg, ${BROWN_END} 0%, ${BROWN_START} 100%)` }}
-      />
-      <div className="relative h-full p-[10px] pt-[46px]">
-        <div className="flex items-center justify-center mb-1">
-          <img src={logoAmss} alt="AMSS" className="h-[30px]" />
-        </div>
-        <div className="text-center text-[11px] text-muted-foreground mb-1">
-          Badge Employé • {sanitizeMatricule(form.matricule)}
-        </div>
-
-        {/* Deux colonnes : QR + contact */}
-        <div className="grid grid-cols-2 gap-2 items-start">
-          <div className="flex items-center justify-center">
-            <div className="flex items-center justify-center w-[136px] h-[136px] bg-white rounded border border-border overflow-hidden">
-              {qrDataUrl ? (
-                <img
-                  src={qrDataUrl}
-                  alt="QR du badge"
-                  style={{ width: 110, height: 110, imageRendering: 'pixelated', display: 'block' }}
-                />
-              ) : (
-                <div className="text-[10px] text-muted-foreground">QR en préparation…</div>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col items-center text-center px-1">
-            <div className="text-[10.5px] leading-[1.25] text-foreground">
-              <div className="font-semibold">Association Malienne pour la Survie au Sahel (AMSS)</div>
-              <div>www.ong-amss.org</div>
-              <div>+223 20 20 27 28</div>
-            </div>
-            <div className="mt-1.5 text-[9.5px] text-muted-foreground">
-              En cas de perte, merci de contacter l’AMSS.
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+  const handleDownload = () => window.print() // impression => PDF
 
   return (
     <div className="min-h-screen bg-background">
-      {/* RÈGLES D’IMPRESSION : ne garder que #badge-print */}
+      {/* Impression : on ne sort que les deux cartes (recto puis verso) */}
       <style>{`
         @media print {
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           body * { visibility: hidden !important; }
           #badge-print, #badge-print * { visibility: visible !important; }
-          #badge-print { position: fixed; inset: 0; margin: 0 auto; padding: 12px; background: white; }
+          #badge-print { position: fixed; inset: 0; margin: 0 auto; }
           .print-card { page-break-after: always; }
           .print-card:last-child { page-break-after: auto; }
         }
       `}</style>
 
-      {/* Zone d’impression dédiée (cachée à l’écran) */}
-      <div id="badge-print" className="hidden print:block">
-        <div className="print-card"><Recto forPrint /></div>
-        <div className="print-card"><Verso forPrint /></div>
-      </div>
-
       {/* Hero */}
-      <section className="py-10 bg-gradient-to-br from-[#5C3A21]/10 to-[#B07B4C]/10 border-b">
+      <section className="py-10 bg-gradient-to-br from-primary/10 to-accent/10 border-b">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Générateur de Badge Employé</h1>
           <p className="text-muted-foreground mt-2">
-            Saisissez les informations, importez une photo et imprimez. Le <strong>QR code</strong> au <strong>verso</strong> encode automatiquement les infos du recto.
+            Saisissez les informations, importez une photo et imprimez un badge au format carte. 
+            Le <strong>QR code</strong> est au <strong>verso</strong> (sans code-barres).
           </p>
         </div>
       </section>
@@ -387,7 +265,7 @@ export default function BadgeEmployePage() {
             </div>
           </div>
 
-          {/* Aperçu écran */}
+          {/* Aperçu Recto + Verso */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold">Aperçu du badge</h2>
@@ -401,14 +279,124 @@ export default function BadgeEmployePage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Recto />
-              <Verso />
+            {/* Aperçu côte à côte à l’écran, 2 pages à l’impression */}
+            <div id="badge-print" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* ====== RECTO ====== */}
+              <div
+                className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
+                style={{ width: 336, height: 212 }}
+              >
+                {/* ✅ Pastille verticale côté gauche (lecture bas->haut) */}
+                <div className="absolute left-1 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                  <div
+                    className="px-1 py-[2px] rounded border border-emerald-200 bg-emerald-50 text-emerald-700 font-medium tracking-tight"
+                    style={{ fontSize: '8px', writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                  >
+                    AMSS • Identification
+                  </div>
+                </div>
+
+                {/* Bande supérieure */}
+                <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-primary to-accent rounded-t-xl" />
+                <div className="relative h-full p-3 grid grid-cols-[96px_1fr] gap-3">
+                  {/* Photo + logo (agrandi) */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-[96px] h-[116px] rounded-md overflow-hidden border border-border bg-muted">
+                      {photoDataUrl ? (
+                        <img src={photoDataUrl} alt="Employé" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                          Photo
+                        </div>
+                      )}
+                    </div>
+                    <img src={logoAmss} alt="AMSS" className="h-20 mt-1" />
+                  </div>
+
+                  {/* Infos */}
+                  <div className="flex flex-col">
+                    <div className="mt-1">
+                      <div className="text-lg font-semibold leading-tight">{displayName || 'Nom Prénom'}</div>
+                      <div className="text-sm text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
+                    </div>
+
+                    {/* Bloc infos : dates MM/AAAA ; labels complets */}
+                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
+                      <div className="break-words">
+                        <span className="font-medium">Département:</span> {form.departement || '—'}
+                      </div>
+                      <div className="break-words">
+                        <span className="font-medium">Bureau:</span> {form.bureau}
+                      </div>
+                      <div className="whitespace-nowrap">
+                        <span className="font-medium">Embauche:</span> {formatMonthYearNum(form.dateEmbauche)}
+                      </div>
+                      <div className="whitespace-nowrap">
+                        <span className="font-medium">Validité:</span> {formatMonthYearNum(form.dateValidite)}
+                      </div>
+                      <div className="col-span-2 break-words">
+                        <span className="font-medium">Email:</span> {form.email || '—'}
+                      </div>
+                      <div className="col-span-2 whitespace-nowrap">
+                        <span className="font-medium">Tél:</span> {form.telephone || '—'}
+                      </div>
+                      <div className="col-span-2 whitespace-nowrap">
+                        <span className="font-medium">Matricule:</span> {sanitizeMatricule(form.matricule)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ====== VERSO ====== */}
+              <div
+                className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
+                style={{ width: 336, height: 212 }}
+              >
+                {/* Bande supérieure */}
+                <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-accent to-primary rounded-t-xl" />
+                <div className="relative h-full p-3">
+                  {/* En-tête */}
+                  <div className="flex items-center justify-center mt-1 mb-2">
+                    <img src={logoAmss} alt="AMSS" className="h-10" />
+                  </div>
+                  <div className="text-center text-xs text-muted-foreground mb-1">
+                    Badge Employé • {sanitizeMatricule(form.matricule)}
+                  </div>
+
+                  {/* Deux colonnes: QR à gauche, contacts à droite */}
+                  <div className="mt-2 grid grid-cols-2 gap-3 items-start">
+                    {/* Colonne QR */}
+                    <div className="flex items-center justify-center">
+                      <div className="flex items-center justify-center w-[130px] h-[130px] bg-white rounded border border-border">
+                        <img
+                          ref={qrImgRef}
+                          alt="QR du badge"
+                          className="block"
+                          style={{ width: 120, height: 120, imageRendering: 'pixelated' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Colonne Contact (texte seul) */}
+                    <div className="flex flex-col items-center text-center px-1">
+                      <div className="text-[11px] leading-tight">
+                        <div className="font-medium">Association Malienne pour la Survie au Sahel (AMSS)</div>
+                        <div>www.ong-amss.org</div>
+                        <div>+223 20 20 27 28</div>
+                      </div>
+                      <div className="mt-2 text-[10px] text-muted-foreground">
+                        En cas de perte, merci de contacter l’AMSS.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <p className="text-xs text-muted-foreground mt-3">
-              Conseil : dans la fenêtre d’impression, activez le <strong>recto-verso</strong> (retournement <em>grand bord</em>).<br />
-              Si le dégradé n’apparaît pas, activez “imprimer les arrière-plans” dans les options d’impression de votre navigateur.
+              Astuce : dans la boîte de dialogue d’impression, activez le <strong>recto-verso</strong> (retournement <em>grand bord</em>)
+              pour aligner recto et verso.
             </p>
           </div>
         </div>
