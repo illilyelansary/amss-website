@@ -121,7 +121,7 @@ export default function BadgeEmployePage() {
 
     ;(async () => {
       try {
-        const url = await makeQrDataUrl(JSON.stringify(payload), 128)
+        const url = await makeQrDataUrl(JSON.stringify(payload), 124) // taille un peu réduite
         if (url) qrImgRef.current.src = url
       } catch {}
     })()
@@ -139,7 +139,7 @@ export default function BadgeEmployePage() {
     reader.readAsDataURL(file)
   }
 
-  /* ========= Impression dans une fenêtre dédiée (fiable) ========= */
+  /* ========= Impression via iframe invisible (fiable, évite les popups/plantages) ========= */
   const handlePrint = async () => {
     if (!qrReady) {
       alert("Le module QR n'est pas encore prêt. Réessayez dans une seconde.")
@@ -162,15 +162,15 @@ export default function BadgeEmployePage() {
     const qrDataUrl =
       qrImgRef.current?.src && qrImgRef.current.src.startsWith('data:image')
         ? qrImgRef.current.src
-        : await makeQrDataUrl(JSON.stringify(payload), 128)
+        : await makeQrDataUrl(JSON.stringify(payload), 124)
 
-    // Dégradé “comme avant” (bleu → vert) : #0ea5e9 → #22c55e
-    const GRAD_START = '#0ea5e9'
-    const GRAD_END   = '#22c55e'
+    // Dégradé marron (charte foncée)
+    const BROWN_START = '#5C3A21'  // marron foncé
+    const BROWN_END   = '#B07B4C'  // marron clair / caramel
 
     const recto = `
       <div class="card">
-        <div class="band" style="background: linear-gradient(90deg, ${GRAD_START} 0%, ${GRAD_END} 100%);"></div>
+        <div class="band" style="background: linear-gradient(90deg, ${BROWN_START} 0%, ${BROWN_END} 100%);"></div>
         <div class="content">
           <div class="left">
             <div class="photo">${photoDataUrl ? `<img src="${photoDataUrl}" />` : 'Photo'}</div>
@@ -189,7 +189,7 @@ export default function BadgeEmployePage() {
               <div class="full"><span class="lbl">Matricule:</span> ${matricule}</div>
             </div>
           </div>
-          <!-- Pastille verticale à gauche, plus petite, sans débordement -->
+          <!-- Pastille verticale à gauche -->
           <div class="tag-vertical">
             <span class="dot"></span> AMSS • Identification
           </div>
@@ -199,7 +199,7 @@ export default function BadgeEmployePage() {
 
     const verso = `
       <div class="card">
-        <div class="band" style="background: linear-gradient(90deg, ${GRAD_END} 0%, ${GRAD_START} 100%);"></div>
+        <div class="band" style="background: linear-gradient(90deg, ${BROWN_END} 0%, ${BROWN_START} 100%);"></div>
         <div class="content verso">
           <div class="header">
             <img src="${logoAmss}" class="logo-small" />
@@ -246,13 +246,14 @@ export default function BadgeEmployePage() {
       .grid .lbl { font-weight: 600; color: #111827; }
       .grid .full { grid-column: 1 / -1; }
 
-      /* Pastille verticale à gauche : plus petite, lecture bas→haut, sans débordement */
+      /* Pastille verticale à gauche : petite, lecture bas→haut */
       .tag-vertical {
         position: absolute;
-        left: 4px;           /* bien à l’intérieur de la carte */
-        top: 36px;           /* “un peu plus haut” */
+        left: 4px;
+        top: 36px;           /* un peu plus haut */
         writing-mode: vertical-rl;
-        transform: rotate(180deg); /* bas → haut */
+        transform: rotate(180deg);
+        transform-origin: left top;
         font-size: 8px;
         color: #065f46;
         background: #ecfdf5;
@@ -262,7 +263,7 @@ export default function BadgeEmployePage() {
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        max-height: 132px;   /* évite tout dépassement */
+        max-height: 132px;
         pointer-events: none;
       }
       .tag-vertical .dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; }
@@ -275,13 +276,13 @@ export default function BadgeEmployePage() {
       .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
       .qr { display: flex; align-items: center; justify-content: center; }
       .qr-box { width: 150px; height: 150px; border: 1px solid #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: #ffffff; }
-      .qr-box img { width: 128px; height: 128px; image-rendering: pixelated; }
+      .qr-box img { width: 124px; height: 124px; image-rendering: pixelated; }
       .contact { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 4px; }
       .contact-lines { font-size: 11px; line-height: 1.25; color: #111827; }
       .contact-lines .strong { font-weight: 600; margin-bottom: 2px; }
       .hint { margin-top: 6px; font-size: 10px; color: #6b7280; }
 
-      /* 1 carte par page */
+      /* 1 carte par page à l’impression */
       .card { page-break-after: always; }
       .card:last-child { page-break-after: auto; }
     `
@@ -298,7 +299,6 @@ export default function BadgeEmployePage() {
         ${recto}
         ${verso}
         <script>
-          // Attendre le chargement complet (images + QR), puis imprimer et fermer proprement
           function waitImages() {
             const imgs = Array.from(document.images || [])
             if (imgs.length === 0) return Promise.resolve()
@@ -306,23 +306,40 @@ export default function BadgeEmployePage() {
           }
           window.addEventListener('load', async () => {
             try { await waitImages() } catch(e) {}
-            setTimeout(() => { window.print() }, 100)
+            setTimeout(() => { window.focus(); window.print() }, 120)
           })
           window.addEventListener('afterprint', () => {
-            // Donne un petit délai pour éviter tout blocage, puis ferme
-            setTimeout(() => { window.close() }, 100)
+            setTimeout(() => { window.parent && window.parent.postMessage('amss_print_done','*') }, 100)
           })
         </script>
       </body>
       </html>
     `
 
-    const w = window.open('', '_blank', 'width=900,height=700')
-    if (!w) return
-    w.document.open()
-    w.document.write(html)
-    w.document.close()
-    w.focus()
+    // IFRAME invisible
+    const iframe = document.createElement('iframe')
+    iframe.style.position = 'fixed'
+    iframe.style.right = '0'
+    iframe.style.bottom = '0'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = '0'
+    document.body.appendChild(iframe)
+
+    const iframedoc = iframe.contentWindow || iframe.contentDocument
+    const doc = iframedoc.document || iframedoc
+    doc.open()
+    doc.write(html)
+    doc.close()
+
+    // Nettoyage une fois l’impression terminée (message postMessage)
+    const cleanup = (ev) => {
+      if (ev?.data === 'amss_print_done') {
+        window.removeEventListener('message', cleanup)
+        document.body.removeChild(iframe)
+      }
+    }
+    window.addEventListener('message', cleanup)
   }
 
   const handleDownload = () => handlePrint()
@@ -330,7 +347,7 @@ export default function BadgeEmployePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="py-10 bg-gradient-to-br from-primary/10 to-accent/10 border-b">
+      <section className="py-10 bg-gradient-to-br from-[##5C3A21]/10 to-[#B07B4C]/10 border-b">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Générateur de Badge Employé</h1>
           <p className="text-muted-foreground mt-2">
@@ -419,7 +436,7 @@ export default function BadgeEmployePage() {
             </div>
           </div>
 
-          {/* Vignette d’aperçu (pour repère visuel) */}
+          {/* Vignette d’aperçu */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold">Aperçu du badge</h2>
@@ -438,7 +455,7 @@ export default function BadgeEmployePage() {
               <div className="relative mx-auto bg-white rounded-xl border border-border shadow-sm" style={{ width: 336, height: 212 }}>
                 <div
                   className="absolute inset-x-0 top-0 h-10 rounded-t-xl"
-                  style={{ background: 'linear-gradient(90deg, #0ea5e9 0%, #22c55e 100%)' }}
+                  style={{ background: 'linear-gradient(90deg, #5C3A21 0%, #B07B4C 100%)' }}
                 />
                 <div className="relative h-full p-3 grid grid-cols-[100px_1fr] gap-3">
                   <div className="flex flex-col items-center">
@@ -491,7 +508,7 @@ export default function BadgeEmployePage() {
               <div className="relative mx-auto bg-white rounded-xl border border-border shadow-sm" style={{ width: 336, height: 212 }}>
                 <div
                   className="absolute inset-x-0 top-0 h-10 rounded-t-xl"
-                  style={{ background: 'linear-gradient(90deg, #22c55e 0%, #0ea5e9 100%)' }}
+                  style={{ background: 'linear-gradient(90deg, #B07B4C 0%, #5C3A21 100%)' }}
                 />
                 <div className="relative h-full p-3">
                   <div className="flex items-center justify-center mt-1 mb-2">
@@ -504,7 +521,7 @@ export default function BadgeEmployePage() {
                   <div className="mt-2 grid grid-cols-2 gap-3 items-start">
                     <div className="flex items-center justify-center">
                       <div className="flex items-center justify-center w-[150px] h-[150px] bg-white rounded border border-border">
-                        <img ref={qrImgRef} alt="QR du badge" style={{ width: 128, height: 128, imageRendering: 'pixelated' }} />
+                        <img ref={qrImgRef} alt="QR du badge" style={{ width: 124, height: 124, imageRendering: 'pixelated' }} />
                       </div>
                     </div>
                     <div className="flex flex-col items-center text-center px-1">
