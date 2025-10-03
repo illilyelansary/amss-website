@@ -6,11 +6,11 @@ import { actualites } from '../data/actualitesData'
 
 // ====== Constantes flux & placeholder ======
 const PLACEHOLDER = '/placeholder-news.jpg' // déposez le fichier dans /public
-// Pages officielles repérées
+// Pages officielles
 const FACEBOOK_PAGE_URL = 'https://www.facebook.com/ONGAMSS'
+// ID de chaîne YouTube fourni => playlist "uploads" auto-actualisée
+const YOUTUBE_UPLOADS_PLAYLIST_ID = 'UUl0ExiL4rmPUDpSjQMo83-A'
 const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@ONG-AMSS'
-// Vidéo YouTube récente à intégrer (fallback si l’API n’est pas branchée)
-const YOUTUBE_VIDEO_ID = 'P_3BiMNpJRc'
 
 const ActualitesPage = () => {
   const [currentPage, setCurrentPage] = useState(1)
@@ -24,16 +24,16 @@ const ActualitesPage = () => {
   }, [])
 
   const categories = useMemo(
-    () => ['Toutes', ...Array.from(new Set(actualites.map(a => a.categorie)))],
+    () => ['Toutes', ...Array.from(new Set((actualites || []).map(a => a.categorie)))],
     []
   )
 
   const filteredActualites = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
-    return actualites.filter(a => {
+    return (actualites || []).filter(a => {
       const matchesCategorie =
         selectedCategorie === 'Toutes' || a.categorie === selectedCategorie
-      const hay = (a.titre + ' ' + (a.excerpt || '')).toLowerCase()
+      const hay = (`${a.titre} ${a.excerpt || ''}`).toLowerCase()
       const matchesSearch = term === '' || hay.includes(term)
       return matchesCategorie && matchesSearch
     })
@@ -43,7 +43,7 @@ const ActualitesPage = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = filteredActualites.slice(indexOfFirstItem, indexOfLastItem)
   const totalPages = Math.ceil(filteredActualites.length / itemsPerPage)
-  const featuredActualites = actualites.filter(a => a.featured)
+  const featuredActualites = (actualites || []).filter(a => a.featured)
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber)
 
@@ -278,12 +278,13 @@ const ActualitesPage = () => {
                     style={{ border: 'none', overflow: 'hidden' }}
                     scrolling="no"
                     frameBorder="0"
+                    loading="lazy"
                     allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                   />
                 </div>
               </div>
 
-              {/* YouTube (vidéo récente + lien chaîne) */}
+              {/* YouTube (playlist "Uploads" auto-actualisée) */}
               <div className="bg-white rounded-xl border border-border shadow-sm p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-semibold">YouTube</h3>
@@ -298,17 +299,16 @@ const ActualitesPage = () => {
                 </div>
                 <div className="rounded-lg overflow-hidden aspect-video">
                   <iframe
-                    title="Vidéo AMSS"
+                    title="Vidéos AMSS"
                     width="100%"
                     height="100%"
-                    src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}`}
+                    src={`https://www.youtube.com/embed/videoseries?list=${YOUTUBE_UPLOADS_PLAYLIST_ID}`}
                     frameBorder="0"
+                    loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
                   />
                 </div>
-
-                {/* CTA secondaire */}
                 <div className="mt-3 text-sm text-muted-foreground">
                   Astuce : abonnez-vous pour recevoir nos prochaines vidéos (reportages terrain, sensibilisations, témoignages).
                 </div>
