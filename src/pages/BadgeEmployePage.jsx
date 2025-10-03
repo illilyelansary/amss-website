@@ -72,7 +72,6 @@ function buildQrValue(form, displayName) {
 
 export default function BadgeEmployePage() {
   const qrReady = useQrLoaders()
-
   const qrImgRef = useRef(null)
 
   const [photoDataUrl, setPhotoDataUrl] = useState('')
@@ -104,7 +103,7 @@ export default function BadgeEmployePage() {
       try {
         if (window.QRCode?.toDataURL) {
           const url = await window.QRCode.toDataURL(value, {
-            width: 128,          // ✅ légèrement réduit pour ne pas déborder
+            width: 128,          // taille ajustée pour ne pas déborder
             margin: 0,
             errorCorrectionLevel: 'M',
             color: { dark: '#111827', light: '#FFFFFF' },
@@ -122,8 +121,7 @@ export default function BadgeEmployePage() {
           const qr = window.qrcode(0, 'M')
           qr.addData(value)
           qr.make()
-          // densité 4 ~ 140px ; passons à 3 pour aller ~105px ; puis on scale via CSS
-          const dataUrl = qr.createDataURL(3)
+          const dataUrl = qr.createDataURL(3) // ~105px (puis on scale via CSS à 128)
           qrImgRef.current.src = dataUrl
           return true
         }
@@ -154,18 +152,15 @@ export default function BadgeEmployePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Impression : on ne sort que les deux cartes (recto puis verso) */}
+      {/* Impression : on ne masque QUE ce qui n'est pas à imprimer (simple et fiable) */}
       <style>{`
         @media print {
-          /* N’imprimer QUE la zone badge, sans duplication */
-          html, body { height: auto !important; margin: 0 !important; }
-          body * { display: none !important; }
-          #badge-print, #badge-print * { display: block !important; visibility: visible !important; }
-          #badge-print { position: static !important; margin: 0 auto !important; }
+          html, body { margin: 0 !important; }
+          .no-print { display: none !important; }
 
-          /* 1 page par carte */
-          .print-card { page-break-after: always; }
-          .print-card:last-child { page-break-after: auto; }
+          /* Une page par carte */
+          .print-card { break-after: page; page-break-after: always; }
+          .print-card:last-child { break-after: auto; page-break-after: auto; }
 
           /* Couleurs de fond en print (si le navigateur l’autorise) */
           * {
@@ -175,13 +170,13 @@ export default function BadgeEmployePage() {
           }
 
           /* Fallback barre unie si les dégradés ne s’impriment pas */
-          .band-primary { background: none !important; border-top: 10px solid #0ea5e9 !important; } /* primary */
-          .band-accent  { background: none !important; border-top: 10px solid #22c55e !important; } /* accent (ex.) */
+          .band-primary { background: none !important; border-top: 10px solid #0ea5e9 !important; }
+          .band-accent  { background: none !important; border-top: 10px solid #22c55e !important; }
         }
       `}</style>
 
-      {/* Hero */}
-      <section className="py-10 bg-gradient-to-br from-primary/10 to-accent/10 border-b">
+      {/* Hero (non imprimé) */}
+      <section className="no-print py-10 bg-gradient-to-br from-primary/10 to-accent/10 border-b">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Générateur de Badge Employé</h1>
           <p className="text-muted-foreground mt-2">
@@ -193,8 +188,8 @@ export default function BadgeEmployePage() {
 
       <section className="py-10">
         <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl">
-          {/* Formulaire */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-border">
+          {/* Formulaire (non imprimé) */}
+          <div className="no-print bg-white rounded-xl p-6 shadow-sm border border-border">
             <h2 className="text-lg font-semibold mb-4">Informations employé</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -272,7 +267,7 @@ export default function BadgeEmployePage() {
 
           {/* Aperçu Recto + Verso */}
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="no-print flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold">Aperçu du badge</h2>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleDownload}>
@@ -284,7 +279,7 @@ export default function BadgeEmployePage() {
               </div>
             </div>
 
-            {/* Aperçu côte à côte à l’écran, 2 pages à l’impression */}
+            {/* À l’écran : côte à côte. À l’impression : 2 pages, grâce à .print-card */}
             <div id="badge-print" className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ====== RECTO ====== */}
               <div
@@ -294,12 +289,12 @@ export default function BadgeEmployePage() {
                 {/* Bande supérieure (avec fallback print via .band-primary) */}
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-primary to-accent rounded-t-xl band-primary" />
 
-                {/* Ruban vertical gauche “AMSS • Identification” */}
+                {/* Ruban vertical gauche “AMSS • Identification” (petit, lecture bas→haut) */}
                 <div
                   className="absolute left-1 top-10 bottom-4 flex items-center"
                   style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
                 >
-                  <span className="text-[9px] px-1 py-[2px] rounded border border-emerald-300 bg-emerald-50 text-emerald-700">
+                  <span className="text-[9px] px-1 py-[1px] rounded border border-emerald-300 bg-emerald-50 text-emerald-700">
                     AMSS • Identification
                   </span>
                 </div>
@@ -363,7 +358,7 @@ export default function BadgeEmployePage() {
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-accent to-primary rounded-t-xl band-accent" />
 
                 <div className="relative h-full p-3">
-                  {/* En-tête simple (conserve le logo en petit) */}
+                  {/* En-tête */}
                   <div className="flex items-center justify-center mt-1 mb-2">
                     <img src={logoAmss} alt="AMSS" className="h-10" />
                   </div>
@@ -385,7 +380,7 @@ export default function BadgeEmployePage() {
                       </div>
                     </div>
 
-                    {/* Colonne Contact (texte seul, sans logo) */}
+                    {/* Colonne Contact (texte seul) */}
                     <div className="flex flex-col items-center text-center px-1">
                       <div className="text-[11px] leading-tight">
                         <div className="font-medium">Association Malienne pour la Survie au Sahel (AMSS)</div>
@@ -401,9 +396,9 @@ export default function BadgeEmployePage() {
               </div>
             </div>
 
-            <p className="text-xs text-muted-foreground mt-3">
-              Astuce : dans la boîte de dialogue d’impression, activez le <strong>recto-verso</strong> (retournement <em>grand bord</em>)
-              pour aligner recto et verso. Pour voir le dégradé, cochez « <em>Imprimer les arrière-plans</em> » ; sinon une barre unie est utilisée.
+            <p className="no-print text-xs text-muted-foreground mt-3">
+              Astuce : dans la boîte de dialogue d’impression, activez le <strong>recto-verso</strong> (retournement <em>grand bord</em>).
+              Pour voir le dégradé, cochez « <em>Imprimer les arrière-plans</em> » ; sinon une barre unie est utilisée.
             </p>
           </div>
         </div>
