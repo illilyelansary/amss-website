@@ -25,7 +25,12 @@ const base = [
     statistiques: { beneficiaires: '800+', seances: '17', menages: '49' },
     partenaires: ['PLAN International', 'GFFO', 'AEN', 'HCR', 'UNICEF', 'Education Cannot Wait'],
     lieux: ['Douentza', 'Ansongo', 'Bankass', 'Gossi', 'Tabango'],
-    featured: true
+    featured: true,
+    tags: [
+      'Humanitaire', 'Protection', 'Sensibilisation', 'Soutien psychosocial', 'Aide en cash',
+      'Douentza', 'Ansongo', 'Bankass', 'Gossi', 'Tabango',
+      'PLAN International', 'GFFO', 'AEN', 'HCR', 'UNICEF', 'Projets'
+    ]
   },
   {
     id: 2,
@@ -38,7 +43,10 @@ const base = [
     contenu: "L'AMSS, en partenariat avec ses bailleurs, a organisé une cérémonie de remise de 12 000 kits scolaires aux enfants déplacés internes dans la région de Tombouctou. Cette initiative vise à soutenir la scolarisation des enfants affectés par les crises et à leur offrir un meilleur avenir.",
     statistiques: { kits: '12 000', enfants: '12 000', ecoles: '50+' },
     lieux: ['Tombouctou'],
-    featured: true
+    featured: true,
+    tags: [
+      'Éducation', 'Enfants déplacés', 'Kit scolaire', 'Scolarisation', 'Tombouctou', 'Projets'
+    ]
   },
   {
     id: 3,
@@ -51,7 +59,11 @@ const base = [
     contenu: "Le 5 juin 2025, l'AMSS, en collaboration avec le projet GFFO, a distribué des intrants agricoles à 400 mères vulnérables dans les cercles de Gao et Ansongo. Cette action s'inscrit dans le cadre du renforcement de la sécurité alimentaire et de la résilience des ménages.",
     statistiques: { beneficiaires: '400', cercles: '2', intrants: 'Semences, engrais, outils' },
     partenaires: ['GFFO'],
-    lieux: ['Gao', 'Ansongo']
+    lieux: ['Gao', 'Ansongo'],
+    tags: [
+      'Sécurité alimentaire', 'Agriculture', 'Intrants', 'Mères', 'Résilience',
+      'GFFO', 'Gao', 'Ansongo', 'Projets'
+    ]
   },
   {
     id: 4,
@@ -64,7 +76,11 @@ const base = [
     contenu: "Dans le cadre du renforcement des capacités locales en protection civile, l'UNESCO et l'AMSS ont procédé à la mise en place de Comités Locaux de Protection Civile dans trois localités stratégiques du nord du Mali.",
     statistiques: { comites: '3', localites: '3', membres: '45' },
     partenaires: ['UNESCO'],
-    lieux: ['Goundam', 'Tonka', 'Alafia']
+    lieux: ['Goundam', 'Tonka', 'Alafia'],
+    tags: [
+      'Protection', 'Gouvernance', 'Protection civile', 'Capacités locales',
+      'UNESCO', 'Goundam', 'Tonka', 'Alafia', 'Projets'
+    ]
   },
   {
     id: 5,
@@ -77,7 +93,11 @@ const base = [
     contenu: "L'USAID et l'AMSS ont officiellement lancé un ambitieux programme d'assistance humanitaire destiné à améliorer les conditions de vie de 60 000 personnes dans les régions de Mopti, Gao et Ménaka.",
     statistiques: { beneficiaires: '60 000', regions: '3', duree: '24 mois' },
     partenaires: ['USAID'],
-    lieux: ['Mopti', 'Gao', 'Ménaka']
+    lieux: ['Mopti', 'Gao', 'Ménaka'],
+    tags: [
+      'Humanitaire', 'WASH', 'Protection', 'Assainissement', 'Hygiène',
+      'USAID', 'Mopti', 'Gao', 'Ménaka', 'Projets'
+    ]
   },
   {
     id: 6,
@@ -89,7 +109,11 @@ const base = [
     excerpt: 'Renforcement des capacités de notre équipe pour mieux servir les communautés vulnérables du Mali.',
     contenu: "L'AMSS a organisé une série de formations pour ses 460 employés répartis dans les 8 régions d'intervention. Ces formations portent sur les nouvelles approches humanitaires, la gestion de projet et le développement communautaire.",
     statistiques: { employes: '460', regions: '8', modules: '12' },
-    lieux: ['Toutes les régions']
+    lieux: ['Toutes les régions'],
+    tags: [
+      'Formation', 'Renforcement des capacités', 'Institutionnel', 'Développement communautaire',
+      'Toutes les régions'
+    ]
   },
   {
     id: 7,
@@ -101,7 +125,11 @@ const base = [
     excerpt: "L'AMSS étend sa couverture géographique pour atteindre plus de populations vulnérables à travers le Mali.",
     contenu: "Après plus de 30 années d'expérience, l'AMSS franchit une nouvelle étape en étendant ses interventions à 8 régions du Mali, marquant ainsi sa volonté d'avoir un impact national sur le développement et l'aide humanitaire.",
     statistiques: { regions: '8', bureaux: '8', population: '15M+' },
-    lieux: ['Tombouctou', 'Gao', 'Ménaka', 'Mopti', 'Ségou', 'Sikasso', 'Bamako', 'Taoudénit']
+    lieux: ['Tombouctou', 'Gao', 'Ménaka', 'Mopti', 'Ségou', 'Sikasso', 'Bamako', 'Taoudénit'],
+    tags: [
+      'Développement', 'Couverture nationale', 'Extension',
+      'Tombouctou', 'Gao', 'Ménaka', 'Mopti', 'Ségou', 'Sikasso', 'Bamako', 'Taoudénit'
+    ]
   },
   {
     id: 8,
@@ -113,7 +141,11 @@ const base = [
     excerpt: "Une belle dynamique pour promouvoir les droits des femmes et soutenir leur rôle moteur dans le développement local.",
     contenu: "À l'occasion de la Journée internationale des droits des femmes, l'AMSS a organisé plusieurs activités de sensibilisation et de formation pour promouvoir l'autonomisation des femmes et leur leadership dans les communautés.",
     statistiques: { femmes: '2 500', sessions: '25', cooperatives: '15' },
-    lieux: ['Ségou', 'Mopti', 'Tombouctou']
+    lieux: ['Ségou', 'Mopti', 'Tombouctou'],
+    tags: [
+      'Autonomisation', 'Femmes', 'Leadership', 'Sensibilisation',
+      'Ségou', 'Mopti', 'Tombouctou', 'Protection'
+    ]
   },
   {
     id: 9,
@@ -125,7 +157,11 @@ const base = [
     excerpt: "Cet atelier vise à outiller davantage les animatrices et animateurs afin d'améliorer la qualité de l'accompagnement pédagogique offert aux enfants.",
     contenu: "L'AMSS a organisé un atelier de formation de trois jours pour ses animateurs pédagogiques dans la région de Ségou. L'objectif est d'améliorer les méthodes d'enseignement et d'accompagnement des enfants dans les centres d'apprentissage.",
     statistiques: { animateurs: '85', jours: '3', modules: '8' },
-    lieux: ['Ségou']
+    lieux: ['Ségou'],
+    tags: [
+      'Éducation', 'Formation', 'Accompagnement pédagogique', 'Enfants',
+      'Ségou', 'Projets'
+    ]
   }
 ]
 
