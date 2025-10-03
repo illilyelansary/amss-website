@@ -4,6 +4,14 @@ import { Link } from 'react-router-dom'
 import { Calendar, ArrowRight, Users, MapPin, Heart, Share2 } from 'lucide-react'
 import { actualites } from '../data/actualitesData'
 
+// ====== Constantes flux & placeholder ======
+const PLACEHOLDER = '/placeholder-news.jpg' // déposez le fichier dans /public
+// Pages officielles repérées
+const FACEBOOK_PAGE_URL = 'https://www.facebook.com/ONGAMSS'
+const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@ONG-AMSS'
+// Vidéo YouTube récente à intégrer (fallback si l’API n’est pas branchée)
+const YOUTUBE_VIDEO_ID = 'P_3BiMNpJRc'
+
 const ActualitesPage = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCategorie, setSelectedCategorie] = useState('Toutes')
@@ -17,7 +25,7 @@ const ActualitesPage = () => {
 
   const categories = useMemo(
     () => ['Toutes', ...Array.from(new Set(actualites.map(a => a.categorie)))],
-    [actualites]
+    []
   )
 
   const filteredActualites = useMemo(() => {
@@ -25,7 +33,7 @@ const ActualitesPage = () => {
     return actualites.filter(a => {
       const matchesCategorie =
         selectedCategorie === 'Toutes' || a.categorie === selectedCategorie
-      const hay = (a.titre + ' ' + a.excerpt).toLowerCase()
+      const hay = (a.titre + ' ' + (a.excerpt || '')).toLowerCase()
       const matchesSearch = term === '' || hay.includes(term)
       return matchesCategorie && matchesSearch
     })
@@ -87,7 +95,13 @@ const ActualitesPage = () => {
                 {featuredActualites.map((a) => (
                   <div key={a.slug} className="bg-white rounded-xl shadow-lg border border-border overflow-hidden hover:shadow-xl transition-shadow">
                     <Link to={`/actualites/${a.slug}`}>
-                      <img src={a.image} alt={a.titre} className="w-full h-64 object-cover" />
+                      <img
+                        src={a.image || PLACEHOLDER}
+                        alt={a.titre}
+                        className="w-full h-64 object-cover"
+                        onError={(e) => { e.currentTarget.src = PLACEHOLDER }}
+                        loading="lazy"
+                      />
                     </Link>
                     <div className="p-6">
                       <div className="flex items-center justify-between mb-3">
@@ -175,7 +189,13 @@ const ActualitesPage = () => {
                 {currentItems.map((a) => (
                   <div key={a.slug} className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow">
                     <Link to={`/actualites/${a.slug}`}>
-                      <img src={a.image} alt={a.titre} className="w-full h-48 object-cover rounded-lg mb-4" />
+                      <img
+                        src={a.image || PLACEHOLDER}
+                        alt={a.titre}
+                        className="w-full h-48 object-cover rounded-lg mb-4"
+                        onError={(e) => { e.currentTarget.src = PLACEHOLDER }}
+                        loading="lazy"
+                      />
                     </Link>
                     <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                       <div className="flex items-center">
@@ -187,7 +207,7 @@ const ActualitesPage = () => {
                       <h3 className="text-lg font-semibold text-foreground mb-3 line-clamp-2">{a.titre}</h3>
                     </Link>
                     <p className="text-muted-foreground text-sm mb-4 leading-relaxed line-clamp-3">{a.excerpt}</p>
-                    {a.lieux && (
+                    {Array.isArray(a.lieux) && a.lieux.length > 0 && (
                       <div className="flex items-center text-xs text-muted-foreground mb-3">
                         <MapPin className="h-3 w-3 mr-1" /><span>{a.lieux.join(', ')}</span>
                       </div>
@@ -223,6 +243,77 @@ const ActualitesPage = () => {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* ====== Section Réseaux sociaux ====== */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
+              Nos réseaux sociaux
+            </h2>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Facebook Page Plugin (timeline) */}
+              <div className="bg-white rounded-xl border border-border shadow-sm p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold">Facebook</h3>
+                  <a
+                    href={FACEBOOK_PAGE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Voir la page
+                  </a>
+                </div>
+                <div className="rounded-lg overflow-hidden">
+                  <iframe
+                    title="Flux Facebook AMSS"
+                    src={`https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FACEBOOK_PAGE_URL)}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true`}
+                    width="100%"
+                    height="600"
+                    style={{ border: 'none', overflow: 'hidden' }}
+                    scrolling="no"
+                    frameBorder="0"
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                  />
+                </div>
+              </div>
+
+              {/* YouTube (vidéo récente + lien chaîne) */}
+              <div className="bg-white rounded-xl border border-border shadow-sm p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold">YouTube</h3>
+                  <a
+                    href={YOUTUBE_CHANNEL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Voir la chaîne
+                  </a>
+                </div>
+                <div className="rounded-lg overflow-hidden aspect-video">
+                  <iframe
+                    title="Vidéo AMSS"
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+
+                {/* CTA secondaire */}
+                <div className="mt-3 text-sm text-muted-foreground">
+                  Astuce : abonnez-vous pour recevoir nos prochaines vidéos (reportages terrain, sensibilisations, témoignages).
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
