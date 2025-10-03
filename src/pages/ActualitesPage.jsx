@@ -6,11 +6,16 @@ import { actualites } from '../data/actualitesData'
 
 // ====== Constantes flux & placeholder ======
 const PLACEHOLDER = '/placeholder-news.jpg' // déposez le fichier dans /public
+
 // Pages officielles
 const FACEBOOK_PAGE_URL = 'https://www.facebook.com/ONGAMSS'
-// ID de chaîne YouTube fourni => playlist "uploads" auto-actualisée
-const YOUTUBE_UPLOADS_PLAYLIST_ID = 'UUl0ExiL4rmPUDpSjQMo83-A'
 const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@ONG-AMSS'
+
+// Playlist "uploads" auto-actualisée : UC → UU
+const YOUTUBE_UPLOADS_PLAYLIST_ID = 'UUl0ExiL4rmPUDpSjQMo83-A'
+
+// Ajoute l'origine du site (utilisé par YouTube pour autoriser l'embed)
+const ORIGIN = typeof window !== 'undefined' ? window.location.origin : ''
 
 const ActualitesPage = () => {
   const [currentPage, setCurrentPage] = useState(1)
@@ -19,7 +24,6 @@ const ActualitesPage = () => {
   const itemsPerPage = 6
 
   useEffect(() => {
-    // Revenir en haut quand on arrive sur la page (au cas où)
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [])
 
@@ -31,8 +35,7 @@ const ActualitesPage = () => {
   const filteredActualites = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
     return (actualites || []).filter(a => {
-      const matchesCategorie =
-        selectedCategorie === 'Toutes' || a.categorie === selectedCategorie
+      const matchesCategorie = selectedCategorie === 'Toutes' || a.categorie === selectedCategorie
       const hay = (`${a.titre} ${a.excerpt || ''}`).toLowerCase()
       const matchesSearch = term === '' || hay.includes(term)
       return matchesCategorie && matchesSearch
@@ -302,9 +305,11 @@ const ActualitesPage = () => {
                     title="Vidéos AMSS"
                     width="100%"
                     height="100%"
-                    src={`https://www.youtube.com/embed/videoseries?list=${YOUTUBE_UPLOADS_PLAYLIST_ID}`}
+                    // domaine "nocookie" + origin pour éviter des blocages d’embed
+                    src={`https://www.youtube-nocookie.com/embed/videoseries?list=${YOUTUBE_UPLOADS_PLAYLIST_ID}&rel=0&modestbranding=1&iv_load_policy=3&origin=${encodeURIComponent(ORIGIN)}`}
                     frameBorder="0"
                     loading="lazy"
+                    referrerPolicy="strict-origin-when-cross-origin"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
                   />
