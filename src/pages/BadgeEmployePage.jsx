@@ -4,7 +4,7 @@ import { Camera, Printer, Download, Hash, User, BadgeCheck, Building2, Briefcase
 import { Button } from '@/components/ui/button'
 import logoAmss from '@/assets/LogoAMSSFHD.png'
 
-/* ========= Chargement libs QR via CDN (aucune install) =========
+/* ========= Chargeurs QR via CDN =========
    1) qrcode (QRCode.*) – priorité
    2) qrcode-generator (qrcode()) – fallback
 */
@@ -52,12 +52,33 @@ function formatMonthYearNum(iso) {
   return `${mm}/${yyyy}`
 }
 
+/** Génère un DataURL de QR pour une valeur donnée */
+async function makeQrDataUrl(value, size = 130) {
+  // priorité: QRCode (qrcode npm)
+  if (window.QRCode?.toDataURL) {
+    return await window.QRCode.toDataURL(value, {
+      width: size,
+      margin: 0,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#111827', light: '#FFFFFF' },
+    })
+  }
+  // fallback: qrcode-generator
+  if (window.qrcode) {
+    const qr = window.qrcode(0, 'M')
+    qr.addData(value)
+    qr.make()
+    // scale 4 ~130-140px selon moduleCount
+    return qr.createDataURL(4)
+  }
+  return ''
+}
+
 export default function BadgeEmployePage() {
   const qrReady = useQrLoaders()
 
   const qrImgRef = useRef(null)
 
-  const [printing, setPrinting] = useState(false) // mode "print-only"
   const [photoDataUrl, setPhotoDataUrl] = useState('')
   const [form, setForm] = useState({
     nom: '',
@@ -78,57 +99,30 @@ export default function BadgeEmployePage() {
     return [p, n].filter(Boolean).join(' ')
   }, [form.prenom, form.nom])
 
-  /* ===== Génération QR (verso) — encode toutes les infos du recto ===== */
+  /* ===== Génération QR (verso) ===== */
   useEffect(() => {
-    const value = JSON.stringify({
-      id: sanitizeMatricule(form.matricule),
+    const matricule = sanitizeMatricule(form.matricule)
+    if (!qrReady || !qrImgRef.current || !matricule) return
+
+    const payload = {
+      type: 'AMSS_EMPLOYE',
+      matricule,
       nom: form.nom || '',
       prenom: form.prenom || '',
       fonction: form.fonction || '',
       departement: form.departement || '',
       bureau: form.bureau || '',
       email: form.email || '',
-      tel: form.telephone || '',
-      embauche: formatMonthYearNum(form.dateEmbauche),
-      validite: formatMonthYearNum(form.dateValidite),
-    })
-
-    if (!qrReady || !qrImgRef.current) return
-
-    const drawWithQRCode = async () => {
-      try {
-        if (window.QRCode?.toDataURL) {
-          const url = await window.QRCode.toDataURL(value, {
-            width: 120,            // ✅ QR plus petit
-            margin: 0,
-            errorCorrectionLevel: 'M',
-            color: { dark: '#111827', light: '#FFFFFF' },
-          })
-          qrImgRef.current.src = url
-          return true
-        }
-      } catch {}
-      return false
-    }
-
-    const drawWithQrcodeGen = () => {
-      try {
-        if (window.qrcode) {
-          const qr = window.qrcode(0, 'M')
-          qr.addData(value)
-          qr.make()
-          // densité 3 => ~120px (selon moduleCount)
-          const dataUrl = qr.createDataURL(3)
-          qrImgRef.current.src = dataUrl
-          return true
-        }
-      } catch {}
-      return false
+      telephone: form.telephone || '',
+      dateEmbauche: formatMonthYearNum(form.dateEmbauche),
+      dateValidite: formatMonthYearNum(form.dateValidite),
     }
 
     ;(async () => {
-      const ok1 = await drawWithQRCode()
-      if (!ok1) drawWithQrcodeGen()
+      try {
+        const url = await makeQrDataUrl(JSON.stringify(payload), 130)
+        if (url) qrImgRef.current.src = url
+      } catch {}
     })()
   }, [qrReady, form])
 
@@ -144,173 +138,180 @@ export default function BadgeEmployePage() {
     reader.readAsDataURL(file)
   }
 
-  // Impression fiable : on ne rend QUE les cartes en mode "printing"
-  useEffect(() => {
-    const onAfter = () => setPrinting(false)
-    window.addEventListener('afterprint', onAfter)
-    return () => window.removeEventListener('afterprint', onAfter)
-  }, [])
+  /* ========= Impression dans une fenêtre dédiée ========= */
+  const handlePrint = async () => {
+    if (!qrReady) {
+      alert("Le module QR n'est pas encore prêt. Réessayez dans une seconde.")
+      return
+    }
 
-  const triggerPrint = () => {
-    setPrinting(true)
-    // laisse le temps au DOM d'afficher le mode print-only
-    setTimeout(() => window.print(), 100)
-  }
+    const matricule = sanitizeMatricule(form.matricule)
+    const payload = {
+      type: 'AMSS_EMPLOYE',
+      matricule,
+      nom: form.nom || '',
+      prenom: form.prenom || '',
+      fonction: form.fonction || '',
+      departement: form.departement || '',
+      bureau: form.bureau || '',
+      email: form.email || '',
+      telephone: form.telephone || '',
+      dateEmbauche: formatMonthYearNum(form.dateEmbauche),
+      dateValidite: formatMonthYearNum(form.dateValidite),
+    }
+    const qrDataUrl =
+      qrImgRef.current?.src && qrImgRef.current.src.startsWith('data:image')
+        ? qrImgRef.current.src
+        : await makeQrDataUrl(JSON.stringify(payload), 130)
 
-  const handlePrint = () => triggerPrint()
-  const handleDownload = () => triggerPrint() // imprimer en PDF côté navigateur
+    const recto = `
+      <div class="card">
+        <div class="band band-recto"></div>
+        <div class="content">
+          <div class="left">
+            <div class="photo">${photoDataUrl ? `<img src="${photoDataUrl}" />` : 'Photo'}</div>
+            <img src="${logoAmss}" class="logo" />
+          </div>
+          <div class="right">
+            <div class="name">${displayName || 'Nom Prénom'}</div>
+            <div class="role">${form.fonction || 'Fonction'}</div>
+            <div class="grid">
+              <div><span class="lbl">Département:</span> ${form.departement || '—'}</div>
+              <div><span class="lbl">Bureau:</span> ${form.bureau}</div>
+              <div><span class="lbl">Embauche:</span> ${formatMonthYearNum(form.dateEmbauche)}</div>
+              <div><span class="lbl">Validité:</span> ${formatMonthYearNum(form.dateValidite)}</div>
+              <div class="full"><span class="lbl">Email:</span> ${form.email || '—'}</div>
+              <div class="full"><span class="lbl">Tél:</span> ${form.telephone || '—'}</div>
+              <div class="full"><span class="lbl">Matricule:</span> ${matricule}</div>
+            </div>
+          </div>
+          <div class="tag-vertical">
+            <span class="dot"></span> AMSS • Identification
+          </div>
+        </div>
+      </div>
+    `
 
-  // Styles d’impression pour garantir la couleur de la bande
-  const PrintStyles = () => (
-    <style>{`
-      @page { margin: 8mm; size: auto; }
-      @media print {
-        html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .print-card { page-break-after: always; }
-        .print-card:last-child { page-break-after: auto; }
-        .band { background: linear-gradient(90deg, var(--tw-gradient-from), var(--tw-gradient-to)); }
-        /* Fallback couleur unie si le navigateur ignore les dégradés en print */
-        .band { background-color: #2563eb !important; }
+    const verso = `
+      <div class="card">
+        <div class="band band-verso"></div>
+        <div class="content verso">
+          <div class="header">
+            <img src="${logoAmss}" class="logo-small" />
+          </div>
+          <div class="subtitle">Badge Employé • ${matricule}</div>
+
+          <div class="cols">
+            <div class="qr">
+              <div class="qr-box">
+                ${qrDataUrl ? `<img src="${qrDataUrl}" />` : 'QR'}
+              </div>
+            </div>
+            <div class="contact">
+              <div class="contact-lines">
+                <div class="strong">Association Malienne pour la Survie au Sahel (AMSS)</div>
+                <div>www.ong-amss.org</div>
+                <div>+223 20 20 27 28</div>
+              </div>
+              <div class="hint">En cas de perte, merci de contacter l’AMSS.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+
+    const css = `
+      @page { margin: 0; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+      html, body { height: 100%; }
+      body { margin: 0; padding: 16px; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif; background: white; }
+      .sheet { width: 336px; height: 212px; }
+      .card {
+        width: 336px; height: 212px; position: relative; border: 1px solid #e5e7eb; border-radius: 12px; margin: 0 auto 18px auto; box-shadow: 0 0 0 0;
       }
-    `}</style>
-  )
+      .band { position: absolute; left: 0; right: 0; top: 0; height: 40px; border-top-left-radius: 12px; border-top-right-radius: 12px; }
+      .band-recto { background: linear-gradient(90deg, #2563eb 0%, #06b6d4 100%); }
+      .band-verso { background: linear-gradient(90deg, #06b6d4 0%, #2563eb 100%); }
+      .content { position: relative; padding: 10px; display: grid; grid-template-columns: 100px 1fr; gap: 10px; height: 100%; }
+      .left { display: flex; flex-direction: column; align-items: center; margin-top: 4px; }
+      .photo { width: 96px; height: 116px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #6b7280; }
+      .photo img { width: 100%; height: 100%; object-fit: cover; }
+      .logo { height: 84px; margin-top: 4px; }
+      .right { padding-top: 2px; }
+      .name { font-weight: 700; font-size: 16px; line-height: 1.1; color: #111827; }
+      .role { color: #6b7280; font-size: 13px; margin-top: 2px; }
+      .grid { margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 12px; line-height: 1.2; color: #374151; }
+      .grid .lbl { font-weight: 600; color: #111827; }
+      .grid .full { grid-column: 1 / -1; }
+      .tag-vertical {
+        position: absolute; left: -6px; top: 46px;
+        transform: rotate(-90deg);
+        transform-origin: left top;
+        font-size: 9px; color: #065f46;
+        background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px;
+        padding: 2px 6px; display: inline-flex; align-items: center; gap: 4px;
+      }
+      .tag-vertical .dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; }
 
-  // ==== Cartes (petit composant réutilisé pour écran & print) ====
-  const Recto = () => (
-    <div
-      className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
-      style={{ width: 336, height: 212 }}
-    >
-      {/* Bande supérieure */}
-      <div className="band absolute inset-x-0 top-0 h-10 rounded-t-xl bg-gradient-to-r from-primary to-accent" />
-      {/* Pastille verticale (gauche) plus petite */}
-      <div
-        className="absolute left-[-14px] top-[42px] origin-bottom-left -rotate-90 bg-emerald-50 text-emerald-700 border border-emerald-200"
-        style={{ fontSize: 8, padding: '2px 6px', borderRadius: 6 }}
-      >
-        <span className="inline-flex items-center">
-          <BadgeCheck style={{ width: 10, height: 10, marginRight: 4 }} />
-          AMSS • Identification
-        </span>
-      </div>
+      /* Verso */
+      .content.verso { display: block; padding-top: 50px; }
+      .header { display: flex; justify-content: center; align-items: center; margin-bottom: 4px; }
+      .logo-small { height: 32px; }
+      .subtitle { text-align: center; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+      .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+      .qr { display: flex; align-items: center; justify-content: center; }
+      .qr-box { width: 150px; height: 150px; border: 1px solid #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: #ffffff; }
+      .qr-box img { width: 130px; height: 130px; image-rendering: pixelated; }
+      .contact { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 4px; }
+      .contact-lines { font-size: 11px; line-height: 1.25; color: #111827; }
+      .contact-lines .strong { font-weight: 600; margin-bottom: 2px; }
+      .hint { margin-top: 6px; font-size: 10px; color: #6b7280; }
 
-      <div className="relative h-full p-3 grid grid-cols-[96px_1fr] gap-3">
-        {/* Photo + logo (agrandi) */}
-        <div className="flex flex-col items-center">
-          <div className="w-[96px] h-[116px] rounded-md overflow-hidden border border-border bg-muted">
-            {photoDataUrl ? (
-              <img src={photoDataUrl} alt="Employé" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Photo</div>
-            )}
-          </div>
-          {/* ✅ logo légèrement plus grand */}
-          <img src={logoAmss} alt="AMSS" className="h-[86px] mt-1" />
-        </div>
+      /* Une carte par page à l'impression */
+      .card { page-break-after: always; }
+      .card:last-child { page-break-after: auto; }
+    `
 
-        {/* Infos */}
-        <div className="flex flex-col">
-          <div className="mt-1">
-            <div className="text-lg font-semibold leading-tight">{displayName || 'Nom Prénom'}</div>
-            <div className="text-sm text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
-          </div>
+    const html = `
+      <!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Badge AMSS – ${matricule}</title>
+        <style>${css}</style>
+      </head>
+      <body>
+        ${recto}
+        ${verso}
+        <script>
+          // Lancer l'impression à la fin du chargement pour éviter les pages blanches
+          window.onload = () => setTimeout(() => window.print(), 100);
+        </script>
+      </body>
+      </html>
+    `
 
-          {/* Bloc infos : dates MM/AAAA ; labels complets non abrégés */}
-          <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
-            <div className="break-words">
-              <span className="font-medium">Département:</span> {form.departement || '—'}
-            </div>
-            <div className="break-words">
-              <span className="font-medium">Bureau:</span> {form.bureau}
-            </div>
-            <div className="whitespace-nowrap">
-              <span className="font-medium">Embauche:</span> {formatMonthYearNum(form.dateEmbauche)}
-            </div>
-            <div className="whitespace-nowrap">
-              <span className="font-medium">Validité:</span> {formatMonthYearNum(form.dateValidite)}
-            </div>
-            <div className="col-span-2 break-words">
-              <span className="font-medium">Email:</span> {form.email || '—'}
-            </div>
-            <div className="col-span-2 whitespace-nowrap">
-              <span className="font-medium">Tél:</span> {form.telephone || '—'}
-            </div>
-            <div className="col-span-2 whitespace-nowrap">
-              <span className="font-medium">Matricule:</span> {sanitizeMatricule(form.matricule)}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const Verso = () => (
-    <div
-      className="print-card relative mx-auto bg-white rounded-xl border border-border shadow-sm"
-      style={{ width: 336, height: 212 }}
-    >
-      {/* Bande supérieure */}
-      <div className="band absolute inset-x-0 top-0 h-10 rounded-t-xl bg-gradient-to-r from-accent to-primary" />
-      <div className="relative h-full p-3">
-        {/* Titre centré + ID */}
-        <div className="text-center text-xs text-muted-foreground mt-2 mb-1">
-          Badge Employé • {sanitizeMatricule(form.matricule)}
-        </div>
-
-        {/* Deux colonnes: QR à gauche, contacts à droite */}
-        <div className="mt-2 grid grid-cols-2 gap-3 items-start">
-          {/* Colonne QR */}
-          <div className="flex items-center justify-center">
-            <div className="flex items-center justify-center w-[130px] h-[130px] bg-white rounded border border-border">
-              <img
-                ref={qrImgRef}
-                alt="QR du badge"
-                className="block"
-                style={{ width: 120, height: 120, imageRendering: 'pixelated' }}
-              />
-            </div>
-          </div>
-
-          {/* Colonne Contact (sans logo, textes uniquement) */}
-          <div className="flex flex-col items-center text-center px-1">
-            <div className="text-[11px] leading-tight">
-              <div className="font-medium">Association Malienne pour la Survie au Sahel (AMSS)</div>
-              <div>www.ong-amss.org</div>
-              <div>+223 20 20 27 28</div>
-            </div>
-            <div className="mt-2 text-[10px] text-muted-foreground">
-              En cas de perte, merci de contacter l’AMSS.
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  // ======= Rendu =======
-  if (printing) {
-    // Mode impression: on ne rend QUE les deux cartes + styles print
-    return (
-      <div className="w-full min-h-screen flex flex-col items-center justify-center">
-        <PrintStyles />
-        <div className="grid grid-cols-1 gap-10">
-          <Recto />
-          <Verso />
-        </div>
-      </div>
-    )
+    const w = window.open('', '_blank', 'width=900,height=700')
+    if (!w) return
+    w.document.open()
+    w.document.write(html)
+    w.document.close()
+    w.focus()
   }
 
-  // Écran normal (formulaire + aperçu côte à côte)
+  const handleDownload = () => handlePrint()
+
   return (
     <div className="min-h-screen bg-background">
+      {/* (On laisse l’aperçu sur la page, mais l’impression se fait dans une nouvelle fenêtre imprimable) */}
+
       {/* Hero */}
       <section className="py-10 bg-gradient-to-br from-primary/10 to-accent/10 border-b">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Générateur de Badge Employé</h1>
           <p className="text-muted-foreground mt-2">
-            Saisissez les informations, importez une photo et imprimez un badge au format carte. 
-            Le <strong>QR code</strong> est au <strong>verso</strong>.
+            Saisissez les informations, importez une photo et imprimez un badge au format carte.
+            Le <strong>QR code</strong> est au <strong>verso</strong> (sans code-barres).
           </p>
         </div>
       </section>
@@ -394,7 +395,7 @@ export default function BadgeEmployePage() {
             </div>
           </div>
 
-          {/* Aperçu Recto + Verso (écran) */}
+          {/* Aperçu à l’écran (non contractuel pour l’impression) */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold">Aperçu du badge</h2>
@@ -408,14 +409,80 @@ export default function BadgeEmployePage() {
               </div>
             </div>
 
+            {/* Vignette d’aperçu recto/verso */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Recto />
-              <Verso />
+              {/* Recto preview */}
+              <div className="relative mx-auto bg-white rounded-xl border border-border shadow-sm" style={{ width: 336, height: 212 }}>
+                <div className="absolute inset-x-0 top-0 h-10 rounded-t-xl" style={{ background: 'linear-gradient(90deg, #2563eb 0%, #06b6d4 100%)' }} />
+                <div className="relative h-full p-3 grid grid-cols-[100px_1fr] gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-[96px] h-[116px] rounded-md overflow-hidden border border-border bg-muted">
+                      {photoDataUrl ? (
+                        <img src={photoDataUrl} alt="Employé" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Photo</div>
+                      )}
+                    </div>
+                    <img src={logoAmss} alt="AMSS" className="h-20 mt-1" />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="mt-1">
+                      <div className="text-lg font-semibold leading-tight">{displayName || 'Nom Prénom'}</div>
+                      <div className="text-sm text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
+                      <div className="break-words"><span className="font-medium">Département:</span> {form.departement || '—'}</div>
+                      <div className="break-words"><span className="font-medium">Bureau:</span> {form.bureau}</div>
+                      <div className="whitespace-nowrap"><span className="font-medium">Embauche:</span> {formatMonthYearNum(form.dateEmbauche)}</div>
+                      <div className="whitespace-nowrap"><span className="font-medium">Validité:</span> {formatMonthYearNum(form.dateValidite)}</div>
+                      <div className="col-span-2 break-words"><span className="font-medium">Email:</span> {form.email || '—'}</div>
+                      <div className="col-span-2 whitespace-nowrap"><span className="font-medium">Tél:</span> {form.telephone || '—'}</div>
+                      <div className="col-span-2 whitespace-nowrap"><span className="font-medium">Matricule:</span> {sanitizeMatricule(form.matricule)}</div>
+                    </div>
+                    <div
+                      className="inline-flex items-center text-[9px] px-1.5 py-[2px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200 self-start"
+                      style={{ position: 'absolute', left: -6, top: 46, transform: 'rotate(-90deg)', transformOrigin: 'left top' }}
+                    >
+                      <BadgeCheck className="h-[10px] w-[10px] mr-1" /> AMSS • Identification
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Verso preview */}
+              <div className="relative mx-auto bg-white rounded-xl border border-border shadow-sm" style={{ width: 336, height: 212 }}>
+                <div className="absolute inset-x-0 top-0 h-10 rounded-t-xl" style={{ background: 'linear-gradient(90deg, #06b6d4 0%, #2563eb 100%)' }} />
+                <div className="relative h-full p-3">
+                  <div className="flex items-center justify-center mt-1 mb-2">
+                    <img src={logoAmss} alt="AMSS" className="h-8" />
+                  </div>
+                  <div className="text-center text-xs text-muted-foreground mb-1">
+                    Badge Employé • {sanitizeMatricule(form.matricule)}
+                  </div>
+
+                  <div className="mt-2 grid grid-cols-2 gap-3 items-start">
+                    <div className="flex items-center justify-center">
+                      <div className="flex items-center justify-center w-[150px] h-[150px] bg-white rounded border border-border">
+                        <img ref={qrImgRef} alt="QR du badge" style={{ width: 130, height: 130, imageRendering: 'pixelated' }} />
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-center text-center px-1">
+                      <div className="text-[11px] leading-tight">
+                        <div className="font-medium">Association Malienne pour la Survie au Sahel (AMSS)</div>
+                        <div>www.ong-amss.org</div>
+                        <div>+223 20 20 27 28</div>
+                      </div>
+                      <div className="mt-2 text-[10px] text-muted-foreground">
+                        En cas de perte, merci de contacter l’AMSS.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <p className="text-xs text-muted-foreground mt-3">
-              Astuce : dans la boîte de dialogue d’impression, activez le <strong>recto-verso</strong> (retournement <em>grand bord</em>)
-              pour aligner recto et verso. Si la bande couleur ne sort pas, vérifiez l’option « Imprimer les couleurs d’arrière-plan ».
+              Conseil : après ouverture de la fenêtre d’aperçu, activez le <strong>recto-verso</strong> (retournement <em>grand bord</em>) dans la boîte de dialogue d’impression.
             </p>
           </div>
         </div>
