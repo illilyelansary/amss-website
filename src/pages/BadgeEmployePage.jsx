@@ -55,8 +55,7 @@ function formatMonthYearNum(iso) {
 }
 
 /** Génère un DataURL de QR pour une valeur donnée */
-async function makeQrDataUrl(value, size = 128) {
-  // priorité: QRCode (qrcode npm)
+async function makeQrDataUrl(value, size = 110) {
   if (window.QRCode?.toDataURL) {
     return await window.QRCode.toDataURL(value, {
       width: size,
@@ -65,13 +64,12 @@ async function makeQrDataUrl(value, size = 128) {
       color: { dark: '#111827', light: '#FFFFFF' },
     })
   }
-  // fallback: qrcode-generator
   if (window.qrcode) {
     const qr = window.qrcode(0, 'M')
     qr.addData(value)
     qr.make()
-    // scale 4 ~ 128-136px selon moduleCount
-    return qr.createDataURL(4)
+    // scale ~ 3.5 ≈ 110–115 px selon moduleCount
+    return qr.createDataURL(3.5)
   }
   return ''
 }
@@ -121,7 +119,7 @@ export default function BadgeEmployePage() {
 
     ;(async () => {
       try {
-        const url = await makeQrDataUrl(JSON.stringify(payload), 124) // taille un peu réduite
+        const url = await makeQrDataUrl(JSON.stringify(payload), 110) // ➜ un peu plus petit pour l’impression
         if (url) qrImgRef.current.src = url
       } catch {}
     })()
@@ -139,7 +137,7 @@ export default function BadgeEmployePage() {
     reader.readAsDataURL(file)
   }
 
-  /* ========= Impression via iframe invisible (fiable, évite les popups/plantages) ========= */
+  /* ========= Impression via iframe invisible ========= */
   const handlePrint = async () => {
     if (!qrReady) {
       alert("Le module QR n'est pas encore prêt. Réessayez dans une seconde.")
@@ -162,11 +160,11 @@ export default function BadgeEmployePage() {
     const qrDataUrl =
       qrImgRef.current?.src && qrImgRef.current.src.startsWith('data:image')
         ? qrImgRef.current.src
-        : await makeQrDataUrl(JSON.stringify(payload), 124)
+        : await makeQrDataUrl(JSON.stringify(payload), 110)
 
     // Dégradé marron (charte foncée)
-    const BROWN_START = '#5C3A21'  // marron foncé
-    const BROWN_END   = '#B07B4C'  // marron clair / caramel
+    const BROWN_START = '#5C3A21'
+    const BROWN_END   = '#B07B4C'
 
     const recto = `
       <div class="card">
@@ -180,16 +178,16 @@ export default function BadgeEmployePage() {
             <div class="name">${displayName || 'Nom Prénom'}</div>
             <div class="role">${form.fonction || 'Fonction'}</div>
             <div class="grid">
-              <div><span class="lbl">Département:</span> ${form.departement || '—'}</div>
-              <div><span class="lbl">Bureau:</span> ${form.bureau}</div>
-              <div><span class="lbl">Embauche:</span> ${formatMonthYearNum(form.dateEmbauche)}</div>
-              <div><span class="lbl">Validité:</span> ${formatMonthYearNum(form.dateValidite)}</div>
-              <div class="full"><span class="lbl">Email:</span> ${form.email || '—'}</div>
-              <div class="full"><span class="lbl">Tél:</span> ${form.telephone || '—'}</div>
-              <div class="full"><span class="lbl">Matricule:</span> ${matricule}</div>
+              <div class="wrap"><span class="lbl">Département&nbsp;:</span> ${form.departement || '—'}</div>
+              <div class="wrap"><span class="lbl">Bureau&nbsp;:</span> ${form.bureau}</div>
+              <div><span class="lbl">Embauche&nbsp;:</span> ${formatMonthYearNum(form.dateEmbauche)}</div>
+              <div><span class="lbl">Validité&nbsp;:</span> ${formatMonthYearNum(form.dateValidite)}</div>
+              <div class="full wrap"><span class="lbl">Email&nbsp;:</span> ${form.email || '—'}</div>
+              <div class="full"><span class="lbl">Tél&nbsp;:</span> ${form.telephone || '—'}</div>
+              <div class="full"><span class="lbl">Matricule&nbsp;:</span> ${matricule}</div>
             </div>
           </div>
-          <!-- Pastille verticale à gauche -->
+          <!-- Pastille verticale à gauche (compacte + confinée) -->
           <div class="tag-vertical">
             <span class="dot"></span> AMSS • Identification
           </div>
@@ -230,57 +228,72 @@ export default function BadgeEmployePage() {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
       html, body { height: 100%; }
       body { margin: 0; padding: 16px; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif; background: white; }
+
       .card {
-        width: 336px; height: 212px; position: relative; border: 1px solid #e5e7eb; border-radius: 12px; margin: 0 auto 18px auto;
+        width: 336px;
+        height: 212px;
+        position: relative;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        margin: 0 auto 18px auto;
+        overflow: hidden; /* ✅ rien ne dépasse */
+        transform: scale(0.985); /* ✅ mini marge anti-coupe */
+        transform-origin: top left;
       }
       .band { position: absolute; left: 0; right: 0; top: 0; height: 40px; border-top-left-radius: 12px; border-top-right-radius: 12px; }
-      .content { position: relative; padding: 10px; display: grid; grid-template-columns: 100px 1fr; gap: 10px; height: 100%; }
-      .left { display: flex; flex-direction: column; align-items: center; margin-top: 4px; }
-      .photo { width: 96px; height: 116px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #6b7280; }
+      .content { position: relative; padding: 9px 10px 10px 10px; display: grid; grid-template-columns: 98px 1fr; gap: 8px; height: 100%; }
+      .left { display: flex; flex-direction: column; align-items: center; margin-top: 2px; }
+      .photo { width: 94px; height: 114px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #6b7280; overflow: hidden; }
       .photo img { width: 100%; height: 100%; object-fit: cover; }
-      .logo { height: 84px; margin-top: 4px; }
-      .right { padding-top: 2px; }
-      .name { font-weight: 700; font-size: 16px; line-height: 1.1; color: #111827; }
-      .role { color: #6b7280; font-size: 13px; margin-top: 2px; }
-      .grid { margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 12px; line-height: 1.2; color: #374151; }
+      .logo { height: 82px; margin-top: 2px; }
+      .right { padding-top: 0; }
+      .name { font-weight: 700; font-size: 15px; line-height: 1.1; color: #111827; }
+      .role { color: #6b7280; font-size: 12px; margin-top: 1px; }
+      .grid { margin-top: 5px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 11px; line-height: 1.2; color: #374151; }
       .grid .lbl { font-weight: 600; color: #111827; }
       .grid .full { grid-column: 1 / -1; }
+      .grid .wrap { word-break: break-word; overflow-wrap: anywhere; }
 
-      /* Pastille verticale à gauche : petite, lecture bas→haut */
+      /* ✅ Pastille verticale confinée */
       .tag-vertical {
         position: absolute;
-        left: 4px;
-        top: 36px;           /* un peu plus haut */
+        left: 2px;
+        top: 44px;              /* montée un peu, sans toucher la bande */
         writing-mode: vertical-rl;
         transform: rotate(180deg);
         transform-origin: left top;
-        font-size: 8px;
+        font-size: 7.5px;
         color: #065f46;
         background: #ecfdf5;
         border: 1px solid #a7f3d0;
         border-radius: 6px;
-        padding: 2px 4px;
+        padding: 2px 3px;
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        max-height: 132px;
+        max-height: 110px;      /* limite stricte */
+        overflow: hidden;       /* rien ne dépasse */
         pointer-events: none;
       }
-      .tag-vertical .dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; }
+      .tag-vertical .dot { width: 5px; height: 5px; background: #10b981; border-radius: 50%; display: inline-block; }
 
-      /* Verso */
-      .content.verso { display: block; padding-top: 50px; }
-      .header { display: flex; justify-content: center; align-items: center; margin-bottom: 4px; }
-      .logo-small { height: 32px; }
-      .subtitle { text-align: center; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
-      .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+      /* Verso compact pour éviter tout débordement */
+      .content.verso { display: block; padding-top: 46px; } /* espace sous la bande */
+      .header { display: flex; justify-content: center; align-items: center; margin-bottom: 2px; }
+      .logo-small { height: 30px; }
+      .subtitle { text-align: center; font-size: 11px; color: #6b7280; margin-bottom: 4px; }
+      .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
       .qr { display: flex; align-items: center; justify-content: center; }
-      .qr-box { width: 150px; height: 150px; border: 1px solid #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: #ffffff; }
-      .qr-box img { width: 124px; height: 124px; image-rendering: pixelated; }
-      .contact { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 4px; }
-      .contact-lines { font-size: 11px; line-height: 1.25; color: #111827; }
+      .qr-box {
+        width: 136px; height: 136px; border: 1px solid #e5e7eb; border-radius: 6px;
+        display: flex; align-items: center; justify-content: center; background: #ffffff; overflow: hidden;
+      }
+      .qr-box img { width: 110px; height: 110px; image-rendering: pixelated; display: block; }
+
+      .contact { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 2px; }
+      .contact-lines { font-size: 10.5px; line-height: 1.25; color: #111827; }
       .contact-lines .strong { font-weight: 600; margin-bottom: 2px; }
-      .hint { margin-top: 6px; font-size: 10px; color: #6b7280; }
+      .hint { margin-top: 6px; font-size: 9.5px; color: #6b7280; }
 
       /* 1 carte par page à l’impression */
       .card { page-break-after: always; }
@@ -316,7 +329,6 @@ export default function BadgeEmployePage() {
       </html>
     `
 
-    // IFRAME invisible
     const iframe = document.createElement('iframe')
     iframe.style.position = 'fixed'
     iframe.style.right = '0'
@@ -332,7 +344,6 @@ export default function BadgeEmployePage() {
     doc.write(html)
     doc.close()
 
-    // Nettoyage une fois l’impression terminée (message postMessage)
     const cleanup = (ev) => {
       if (ev?.data === 'amss_print_done') {
         window.removeEventListener('message', cleanup)
@@ -347,7 +358,7 @@ export default function BadgeEmployePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="py-10 bg-gradient-to-br from-[##5C3A21]/10 to-[#B07B4C]/10 border-b">
+      <section className="py-10 bg-gradient-to-br from-[#5C3A21]/10 to-[#B07B4C]/10 border-b">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Générateur de Badge Employé</h1>
           <p className="text-muted-foreground mt-2">
@@ -436,7 +447,7 @@ export default function BadgeEmployePage() {
             </div>
           </div>
 
-          {/* Vignette d’aperçu */}
+          {/* Vignette d’aperçu (ajustée pour refléter l’impression) */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold">Aperçu du badge</h2>
@@ -452,52 +463,53 @@ export default function BadgeEmployePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Recto preview */}
-              <div className="relative mx-auto bg-white rounded-xl border border-border shadow-sm" style={{ width: 336, height: 212 }}>
+              <div className="relative mx-auto bg-white rounded-xl border border-border shadow-sm overflow-hidden" style={{ width: 336, height: 212 }}>
                 <div
                   className="absolute inset-x-0 top-0 h-10 rounded-t-xl"
                   style={{ background: 'linear-gradient(90deg, #5C3A21 0%, #B07B4C 100%)' }}
                 />
-                <div className="relative h-full p-3 grid grid-cols-[100px_1fr] gap-3">
+                <div className="relative h-full p-[10px] grid grid-cols-[98px_1fr] gap-2">
                   <div className="flex flex-col items-center">
-                    <div className="w-[96px] h-[116px] rounded-md overflow-hidden border border-border bg-muted">
+                    <div className="w-[94px] h-[114px] rounded-md overflow-hidden border border-border bg-muted">
                       {photoDataUrl ? (
                         <img src={photoDataUrl} alt="Employé" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Photo</div>
                       )}
                     </div>
-                    <img src={logoAmss} alt="AMSS" className="h-20 mt-1" />
+                    <img src={logoAmss} alt="AMSS" className="h-[82px] mt-[2px]" />
                   </div>
                   <div className="flex flex-col">
-                    <div className="mt-1">
-                      <div className="text-lg font-semibold leading-tight">{displayName || 'Nom Prénom'}</div>
-                      <div className="text-sm text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
+                    <div className="mt-0.5">
+                      <div className="text-[15px] font-semibold leading-tight">{displayName || 'Nom Prénom'}</div>
+                      <div className="text-[12px] text-muted-foreground leading-tight">{form.fonction || 'Fonction'}</div>
                     </div>
-                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-[2px] text-[12px] leading-5">
+                    <div className="mt-1.5 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] leading-[1.2]">
                       <div className="break-words"><span className="font-medium">Département:</span> {form.departement || '—'}</div>
                       <div className="break-words"><span className="font-medium">Bureau:</span> {form.bureau}</div>
-                      <div className="whitespace-nowrap"><span className="font-medium">Embauche:</span> {formatMonthYearNum(form.dateEmbauche)}</div>
-                      <div className="whitespace-nowrap"><span className="font-medium">Validité:</span> {formatMonthYearNum(form.dateValidite)}</div>
+                      <div><span className="font-medium">Embauche:</span> {formatMonthYearNum(form.dateEmbauche)}</div>
+                      <div><span className="font-medium">Validité:</span> {formatMonthYearNum(form.dateValidite)}</div>
                       <div className="col-span-2 break-words"><span className="font-medium">Email:</span> {form.email || '—'}</div>
-                      <div className="col-span-2 whitespace-nowrap"><span className="font-medium">Tél:</span> {form.telephone || '—'}</div>
-                      <div className="col-span-2 whitespace-nowrap"><span className="font-medium">Matricule:</span> {sanitizeMatricule(form.matricule)}</div>
+                      <div className="col-span-2"><span className="font-medium">Tél:</span> {form.telephone || '—'}</div>
+                      <div className="col-span-2"><span className="font-medium">Matricule:</span> {sanitizeMatricule(form.matricule)}</div>
                     </div>
 
-                    {/* pastille verticale (aperçu) */}
+                    {/* Pastille verticale (aperçu) */}
                     <div
-                      className="inline-flex items-center px-[4px] py-[2px] text-[8px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      className="inline-flex items-center px-[3px] py-[2px] text-[7.5px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200"
                       style={{
                         position: 'absolute',
-                        left: 4,
-                        top: 36,
+                        left: 2,
+                        top: 44,
                         writingMode: 'vertical-rl',
                         transform: 'rotate(180deg)',
                         transformOrigin: 'left top',
-                        maxHeight: 132,
+                        maxHeight: 110,
+                        overflow: 'hidden',
                         pointerEvents: 'none'
                       }}
                     >
-                      <BadgeCheck className="h-[10px] w-[10px] mr-1" />
+                      <span className="inline-block w-[5px] h-[5px] bg-emerald-500 rounded-full mr-1" />
                       AMSS • Identification
                     </div>
                   </div>
@@ -505,32 +517,32 @@ export default function BadgeEmployePage() {
               </div>
 
               {/* Verso preview */}
-              <div className="relative mx-auto bg-white rounded-xl border border-border shadow-sm" style={{ width: 336, height: 212 }}>
+              <div className="relative mx-auto bg-white rounded-xl border border-border shadow-sm overflow-hidden" style={{ width: 336, height: 212 }}>
                 <div
                   className="absolute inset-x-0 top-0 h-10 rounded-t-xl"
                   style={{ background: 'linear-gradient(90deg, #B07B4C 0%, #5C3A21 100%)' }}
                 />
-                <div className="relative h-full p-3">
-                  <div className="flex items-center justify-center mt-1 mb-2">
-                    <img src={logoAmss} alt="AMSS" className="h-8" />
+                <div className="relative h-full p-[10px] pt-[46px]">
+                  <div className="flex items-center justify-center mb-1">
+                    <img src={logoAmss} alt="AMSS" className="h-[30px]" />
                   </div>
-                  <div className="text-center text-xs text-muted-foreground mb-1">
+                  <div className="text-center text-[11px] text-muted-foreground mb-1">
                     Badge Employé • {sanitizeMatricule(form.matricule)}
                   </div>
 
-                  <div className="mt-2 grid grid-cols-2 gap-3 items-start">
+                  <div className="grid grid-cols-2 gap-2 items-start">
                     <div className="flex items-center justify-center">
-                      <div className="flex items-center justify-center w-[150px] h-[150px] bg-white rounded border border-border">
-                        <img ref={qrImgRef} alt="QR du badge" style={{ width: 124, height: 124, imageRendering: 'pixelated' }} />
+                      <div className="flex items-center justify-center w-[136px] h-[136px] bg-white rounded border border-border overflow-hidden">
+                        <img ref={qrImgRef} alt="QR du badge" style={{ width: 110, height: 110, imageRendering: 'pixelated', display: 'block' }} />
                       </div>
                     </div>
                     <div className="flex flex-col items-center text-center px-1">
-                      <div className="text-[11px] leading-tight">
-                        <div className="font-medium">Association Malienne pour la Survie au Sahel (AMSS)</div>
+                      <div className="text-[10.5px] leading-[1.25] text-foreground">
+                        <div className="font-semibold">Association Malienne pour la Survie au Sahel (AMSS)</div>
                         <div>www.ong-amss.org</div>
                         <div>+223 20 20 27 28</div>
                       </div>
-                      <div className="mt-2 text-[10px] text-muted-foreground">
+                      <div className="mt-1.5 text-[9.5px] text-muted-foreground">
                         En cas de perte, merci de contacter l’AMSS.
                       </div>
                     </div>
