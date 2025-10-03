@@ -148,7 +148,7 @@ const base = [
     image: img('padem-lancement-sikasso.jpg'),
     excerpt: "Lancement régional du Programme d’Appui au Développement Éducatif du Mali (PADEM) à Sikasso.",
     contenu: "Le 8 avril 2025 à Sikasso, AMSS a participé au lancement régional du PADEM, aux côtés des autorités éducatives. L’initiative vise à améliorer l’équité et la qualité des apprentissages, avec un accent sur l’inclusion et l’amélioration des environnements scolaires.",
-    partenaires: ['Ministère de l’Éducation nationale'],
+    partenaires: ['Ministère de l’Éducation nationale','Union Europenne','Save the Children'],
     lieux: ['Sikasso'],
     tags: ['Éducation', 'Scolarisation', 'Inclusion', 'Sikasso', 'Projets']
   },
