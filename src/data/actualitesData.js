@@ -232,7 +232,7 @@ const base = [
     categorie: 'Plaidoyer',
     image: img('localisation-aide-pays-bas-2022.jpg'),
     excerpt: "Rencontre autour du Forum national sur la localisation de l’aide humanitaire et le développement au Mali (FONA-LAHDM).",
-    contenu: "Le Président de la Plateforme des ONG nationales actives dans l’humanitaire et le Directeur des Programmes de l’AMSS ont échangé le 5 octobre 2022 avec l’Ambassade du Royaume des Pays-Bas au Mali au sujet des enjeux de localisation de l’aide.",
+    contenu: "Le Président de la Plateforme des ONG nationales actives dans l’humanitaire et Directeur des Programmes de l’AMSS accompagnés des ces collegues ont échangé le 5 octobre 2022 avec l’Ambassade du Royaume des Pays-Bas au Mali au sujet des enjeux de localisation de l’aide.",
     partenaires: ['Ambassade du Royaume des Pays-Bas'],
     lieux: ['Bamako'],
     tags: ['Plaidoyer', 'Gouvernance', 'Partenaires']
