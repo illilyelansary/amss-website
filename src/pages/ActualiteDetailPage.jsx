@@ -4,7 +4,7 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import { Calendar, Tag, MapPin, Share2, ChevronLeft, ArrowLeft, ArrowRight, Copy, Check, Home } from 'lucide-react'
 import { actualites } from '../data/actualitesData'
 
-// Routes cibles pour les tags
+// Routes cibles pour les tags (mappage direct)
 const TAG_ROUTE_MAP = {
   'Éducation': '/education',
   'Education': '/education',
@@ -20,20 +20,59 @@ const TAG_ROUTE_MAP = {
   'Projets': '/projets'
 } as const
 
+// Résolution avancée des tags → routes (Projets/Rapports filtrés)
+const resolveTagHref = (raw) => {
+  const label = String(raw || '').trim()
+  if (!label) return '/actualites'
+
+  // 1) Mappage direct si connu
+  if (Object.prototype.hasOwnProperty.call(TAG_ROUTE_MAP, label)) return TAG_ROUTE_MAP[label]
+
+  // 2) Projets: Domaine
+  const mProj = label.match(/^projets?\s*:\s*(.+)$/i)
+  if (mProj) return `/projets?domain=${encodeURIComponent(mProj[1])}`
+
+  // 3) Rapports: Type
+  const mRep = label.match(/^rapports?\s*:\s*(.+)$/i)
+  if (mRep) return `/rapports?type=${encodeURIComponent(mRep[1])}`
+
+  // 4) Année → Rapports par année
+  const mYear = label.match(/^ann(?:é|e)e\s*:\s*(\d{4})$/i)
+  if (mYear) return `/rapports?annee=${encodeURIComponent(mYear[1])}`
+
+  // 5) Donor/Bailleur/Partenaire → Projets par bailleur
+  const mDonor = label.match(/^(?:donor|bailleur|partenaire)\s*:\s*(.+)$/i)
+  if (mDonor) return `/projets?donor=${encodeURIComponent(mDonor[1])}`
+
+  // 6) Région → Projets par région
+  const mRegion = label.match(/^(?:r[ée]gion)\s*:\s*(.+)$/i)
+  if (mRegion) return `/projets?region=${encodeURIComponent(mRegion[1])}`
+
+  // 7) Domaine brut courant → /projets?domain=
+  const domainHints = ['WASH','Protection','Éducation','Education','Gouvernance','Sécurité alimentaire','Sante','Santé']
+  if (domainHints.includes(label)) return `/projets?domain=${encodeURIComponent(label)}`
+
+  // 8) Sinon, filtrage côté liste d’actualités
+  return `/actualites?tag=${encodeURIComponent(label)}`
+}
+
 const ActualiteDetailPage = () => {
   const { slug } = useParams()
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
   // Trouver l'actu courante (tolère des slugs en minuscules)
-  const actu = useMemo(() => actualites.find(a => String(a.slug).toLowerCase() === String(slug).toLowerCase()), [slug])
+  const actu = useMemo(
+    () => actualites.find(a => String(a.slug).toLowerCase() === String(slug).toLowerCase()),
+    [slug]
+  )
 
-  // Tri global des actualités par date (si parsable), sinon par ordre d'origine
+  // Tri global des actualités par dateISO (ou date), sinon par ordre d'origine
   const sorted = useMemo(() => {
     const copy = [...actualites]
     return copy.sort((a, b) => {
-      const ta = Date.parse(a.date)
-      const tb = Date.parse(b.date)
+      const ta = Date.parse(a.dateISO || a.date)
+      const tb = Date.parse(b.dateISO || b.date)
       if (isNaN(ta) && isNaN(tb)) return 0
       if (isNaN(ta)) return 1
       if (isNaN(tb)) return -1
@@ -66,15 +105,15 @@ const ActualiteDetailPage = () => {
     return `${window.location.origin}${pathname}`
   }, [pathname])
 
-  // Formatage de date (si parsable)
+  // Formatage de date (prend dateISO si dispo)
   const dateLabel = useMemo(() => {
-    if (!actu?.date) return ''
-    const t = Date.parse(actu.date)
-    if (isNaN(t)) return actu.date
+    if (!actu?.date && !actu?.dateISO) return ''
+    const t = Date.parse(actu.dateISO || actu.date)
+    if (isNaN(t)) return actu?.date || ''
     try {
       return new Date(t).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
     } catch {
-      return actu.date
+      return actu?.date || ''
     }
   }, [actu])
 
@@ -98,8 +137,7 @@ const ActualiteDetailPage = () => {
         setCopied(true)
         setTimeout(() => setCopied(false), 1800)
       }
-    } catch (e) {
-      // fallback en cas d’annulation ou d’erreur
+    } catch {
       try {
         await navigator.clipboard.writeText(canonicalUrl)
         setCopied(true)
@@ -126,9 +164,8 @@ const ActualiteDetailPage = () => {
     )
   }
 
-  // Actualités liées (même catégorie -> 4 max)
+  // Actualités liées (score catégorie + tags, max 4)
   const related = useMemo(() => {
-    // score par proximité de catégorie et tags
     const tagsSet = new Set((actu.tags || []).map(String))
     const scored = sorted
       .filter(a => a.slug !== actu.slug)
@@ -147,9 +184,9 @@ const ActualiteDetailPage = () => {
     return scored.slice(0, 4)
   }, [sorted, actu])
 
-  // Données structurées (SEO) – simple et sûr
+  // Données structurées (SEO)
   const jsonLd = useMemo(() => {
-    const t = Date.parse(actu.date)
+    const t = Date.parse(actu.dateISO || actu.date)
     const isoDate = isNaN(t) ? undefined : new Date(t).toISOString()
     return {
       '@context': 'https://schema.org',
@@ -215,7 +252,7 @@ const ActualiteDetailPage = () => {
               <div className="mt-3 flex flex-wrap gap-2">
                 {actu.tags.map((t, i) => {
                   const label = String(t)
-                  const href = TAG_ROUTE_MAP[label] || `/actualites?tag=${encodeURIComponent(label)}`
+                  const href = resolveTagHref(label)
                   return (
                     <Link
                       key={i}
