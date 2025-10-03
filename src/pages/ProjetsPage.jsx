@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { projetsEnCours, projetsTermines, rapports } from '../data/projetsData'
 
 if (import.meta.env.DEV) {
-  // Aide visuelle en dev
   // eslint-disable-next-line no-console
   console.log('projetsEnCours:', projetsEnCours?.length, 'projetsTermines:', projetsTermines?.length)
 }
@@ -82,18 +81,10 @@ const extractCommunes = (regionStr) => {
 }
 
 export default function ProjetsPage() {
-  const { hash } = useLocation()
+  const { hash, search } = useLocation()
 
-  // Scroll initial + au changement de hash
-  useEffect(() => {
-    if (!hash) {
-      window.scrollTo({ top: 0, behavior: 'instant' })
-      return
-    }
-    const id = hash.replace('#', '')
-    const el = document.getElementById(id)
-    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
-  }, [hash])
+  // ===== Synchronisation filtres ←→ URL (prefill via ?domain= & ?q= & ?region= & ?donor= & ?status= & ?usaid=1) =====
+  const params = new URLSearchParams(search)
 
   // ========= Données & listes pour filtres =========
   const allProjects = useMemo(() => {
@@ -126,13 +117,42 @@ export default function ProjetsPage() {
     return ['Tous', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
   }, [allProjects])
 
-  // ========= État des filtres =========
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedDomain, setSelectedDomain] = useState('Tous')
-  const [selectedRegion, setSelectedRegion] = useState('Toutes')
-  const [selectedDonor, setSelectedDonor] = useState('Tous')
-  const [statusScope, setStatusScope] = useState('Tous') // 'Tous' | 'En cours' | 'Terminé'
-  const [usaidOnly, setUsaidOnly] = useState(false)
+  // ========= État des filtres (initialisé depuis l'URL) =========
+  const [searchTerm, setSearchTerm] = useState(params.get('q') || '')
+  const [selectedDomain, setSelectedDomain] = useState(params.get('domain') || 'Tous')
+  const [selectedRegion, setSelectedRegion] = useState(params.get('region') || 'Toutes')
+  const [selectedDonor, setSelectedDonor] = useState(params.get('donor') || 'Tous')
+  const [statusScope, setStatusScope] = useState(params.get('status') || 'Tous') // 'Tous' | 'En cours' | 'Terminé'
+  const [usaidOnly, setUsaidOnly] = useState(params.get('usaid') === '1')
+
+  // Met à jour l'état si l'URL change (navigations internes)
+  useEffect(() => {
+    const p = new URLSearchParams(search)
+    const urlDomain = p.get('domain') || 'Tous'
+    const urlQ = p.get('q') || ''
+    const urlRegion = p.get('region') || 'Toutes'
+    const urlDonor = p.get('donor') || 'Tous'
+    const urlStatus = p.get('status') || 'Tous'
+    const urlUsaid = p.get('usaid') === '1'
+
+    if (urlDomain !== selectedDomain) setSelectedDomain(urlDomain)
+    if (urlQ !== searchTerm) setSearchTerm(urlQ)
+    if (urlRegion !== selectedRegion) setSelectedRegion(urlRegion)
+    if (urlDonor !== selectedDonor) setSelectedDonor(urlDonor)
+    if (urlStatus !== statusScope) setStatusScope(urlStatus)
+    if (urlUsaid !== usaidOnly) setUsaidOnly(urlUsaid)
+  }, [search])
+
+  // Scroll initial + au changement de hash
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      return
+    }
+    const id = hash.replace('#', '')
+    const el = document.getElementById(id)
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+  }, [hash])
 
   // ========= Application des filtres =========
   const filteredAll = useMemo(() => {
@@ -607,7 +627,7 @@ export default function ProjetsPage() {
       <section className="py-16 bg-gradient-to-br from-primary/5 to-accent/5">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-6">Collaborer avec l&apos;AMSS</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-6">Collaborer avec l'AMSS</h2>
             <p className="text-xl text-muted-foreground mb-8">
               Rejoignez-nous dans notre mission pour un développement durable au Sahel.
             </p>
