@@ -6,7 +6,7 @@ import './App.css'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
-import HashContactRedirect from './components/HashContactRedirect' // ⬅️ NEW
+import HashContactRedirect from './components/HashContactRedirect'
 
 // Pages
 import HomePage from './pages/HomePage'
@@ -24,16 +24,18 @@ import ContactPage from './pages/ContactPage'
 import DomainesPage from './pages/DomainesPage'
 import ProjetsPage from './pages/ProjetsPage'
 import ZonesPage from './pages/ZonesPage'
-import PartenairesPage from './pages/PartenairesPage.jsx'  // ✅ import unique
+import PartenairesPage from './pages/PartenairesPage.jsx'
 import ActualitesPage from './pages/ActualitesPage'
 import ActualiteDetailPage from './pages/ActualiteDetailPage'
-import RecrutementPage from './pages/RecrutementPage.jsx'  // ✅ extension explicite
+import RecrutementPage from './pages/RecrutementPage.jsx'
 import DonPage from './pages/DonPage'
 import MentionsLegalesPage from './pages/MentionsLegalesPage'
 import PolitiqueConfidentialitePage from './pages/PolitiqueConfidentialitePage'
 import TransparencePage from './pages/TransparencePage'
 import BadgeEmployePage from './pages/BadgeEmployePage'
 
+// ⬇️ NEW
+import DetailsBureauPage from './pages/DetailsBureauPage'
 
 // Données (pour redirection legacy id -> slug)
 import { actualites } from './data/actualitesData'
@@ -49,10 +51,7 @@ function RedirectActuById() {
 function App() {
   return (
     <Router>
-      {/* Redirection auto /#contact → /contact (et ...#contact depuis n'importe quelle page) */}
       <HashContactRedirect />
-
-      {/* Remonter automatiquement en haut à chaque navigation */}
       <ScrollToTop />
 
       <div className="min-h-screen bg-background">
@@ -75,14 +74,15 @@ function App() {
             {/* Actualités */}
             <Route path="/actualites" element={<ActualitesPage />} />
             <Route path="/actualites/:slug" element={<ActualiteDetailPage />} />
-            <Route path="/actualites/:id(\d+)" element={<RedirectActuById />} />
+            {/* ⚠️ bien doubler l'antislash pour le pattern numérique */}
+            <Route path="/actualites/:id(\\d+)" element={<RedirectActuById />} />
 
             {/* Projets */}
             <Route path="/projets" element={<ProjetsPage />} />
             <Route path="/projets-en-cours" element={<ProjetsEnCoursPage />} />
             <Route path="/projets-termines" element={<ProjetsTerminesPage />} />
             <Route path="/rapports" element={<RapportsPage />} />
-            <Route path="/partenaires" element={<PartenairesPage />} /> {/* ✅ page dédiée */}
+            <Route path="/partenaires" element={<PartenairesPage />} />
 
             {/* Zones d'intervention */}
             <Route path="/zones" element={<ZonesPage />} />
@@ -90,16 +90,17 @@ function App() {
 
             {/* Recrutement & Contact */}
             <Route path="/recrutement" element={<RecrutementPage />} />
+            <Route path="/recrutement/emplois" element={<RecrutementPage />} />
+            <Route path="/recrutement/marches" element={<RecrutementPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/don" element={<DonPage />} />
             <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
             <Route path="/politique-confidentialite" element={<PolitiqueConfidentialitePage />} />
             <Route path="/transparence" element={<TransparencePage />} />
-            <Route path="/recrutement" element={<RecrutementPage />} />
-<Route path="/recrutement/emplois" element={<RecrutementPage />} />
-<Route path="/recrutement/marches" element={<RecrutementPage />} />
             <Route path="/badge-employe" element={<BadgeEmployePage />} />
 
+            {/* ⬇️ NEW: fiche détails bureau */}
+            <Route path="/bureaux/:slug" element={<DetailsBureauPage />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
