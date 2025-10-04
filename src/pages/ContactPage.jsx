@@ -1,162 +1,108 @@
 import { MapPin, Phone, Mail, Clock, Send, Building, Globe, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useState, useMemo, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 
 /**
- * AMSS — Page Contact (mise à jour)
- * - Coordonnées réelles par bureau (téléphones/emails multiples si dispo)
- * - Partenaires (noms uniquement) chargés depuis /api/partners/by-bureau?name=...
- * - Validation accessible + états (chargement/succès/erreur)
- * - Anti-spam (honeypot)
- * - Envoi POST JSON vers /api/contact
+ * AMSS — Page Contact (GitHub + Netlify, sans API)
+ * - Formulaire géré par Netlify Forms (data-netlify)
+ * - Anti-spam (honeypot) Netlify
+ * - Bureaux avec téléphones/emails multiples
+ * - Partenaires (noms) déduits localement des données Projets (projetsData)
  */
 
 const ContactPage = () => {
-  const [formData, setFormData] = useState({
-    nom: '',
-    email: '',
-    sujet: '',
-    message: '',
-    website: '' // honeypot anti-spam
-  })
-  const [errors, setErrors] = useState({})
-  const [loading, setLoading] = useState(false)
+  // --- Etat minimal pour retour visuel local (facultatif) ---
   const [status, setStatus] = useState({ type: '', message: '' })
 
   // === Bureaux (coordonnées réelles) ===
   const bureaux = useMemo(() => ([
     {
+      slug: 'tombouctou',
       ville: "Bureau de Tombouctou (siège de l'AMSS)",
       adresse: "Tombouctou/Quartier Hamabangou, Porte : 915, Route de Kabara en face de la BIM sa, BP : 152,",
       telephones: ["+223 76 04 21 32", "+223 66 71 38 12"],
       emails: ["mossainalbaraka@yahoo.fr", "mossa@ong-amss.org"],
       type: "Siège principal",
       responsable: "Moussa Inalbaraka Cissé",
-      zones: "Région de Tombouctou"
+      zones: ["Tombouctou", "Diré", "Goundam", "Niafunké", "Foum Elba", "Gourma-Rharous"]
     },
     {
+      slug: 'bamako',
       ville: "Bamako",
       adresse: "BP 153 Bamako",
       telephones: ["+223 20 20 27 28"],
       emails: [],
       type: "Bureau de coordination",
       responsable: "",
-      zones: "Coordination nationale"
+      zones: ["Bamako"]
     },
     {
+      slug: 'gao',
       ville: "Base d'AMSS Gao",
       adresse: "Gao , Château seteur II",
       telephones: ["+223 76 94 78 58"],
       emails: [],
       type: "Bureau régional",
       responsable: "MOUSSA SAGARA",
-      zones: "Régions de Gao, Ménaka et Kidal"
+      zones: ["Gao", "Ménaka", "Kidal"]
     },
     {
+      slug: 'sikasso',
       ville: "Base de Sikasso",
       adresse: "Sikasso/ Wayerma II derrière API",
       telephones: ["+223 74 72 79 67"],
       emails: ["aboubacrine@ong-amss.org", "aboubacrine14@gmail.com"],
       type: "Bureau régional",
       responsable: "Mohamed Aboubacrine Ag Mohamed",
-      zones: "Sikasso – Koutiala – Bougouni"
+      zones: ["Sikasso", "Koutiala", "Bougouni"]
     },
     {
+      slug: 'mopti',
       ville: "Base d'AMSS Mopti",
       adresse: "Mopti/Sevaré, Quartier Poudrière près de l’Hôpital Somine Dolo, en face de la mosquée",
       telephones: ["+223 76 14 13 71"],
       emails: ["oumaryanogo@ong-amss.org"],
       type: "Bureau régional",
       responsable: "Oumar Yanogo",
-      zones: "Région de Mopti"
+      zones: ["Mopti", "Bandiagara", "Bankass", "Djenné", "Douentza", "Koro", "Ténenkou", "Youwarou"]
     },
     {
+      slug: 'segou',
       ville: "Base d'AMSS Ségou",
       adresse: "Ségou; Sébougou près de l'université",
       telephones: ["+223 76 02 33 50"],
       emails: ["medagabdallah@ong-amss.org"],
       type: "Bureau régional",
       responsable: "Mohamed Ag Abdallah",
-      zones: "Région de Ségou"
+      zones: ["Ségou", "Barouéli", "Tominian", "San", "Bla", "Niono", "Macina"]
     }
   ]), [])
 
-  // === Partenaires par bureau (noms uniquement) depuis la page Projets ===
-  const [partnersByBureau, setPartnersByBureau] = useState({})
-  useEffect(() => {
-    let cancelled = false
-    async function loadPartners() {
-      try {
-        const entries = await Promise.all(
-          bureaux.map(async (b) => {
-            try {
-              const res = await fetch(`/api/partners/by-bureau?name=${encodeURIComponent(b.ville)}`)
-              if (!res.ok) return [b.ville, []]
-              const data = await res.json() // { partners: [...] }
-              return [b.ville, Array.isArray(data.partners) ? data.partners : []]
-            } catch {
-              return [b.ville, []]
-            }
-          })
-        )
-        if (!cancelled) setPartnersByBureau(Object.fromEntries(entries))
-      } catch { /* no-op */ }
-    }
-    loadPartners()
-    return () => { cancelled = true }
-  }, [bureaux])
+  // === Partenaires (noms) par bureau, sans API ===
+  // On agrège depuis projetsData en matching "region" ~ zones du bureau
+  const partnersByBureau = useMemo(() => {
+    const byBureau = {}
+    const norm = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
-  // ===== Formulaire =====
-  const validate = () => {
-    const newErrors = {}
-    if (!formData.nom || formData.nom.trim().length < 2) newErrors.nom = 'Veuillez saisir votre nom complet.'
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(formData.email)
-    if (!emailOk) newErrors.email = "Adresse e-mail invalide."
-    if (!formData.sujet) newErrors.sujet = 'Sélectionnez un sujet.'
-    if (!formData.message || formData.message.trim().length < 10) newErrors.message = 'Votre message doit contenir au moins 10 caractères.'
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setStatus({ type: '', message: '' })
-
-    // honeypot
-    if (formData.website) {
-      setStatus({ type: 'error', message: 'Échec de l’envoi.' })
-      return
-    }
-    if (!validate()) return
-
-    try {
-      setLoading(true)
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nom: formData.nom,
-          email: formData.email,
-          sujet: formData.sujet,
-          message: formData.message
-        })
+    const allProjects = [...projetsData.enCours, ...projetsData.termines]
+    bureaux.forEach((b) => {
+      const donors = new Set()
+      allProjects.forEach((p) => {
+        const regionStr = String(p.region || '')
+        const hasMatch = b.zones.some((z) => norm(regionStr).includes(norm(z)))
+        if (hasMatch) {
+          // "donor" peut contenir plusieurs bailleurs séparés par "/"
+          String(p.donor || '')
+            .split('/')
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .forEach((d) => donors.add(d))
+        }
       })
-      if (!res.ok) throw new Error('HTTP ' + res.status)
-
-      setStatus({ type: 'success', message: 'Merci pour votre message ! Nous vous répondrons dans les meilleurs délais.' })
-      setFormData({ nom: '', email: '', sujet: '', message: '', website: '' })
-      setErrors({})
-    } catch (err) {
-      setStatus({ type: 'error', message: "Une erreur est survenue lors de l’envoi. Veuillez réessayer." })
-    } finally {
-      setLoading(false)
-    }
-  }
+      byBureau[b.ville] = Array.from(donors).sort((a, b) => a.localeCompare(b))
+    })
+    return byBureau
+  }, [bureaux])
 
   return (
     <div className="min-h-screen bg-background">
@@ -165,9 +111,7 @@ const ContactPage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <Mail className="h-16 w-16 text-primary mx-auto mb-6" />
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Contactez-nous
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Contactez-nous</h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
               Nous sommes à votre écoute. N'hésitez pas à nous contacter pour toute
               question, partenariat ou collaboration.
@@ -226,63 +170,43 @@ const ContactPage = () => {
         </div>
       </section>
 
-      {/* Formulaire de contact */}
+      {/* Formulaire de contact — Netlify Forms (sans API) */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div>
-                <h2 className="text-3xl font-bold text-foreground mb-6">
-                  Envoyez-nous un Message
-                </h2>
+                <h2 className="text-3xl font-bold text-foreground mb-6">Envoyez-nous un Message</h2>
                 <p className="text-muted-foreground mb-8 leading-relaxed">
                   Que vous soyez un partenaire potentiel, un bénéficiaire, un donateur
                   ou simplement curieux de nos activités, nous serions ravis d'échanger avec vous.
                 </p>
 
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Clock className="h-5 w-5 text-primary" />
-                    <span className="text-muted-foreground">Réponse sous 48h en moyenne</span>
+                {status.type && (
+                  <div className={`mb-6 rounded-lg border p-4 ${status.type === 'success' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'}`}>
+                    {status.type === 'success' ? <CheckCircle2 className="inline h-5 w-5 mr-2" /> : <AlertTriangle className="inline h-5 w-5 mr-2" />}
+                    {status.message}
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <Globe className="h-5 w-5 text-accent" />
-                    <span className="text-muted-foreground">Disponible en français et en langues locales</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Building className="h-5 w-5 text-primary" />
-                    <span className="text-muted-foreground">{bureaux.length} bureaux régionaux à votre service</span>
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="bg-white rounded-xl p-8 shadow-sm border border-border">
-                {/* Statuts */}
-                {status.type === 'success' && (
-                  <div className="mb-6 flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">
-                    <CheckCircle2 className="h-5 w-5 mt-0.5" />
-                    <p>{status.message}</p>
-                  </div>
-                )}
-                {status.type === 'error' && (
-                  <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-                    <AlertTriangle className="h-5 w-5 mt-0.5" />
-                    <p>{status.message}</p>
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+                {/* IMPORTANT Netlify: data-netlify, name, hidden input form-name + honeypot */}
+                <form
+                  name="contact"
+                  method="POST"
+                  data-netlify="true"
+                  data-netlify-honeypot="bot-field"
+                  // action="/merci" // <-- décommente si tu crées une page /merci
+                  className="space-y-6"
+                >
                   {/* Honeypot */}
-                  <input
-                    type="text"
-                    name="website"
-                    value={formData.website}
-                    onChange={handleChange}
-                    tabIndex={-1}
-                    autoComplete="off"
-                    className="hidden"
-                    aria-hidden="true"
-                  />
+                  <input type="hidden" name="form-name" value="contact" />
+                  <p className="hidden">
+                    <label>
+                      Ne pas remplir: <input name="bot-field" />
+                    </label>
+                  </p>
 
                   <div>
                     <label htmlFor="nom" className="block text-sm font-medium text-foreground mb-2">
@@ -293,14 +217,9 @@ const ContactPage = () => {
                       id="nom"
                       name="nom"
                       required
-                      value={formData.nom}
-                      onChange={handleChange}
-                      aria-invalid={!!errors.nom}
-                      aria-describedby={errors.nom ? 'nom-err' : undefined}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${errors.nom ? 'border-red-300' : 'border-border'}`}
+                      className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="Votre nom complet"
                     />
-                    {errors.nom && <p id="nom-err" className="mt-2 text-sm text-red-600">{errors.nom}</p>}
                   </div>
 
                   <div>
@@ -312,14 +231,9 @@ const ContactPage = () => {
                       id="email"
                       name="email"
                       required
-                      value={formData.email}
-                      onChange={handleChange}
-                      aria-invalid={!!errors.email}
-                      aria-describedby={errors.email ? 'email-err' : undefined}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${errors.email ? 'border-red-300' : 'border-border'}`}
+                      className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="votre.email@exemple.com"
                     />
-                    {errors.email && <p id="email-err" className="mt-2 text-sm text-red-600">{errors.email}</p>}
                   </div>
 
                   <div>
@@ -330,11 +244,7 @@ const ContactPage = () => {
                       id="sujet"
                       name="sujet"
                       required
-                      value={formData.sujet}
-                      onChange={handleChange}
-                      aria-invalid={!!errors.sujet}
-                      aria-describedby={errors.sujet ? 'sujet-err' : undefined}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${errors.sujet ? 'border-red-300' : 'border-border'}`}
+                      className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     >
                       <option value="">Sélectionnez un sujet</option>
                       <option value="partenariat">Partenariat</option>
@@ -344,7 +254,6 @@ const ContactPage = () => {
                       <option value="media">Média / Presse</option>
                       <option value="autre">Autre</option>
                     </select>
-                    {errors.sujet && <p id="sujet-err" className="mt-2 text-sm text-red-600">{errors.sujet}</p>}
                   </div>
 
                   <div>
@@ -356,19 +265,14 @@ const ContactPage = () => {
                       name="message"
                       required
                       rows={6}
-                      value={formData.message}
-                      onChange={handleChange}
-                      aria-invalid={!!errors.message}
-                      aria-describedby={errors.message ? 'message-err' : undefined}
-                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none ${errors.message ? 'border-red-300' : 'border-border'}`}
+                      className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                       placeholder="Décrivez votre demande ou votre message..."
                     />
-                    {errors.message && <p id="message-err" className="mt-2 text-sm text-red-600">{errors.message}</p>}
                   </div>
 
-                  <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                  <Button type="submit" size="lg" className="w-full">
                     <Send className="mr-2 h-5 w-5" />
-                    {loading ? 'Envoi…' : 'Envoyer le Message'}
+                    Envoyer le Message
                   </Button>
                 </form>
               </div>
@@ -382,12 +286,8 @@ const ContactPage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-foreground">
-                Nos Bureaux Régionaux
-              </h2>
-              <p className="text-xl text-muted-foreground">
-                Une présence de proximité dans {bureaux.length} régions du Mali
-              </p>
+              <h2 className="text-3xl font-bold text-foreground mb-4">Nos Bureaux Régionaux</h2>
+              <p className="text-xl text-muted-foreground">Une présence de proximité dans {bureaux.length} régions du Mali</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -397,12 +297,11 @@ const ContactPage = () => {
                     <Building className="h-6 w-6 text-primary mr-3" />
                     <h3 className="text-lg font-semibold text-foreground">{bureau.ville}</h3>
                   </div>
-
                   <div className="space-y-2 text-sm text-muted-foreground">
                     {bureau.adresse && <p>{bureau.adresse}</p>}
 
                     {/* Téléphones (multiples) */}
-                    {Array.isArray(bureau.telephones) && bureau.telephones.length > 0 && (
+                    {bureau.telephones?.length > 0 && (
                       <div className="space-y-1">
                         {bureau.telephones.map((tel, i) => (
                           <p key={i}>
@@ -413,7 +312,7 @@ const ContactPage = () => {
                     )}
 
                     {/* Emails (multiples) */}
-                    {Array.isArray(bureau.emails) && bureau.emails.length > 0 && (
+                    {bureau.emails?.length > 0 && (
                       <p className="flex flex-wrap gap-2">
                         {bureau.emails.map((em, i) => (
                           <a key={i} href={`mailto:${em}`} className="hover:underline">{em}</a>
@@ -424,25 +323,20 @@ const ContactPage = () => {
                     {bureau.responsable && (
                       <p><span className="font-medium text-foreground">Responsable:</span> {bureau.responsable}</p>
                     )}
-                    {bureau.zones && (
-                      <p><span className="font-medium text-foreground">Zones couvertes:</span> {bureau.zones}</p>
+                    {bureau.zones?.length > 0 && (
+                      <p><span className="font-medium text-foreground">Zones couvertes:</span> {bureau.zones.join(', ')}</p>
                     )}
 
-                    {/* Partenaires (noms uniquement, tirés de la page Projets) */}
+                    {/* Partenaires (noms) — déduits localement depuis projetsData */}
                     {Array.isArray(partnersByBureau[bureau.ville]) && partnersByBureau[bureau.ville].length > 0 && (
-                      <p>
-                        <span className="font-medium text-foreground">Partenaires:</span> {partnersByBureau[bureau.ville].join(', ')}
-                      </p>
+                      <p><span className="font-medium text-foreground">Partenaires:</span> {partnersByBureau[bureau.ville].join(', ')}</p>
                     )}
 
-                    <span className="inline-block bg-primary/10 text-primary px-2 py-1 rounded text-xs">
-                      {bureau.type}
-                    </span>
+                    <span className="inline-block bg-primary/10 text-primary px-2 py-1 rounded text-xs">{bureau.type}</span>
                   </div>
                 </div>
               ))}
             </div>
-
           </div>
         </div>
       </section>
@@ -481,3 +375,26 @@ const ContactPage = () => {
 }
 
 export default ContactPage
+
+/* =================== Données Projets (à remplacer par tes vraies données) =================== */
+/* 
+   👉 Colle ici le contenu (tableaux) utilisé dans ta page Projets pour que l’agrégation fonctionne hors-API.
+   Format attendu : projetsData.enCours et projetsData.termines = tableaux d’objets { region: string, donor: string }
+   - region : texte libre contenant la/les régions (ex: "Gao, Kidal, Ménaka")
+   - donor : liste de bailleurs/partenaires séparés par "/" (ex: "UNHCR / UNFPA / ACF")
+*/
+
+const projetsData = {
+  enCours: [
+    // EXEMPLES (remplace par tes vraies entrées)
+    { region: "Gao, Ménaka", donor: "UNHCR / UNFPA" },
+    { region: "Ségou, San, Bla", donor: "EDUCO / AECID" },
+    { region: "Mopti, Douentza, Koro", donor: "CRS / ECHO" },
+    { region: "Tombouctou, Diré, Goundam", donor: "CORDaid / UNHCR" },
+  ],
+  termines: [
+    // EXEMPLES (remplace par tes vraies entrées)
+    { region: "Sikasso, Bougouni", donor: "DDC / UE" },
+    { region: "Kidal", donor: "PLAN / ACF" },
+  ]
+}
