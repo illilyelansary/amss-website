@@ -1,24 +1,14 @@
 import { MapPin, Phone, Mail, Clock, Send, Building, Globe, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 /**
- * AMSS — Page Contact (améliorée)
- *
- * Améliorations clés:
- * - Validation côté client avec messages d'erreur accessibles
- * - États de chargement / succès / erreur (sans alert())
- * - Anti-spam (champ honeypot discret)
- * - Envoi POST JSON vers /api/contact (à créer côté serveur)
- * - Liens cliquables pour emails et téléphones
- * - Comptage dynamique des bureaux ({bureaux.length})
- * - Iframe carte intégrée (sans clé) — remplaçable par une carte interactive
- * - Petites améliorations d’accessibilité (aria-*, focus states)
- *
- * À faire côté serveur (exemple Next.js):
- * 1) Créez /pages/api/contact.js OU /app/api/contact/route.js
- * 2) Parsez le JSON, validez, puis envoyez un email (ex: nodemailer) ou stockez le message
- * 3) Retournez { ok: true } en cas de succès avec status 200
+ * AMSS — Page Contact (mise à jour)
+ * - Coordonnées réelles par bureau (téléphones/emails multiples si dispo)
+ * - Partenaires (noms uniquement) chargés depuis /api/partners/by-bureau?name=...
+ * - Validation accessible + états (chargement/succès/erreur)
+ * - Anti-spam (honeypot)
+ * - Envoi POST JSON vers /api/contact
  */
 
 const ContactPage = () => {
@@ -27,81 +17,101 @@ const ContactPage = () => {
     email: '',
     sujet: '',
     message: '',
-    website: '' // honeypot
+    website: '' // honeypot anti-spam
   })
-
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState({ type: '', message: '' })
 
+  // === Bureaux (coordonnées réelles) ===
   const bureaux = useMemo(() => ([
     {
       ville: "Bureau de Tombouctou (siège de l'AMSS)",
       adresse: "Tombouctou/Quartier Hamabangou, Porte : 915, Route de Kabara en face de la BIM sa, BP : 152,",
-      telephone: "+223 21 92 10 48",
-      emails: [],
+      telephones: ["+223 76 04 21 32", "+223 66 71 38 12"],
+      emails: ["mossainalbaraka@yahoo.fr", "mossa@ong-amss.org"],
       type: "Siège principal",
       responsable: "Moussa Inalbaraka Cissé",
-      zones: "Région de Tombouctou: Cercles de Tombouctou, Diré, Goundam, Niafunké et Foum Elba (communes détaillées)",
-      partenaires: "Fondation Stromme, UNHCR, CORDAID, ..."
+      zones: "Région de Tombouctou"
     },
     {
       ville: "Bamako",
       adresse: "BP 153 Bamako",
-      telephone: "+223 20 20 27 28",
+      telephones: ["+223 20 20 27 28"],
       emails: [],
       type: "Bureau de coordination",
       responsable: "",
-      zones: "Coordination nationale",
-      partenaires: ""
+      zones: "Coordination nationale"
     },
     {
       ville: "Base d'AMSS Gao",
       adresse: "Gao , Château seteur II",
-      telephone: "Contact via Siège",
+      telephones: ["+223 76 94 78 58"],
       emails: [],
       type: "Bureau régional",
       responsable: "MOUSSA SAGARA",
-      zones: "Région de GAO, Ménaka et Kidal (cercles : N’tilit, Gounzoureye, Soni Aliber, Anchawadj, Ansongo, Bourem, Kidal, Tessalit, Anefif, Abeïbara, Aguelhoc)",
-      partenaires: "UNHCR, UNFPA, ACF, PLAN, FHRAOC"
+      zones: "Régions de Gao, Ménaka et Kidal"
     },
     {
       ville: "Base de Sikasso",
       adresse: "Sikasso/ Wayerma II derrière API",
-      telephone: "Contact via Siège",
-      emails: [],
+      telephones: ["+223 74 72 79 67"],
+      emails: ["aboubacrine@ong-amss.org", "aboubacrine14@gmail.com"],
       type: "Bureau régional",
       responsable: "Mohamed Aboubacrine Ag Mohamed",
-      zones: "Sikasso – Koutiala – Bougouni",
-      partenaires: "DDC, UE"
+      zones: "Sikasso – Koutiala – Bougouni"
     },
     {
       ville: "Base d'AMSS Mopti",
       adresse: "Mopti/Sevaré, Quartier Poudrière près de l’Hôpital Somine Dolo, en face de la mosquée",
-      telephone: "Contact via Siège",
-      emails: [],
+      telephones: ["+223 76 14 13 71"],
+      emails: ["oumaryanogo@ong-amss.org"],
       type: "Bureau régional",
       responsable: "Oumar Yanogo",
-      zones: "Région de Mopti : 8 Cercles (Bandiagara, Bankass, Djenné, Douentza, Koro, Mopti, Ténenkou, Youwarou)",
-      partenaires: "UNHCR, AEN, CRS, UNFPA"
+      zones: "Région de Mopti"
     },
     {
       ville: "Base d'AMSS Ségou",
       adresse: "Ségou; Sébougou près de l'université",
-      telephone: "Contact via Siège",
-      emails: [],
+      telephones: ["+223 76 02 33 50"],
+      emails: ["medagabdallah@ong-amss.org"],
       type: "Bureau régional",
       responsable: "Mohamed Ag Abdallah",
-      zones: "Région de Ségou : 7 Cercles (Barouéli, Tominian, San, Bla, Ségou, Niono, Macina)",
-      partenaires: "UNHCR, EDUCO, Ayuda En Accion, CAEB, Cordaid, CRS, EUMC, ACF"
+      zones: "Région de Ségou"
     }
   ]), [])
 
+  // === Partenaires par bureau (noms uniquement) depuis la page Projets ===
+  const [partnersByBureau, setPartnersByBureau] = useState({})
+  useEffect(() => {
+    let cancelled = false
+    async function loadPartners() {
+      try {
+        const entries = await Promise.all(
+          bureaux.map(async (b) => {
+            try {
+              const res = await fetch(`/api/partners/by-bureau?name=${encodeURIComponent(b.ville)}`)
+              if (!res.ok) return [b.ville, []]
+              const data = await res.json() // { partners: [...] }
+              return [b.ville, Array.isArray(data.partners) ? data.partners : []]
+            } catch {
+              return [b.ville, []]
+            }
+          })
+        )
+        if (!cancelled) setPartnersByBureau(Object.fromEntries(entries))
+      } catch { /* no-op */ }
+    }
+    loadPartners()
+    return () => { cancelled = true }
+  }, [bureaux])
+
+  // ===== Formulaire =====
   const validate = () => {
     const newErrors = {}
     if (!formData.nom || formData.nom.trim().length < 2) newErrors.nom = 'Veuillez saisir votre nom complet.'
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(formData.email)
-    if (!emailOk) newErrors.email = "Adresse e‑mail invalide."
+    if (!emailOk) newErrors.email = "Adresse e-mail invalide."
     if (!formData.sujet) newErrors.sujet = 'Sélectionnez un sujet.'
     if (!formData.message || formData.message.trim().length < 10) newErrors.message = 'Votre message doit contenir au moins 10 caractères.'
     setErrors(newErrors)
@@ -117,12 +127,11 @@ const ContactPage = () => {
     e.preventDefault()
     setStatus({ type: '', message: '' })
 
-    // Honeypot: si rempli, on ignore
+    // honeypot
     if (formData.website) {
       setStatus({ type: 'error', message: 'Échec de l’envoi.' })
       return
     }
-
     if (!validate()) return
 
     try {
@@ -137,7 +146,6 @@ const ContactPage = () => {
           message: formData.message
         })
       })
-
       if (!res.ok) throw new Error('HTTP ' + res.status)
 
       setStatus({ type: 'success', message: 'Merci pour votre message ! Nous vous répondrons dans les meilleurs délais.' })
@@ -157,7 +165,9 @@ const ContactPage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <Mail className="h-16 w-16 text-primary mx-auto mb-6" />
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Contactez-nous</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+              Contactez-nous
+            </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
               Nous sommes à votre écoute. N'hésitez pas à nous contacter pour toute
               question, partenariat ou collaboration.
@@ -185,7 +195,7 @@ const ContactPage = () => {
                 <Phone className="h-12 w-12 text-accent mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-foreground mb-4">Téléphones</h3>
                 <div className="space-y-2 text-muted-foreground">
-                  <p>Tombouctou: <a className="hover:underline" href="tel:+22321921048">+223 21 92 10 48</a></p>
+                  <p>Tombouctou: <a className="hover:underline" href="tel:+22376042132">+223 76 04 21 32</a> / <a className="hover:underline" href="tel:+22366713812">+223 66 71 38 12</a></p>
                   <p>Bamako: <a className="hover:underline" href="tel:+22320202728">+223 20 20 27 28</a></p>
                   <p>Mobile: <a className="hover:underline" href="tel:+22366023225">+223 66 02 32 25</a></p>
                 </div>
@@ -222,7 +232,9 @@ const ContactPage = () => {
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div>
-                <h2 className="text-3xl font-bold text-foreground mb-6">Envoyez-nous un Message</h2>
+                <h2 className="text-3xl font-bold text-foreground mb-6">
+                  Envoyez-nous un Message
+                </h2>
                 <p className="text-muted-foreground mb-8 leading-relaxed">
                   Que vous soyez un partenaire potentiel, un bénéficiaire, un donateur
                   ou simplement curieux de nos activités, nous serions ravis d'échanger avec vous.
@@ -370,8 +382,12 @@ const ContactPage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-foreground mb-4">Nos Bureaux Régionaux</h2>
-              <p className="text-xl text-muted-foreground">Une présence de proximité dans {bureaux.length} régions du Mali</p>
+              <h2 className="text-3xl font-bold text-foreground">
+                Nos Bureaux Régionaux
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                Une présence de proximité dans {bureaux.length} régions du Mali
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -381,17 +397,22 @@ const ContactPage = () => {
                     <Building className="h-6 w-6 text-primary mr-3" />
                     <h3 className="text-lg font-semibold text-foreground">{bureau.ville}</h3>
                   </div>
+
                   <div className="space-y-2 text-sm text-muted-foreground">
                     {bureau.adresse && <p>{bureau.adresse}</p>}
-                    {bureau.telephone && (
-                      <p>
-                        {bureau.telephone.startsWith('+223') ? (
-                          <a className="hover:underline" href={`tel:${bureau.telephone.replace(/\s+/g, '')}`}>{bureau.telephone}</a>
-                        ) : (
-                          <span>{bureau.telephone}</span>
-                        )}
-                      </p>
+
+                    {/* Téléphones (multiples) */}
+                    {Array.isArray(bureau.telephones) && bureau.telephones.length > 0 && (
+                      <div className="space-y-1">
+                        {bureau.telephones.map((tel, i) => (
+                          <p key={i}>
+                            <a className="hover:underline" href={`tel:${tel.replace(/\s+/g, '')}`}>{tel}</a>
+                          </p>
+                        ))}
+                      </div>
                     )}
+
+                    {/* Emails (multiples) */}
                     {Array.isArray(bureau.emails) && bureau.emails.length > 0 && (
                       <p className="flex flex-wrap gap-2">
                         {bureau.emails.map((em, i) => (
@@ -399,17 +420,29 @@ const ContactPage = () => {
                         ))}
                       </p>
                     )}
+
                     {bureau.responsable && (
                       <p><span className="font-medium text-foreground">Responsable:</span> {bureau.responsable}</p>
                     )}
                     {bureau.zones && (
                       <p><span className="font-medium text-foreground">Zones couvertes:</span> {bureau.zones}</p>
                     )}
-                    <span className="inline-block bg-primary/10 text-primary px-2 py-1 rounded text-xs">{bureau.type}</span>
+
+                    {/* Partenaires (noms uniquement, tirés de la page Projets) */}
+                    {Array.isArray(partnersByBureau[bureau.ville]) && partnersByBureau[bureau.ville].length > 0 && (
+                      <p>
+                        <span className="font-medium text-foreground">Partenaires:</span> {partnersByBureau[bureau.ville].join(', ')}
+                      </p>
+                    )}
+
+                    <span className="inline-block bg-primary/10 text-primary px-2 py-1 rounded text-xs">
+                      {bureau.type}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
+
           </div>
         </div>
       </section>
