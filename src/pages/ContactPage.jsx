@@ -1,12 +1,10 @@
 // src/pages/ContactPage.jsx
 import { MapPin, Phone, Mail, Clock, Send, Building, Globe, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { bureaux } from '@/data/bureaux'
-import { projetsEnCours, projetsTermines } from '@/data/projetsData' // <-- attention à la casse (projetsData)
-import { mapPartnersByBureaux } from '@/utils/partners'
+import { bureaux } from '@/data/bureaux' // source unique des bureaux
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -19,12 +17,6 @@ const ContactPage = () => {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState({ type: '', message: '' })
-
-  // Bailleurs/partenaires auto par bureau (cartographie + projets)
-  const partnersByBureau = useMemo(
-    () => mapPartnersByBureaux(bureaux, projetsEnCours, projetsTermines),
-    []
-  )
 
   // ===== Validation formulaire =====
   const validate = () => {
@@ -53,7 +45,6 @@ const ContactPage = () => {
 
     if (!validate()) return
 
-    // IMPORTANT: pour Netlify, on envoie 'form-name' + champs
     const payload = {
       'form-name': 'contact',
       nom: formData.nom,
@@ -74,7 +65,6 @@ const ContactPage = () => {
       setFormData({ nom: '', email: '', sujet: '', message: '', website: '' })
       setErrors({})
     } catch (err) {
-      // ⚠️ Corrigé: pas d'antislash dans les guillemets
       setStatus({ type: 'error', message: 'Une erreur est survenue lors de l’envoi. Veuillez réessayer.' })
     } finally {
       setLoading(false)
@@ -285,13 +275,15 @@ const ContactPage = () => {
         </div>
       </section>
 
-      {/* Nos bureaux */}
+      {/* Nos bureaux — NOM + TYPE + ADRESSE + lien fiche */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-foreground mb-4">Nos Bureaux Régionaux</h2>
-              <p className="text-xl text-muted-foreground">Une présence de proximité dans {bureaux.length} régions du Mali</p>
+              <p className="text-xl text-muted-foreground">
+                Une présence de proximité dans {bureaux.length} régions du Mali
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -299,63 +291,28 @@ const ContactPage = () => {
                 <div key={bureau.slug} className="bg-white rounded-xl p-6 shadow-sm border border-border">
                   <div className="flex items-center mb-4">
                     <Building className="h-6 w-6 text-primary mr-3" />
-                    <h3 className="text-lg font-semibold text-foreground">{bureau.ville}</h3>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">{bureau.ville}</h3>
+                      {bureau.type && (
+                        <span className="inline-block mt-1 bg-primary/10 text-primary px-2 py-1 rounded text-xs">
+                          {bureau.type}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-2 text-sm text-muted-foreground">
-                    {/* Responsable en premier */}
-                    {bureau.responsable && (
-                      <p><span className="font-medium text-foreground">Responsable:</span> {bureau.responsable}</p>
-                    )}
-                    {bureau.distinctions && (<p className="italic">{bureau.distinctions}</p>)}
-
-                    {/* Téléphones (multiples) */}
-                    {Array.isArray(bureau.telephones) && bureau.telephones.length > 0 && (
-                      <div className="space-y-1">
-                        {bureau.telephones.map((tel, i) => (
-                          <p key={i}>
-                            <a className="hover:underline" href={'tel:' + tel.replace(/\s+/g, '')}>{tel}</a>
-                          </p>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Emails (multiples) */}
-                    {Array.isArray(bureau.emails) && bureau.emails.length > 0 && (
-                      <p className="flex flex-wrap gap-2">
-                        {bureau.emails.map((em, i) => (
-                          <a key={i} href={`mailto:${em}`} className="hover:underline">{em}</a>
-                        ))}
+                    {bureau.adresse && (
+                      <p>
+                        <span className="font-medium text-foreground">Adresse:</span> {bureau.adresse}
                       </p>
                     )}
 
-                    {/* Adresse & zones */}
-                    {bureau.adresse && <p><span className="font-medium text-foreground">Adresse:</span> {bureau.adresse}</p>}
-                    {Array.isArray(bureau.zones) && bureau.zones.length > 0 && (
-                      <p><span className="font-medium text-foreground">Zones couvertes:</span> {bureau.zones.join(', ')}</p>
-                    )}
-                    {!Array.isArray(bureau.zones) && bureau.zones && (
-                      <p><span className="font-medium text-foreground">Zones couvertes:</span> {bureau.zones}</p>
-                    )}
-
-                    {/* Partenaires/Bailleurs auto (depuis helper) */}
-                    {partnersByBureau[bureau.ville]?.length > 0 && (
-                      <p><span className="font-medium text-foreground">Partenaires/Bailleurs:</span> {partnersByBureau[bureau.ville].join(', ')}</p>
-                    )}
-
-                    {/* Site web éventuel */}
-                    {bureau.siteWeb && (
-                      <p><a href={bureau.siteWeb} target="_blank" rel="noreferrer" className="hover:underline">{bureau.siteWeb}</a></p>
-                    )}
-
-                    {/* Lien fiche détails */}
                     <div className="pt-2">
                       <Button asChild size="sm">
                         <Link to={`/bureaux/${bureau.slug}`}>Voir la fiche</Link>
                       </Button>
                     </div>
-
-                    <span className="inline-block bg-primary/10 text-primary px-2 py-1 rounded text-xs">{bureau.type}</span>
                   </div>
                 </div>
               ))}
