@@ -1,45 +1,164 @@
-// src/pages/ContactPage.jsx
 import { MapPin, Phone, Mail, Clock, Send, Building, Globe, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
-import { bureaux } from '@/data/bureaux'
-import { projetsEnCours, projetsTermines } from '@/data/projectsData'
-import { mapPartnersByBureaux } from '@/utils/partners'
+/**
+ * AMSS — Page Contact (améliorée)
+ *
+ * Améliorations clés:
+ * - Validation côté client avec messages d'erreur accessibles
+ * - États de chargement / succès / erreur (sans alert())
+ * - Anti-spam (champ honeypot discret)
+ * - Envoi POST JSON vers /api/contact (à créer côté serveur)
+ * - Liens cliquables pour emails et téléphones
+ * - Comptage dynamique des bureaux ({bureaux.length})
+ * - Iframe carte intégrée (sans clé) — remplaçable par une carte interactive
+ * - Petites améliorations d’accessibilité (aria-*, focus states)
+ *
+ * À faire côté serveur (exemple Next.js):
+ * 1) Créez /pages/api/contact.js OU /app/api/contact/route.js
+ * 2) Parsez le JSON, validez, puis envoyez un email (ex: nodemailer) ou stockez le message
+ * 3) Retournez { ok: true } en cas de succès avec status 200
+ */
 
 const ContactPage = () => {
-  const [formData, setFormData] = useState({ nom: '', email: '', sujet: '', message: '', website: '' }) // website = honeypot
+  const [formData, setFormData] = useState({
+    nom: '',
+    email: '',
+    sujet: '',
+    message: '',
+    website: '' // honeypot
+  })
+
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState({ type: '', message: '' })
 
-  // Bailleurs/partenaires auto par bureau (cartographie + projets)
-  const partnersByBureau = useMemo(
-    () => mapPartnersByBureaux(bureaux, projetsEnCours, projetsTermines),
-    []
-  )
+  const bureaux = useMemo(() => ([
+    {
+      slug: 'tombouctou',
+      ville: "Bureau de Tombouctou (siège de l'AMSS)",
+      adresse: "Tombouctou/Quartier Hamabangou, Porte : 915, Route de Kabara en face de la BIM sa, BP : 152,",
+      telephones: ["+223 76 04 21 32", "+223 66 71 38 12"],
+      emails: ["mossainalbaraka@yahoo.fr", "mossa@ong-amss.org"],
+      type: "Siège principal",
+      responsable: "Moussa Inalbaraka Cissé",
+      zones: "Région de Tombouctou"
+    },
+    {
+      slug: 'bamako',
+      ville: "Bamako",
+      adresse: "BP 153 Bamako",
+      telephones: ["+223 76 02 32 25", "+223 66 02 32 25", "+223 20 20 27 28"],
+      emails: [
+        "elmehdi.agwakina@ong-amss.org",
+        "elmehdw@yahoo.fr",
+        "ong.amss@yahoo.com",
+        "amss@ong-amss.org"
+      ],
+      type: "Bureau de coordination",
+      responsable: "Dr Elmehdi Ag Wakina — Directeur des Programmes",
+      distinctions: "Officier de l'Ordre National du Mali ; Président de la Plateforme des ONG Nationales actives dans l'Humanitaire",
+      siteWeb: "https://www.ong-amss.org",
+      zones: "Coordination nationale"
+    },
+    {
+      slug: 'gao',
+      ville: "Base d'AMSS Gao",
+      adresse: "Gao , Château seteur II",
+      telephones: ["+223 76 94 78 58"],
+      emails: [],
+      type: "Bureau régional",
+      responsable: "MOUSSA SAGARA",
+      zones: "Régions de Gao, Ménaka et Kidal"
+    },
+    {
+      slug: 'sikasso',
+      ville: "Base de Sikasso",
+      adresse: "Sikasso/ Wayerma II derrière API",
+      telephones: ["+223 74 72 79 67"],
+      emails: ["aboubacrine@ong-amss.org", "aboubacrine14@gmail.com"],
+      type: "Bureau régional",
+      responsable: "Mohamed Aboubacrine Ag Mohamed",
+      zones: "Sikasso – Koutiala – Bougouni"
+    },
+    {
+      slug: 'mopti',
+      ville: "Base d'AMSS Mopti",
+      adresse: "Mopti/Sevaré, Quartier Poudrière près de l’Hôpital Somine Dolo, en face de la mosquée",
+      telephones: ["+223 76 14 13 71"],
+      emails: ["oumaryanogo@ong-amss.org"],
+      type: "Bureau régional",
+      responsable: "Oumar Yanogo",
+      zones: "Région de Mopti"
+    },
+    {
+      slug: 'segou',
+      ville: "Base d'AMSS Ségou",
+      adresse: "Ségou; Sébougou près de l'université",
+      telephones: ["+223 76 02 33 50"],
+      emails: ["medagabdallah@ong-amss.org"],
+      type: "Bureau régional",
+      responsable: "Mohamed Ag Abdallah",
+      zones: "Région de Ségou"
+    }
+  ]), [])
 
-  // ===== Validation formulaire =====
   const validate = () => {
     const newErrors = {}
     if (!formData.nom || formData.nom.trim().length < 2) newErrors.nom = 'Veuillez saisir votre nom complet.'
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(formData.email)
-    if (!emailOk) newErrors.email = "Adresse e-mail invalide."
+    if (!emailOk) newErrors.email = "Adresse e‑mail invalide."
     if (!formData.sujet) newErrors.sujet = 'Sélectionnez un sujet.'
     if (!formData.message || formData.message.trim().length < 10) newErrors.message = 'Votre message doit contenir au moins 10 caractères.'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setStatus({ type: '', message: '' })
 
-    // anti-spam (honeypot)
-    if (formData.website) { setStatus({ type: 'error', message: 'Échec de l’envoi.' }); return }
+    // Netlify Forms + honeypot
+    if (formData.website) {
+      setStatus({ type: 'error', message: 'Échec de l’envoi.' })
+      return
+    }
+
+    if (!validate()) return
+
+    const payload = {
+      'form-name': 'contact',
+      nom: formData.nom,
+      email: formData.email,
+      sujet: formData.sujet,
+      message: formData.message
+    }
+
+    try {
+      setLoading(true)
+      const res = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(payload).toString()
+      })
+      if (!res.ok) throw new Error('HTTP ' + res.status)
+      setStatus({ type: 'success', message: 'Merci pour votre message ! Nous vous répondrons dans les meilleurs délais.' })
+      setFormData({ nom: '', email: '', sujet: '', message: '', website: '' })
+      setErrors({})
+    } catch (err) {
+      setStatus({ type: 'error', message: \"Une erreur est survenue lors de l’envoi. Veuillez réessayer.\" })
+    } finally {
+      setLoading(false)
+    }
+  }
+
     if (!validate()) return
 
     try {
@@ -54,7 +173,9 @@ const ContactPage = () => {
           message: formData.message
         })
       })
+
       if (!res.ok) throw new Error('HTTP ' + res.status)
+
       setStatus({ type: 'success', message: 'Merci pour votre message ! Nous vous répondrons dans les meilleurs délais.' })
       setFormData({ nom: '', email: '', sujet: '', message: '', website: '' })
       setErrors({})
@@ -67,7 +188,7 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero */}
+      {/* Hero Section */}
       <section className="py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -102,7 +223,7 @@ const ContactPage = () => {
                 <div className="space-y-2 text-muted-foreground">
                   <p>Tombouctou: <a className="hover:underline" href="tel:+22321921048">+223 21 92 10 48</a></p>
                   <p>Bamako: <a className="hover:underline" href="tel:+22320202728">+223 20 20 27 28</a></p>
-                  <p>Mobile: <a className="hover:underline" href="tel:+22376023225">+223 76 02 32 25</a> / <a className="hover:underline" href="tel:+22366023225">+223 66 02 32 25</a></p>
+                  <p>Mobile: <a className=\"hover:underline\" href=\"tel:+22376023225\">+223 76 02 32 25<\/a> / <a className=\"hover:underline\" href=\"tel:+22366023225\">+223 66 02 32 25<\/a><\/p>
                 </div>
               </div>
 
@@ -174,7 +295,9 @@ const ContactPage = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+                <form name=\"contact\" method=\"POST\" data-netlify=\"true\" data-netlify-honeypot=\"bot-field\" onSubmit={handleSubmit} className=\"space-y-6\" noValidate>
+                  <input type=\"hidden\" name=\"form-name\" value=\"contact\" />
+                  <p className=\"hidden\"><label>Ne pas remplir: <input name=\"bot-field\" onChange={handleChange} /><\/label><\/p>
                   {/* Honeypot */}
                   <input
                     type="text"
@@ -188,10 +311,18 @@ const ContactPage = () => {
                   />
 
                   <div>
-                    <label htmlFor="nom" className="block text-sm font-medium text-foreground mb-2">Nom complet *</label>
+                    <label htmlFor="nom" className="block text-sm font-medium text-foreground mb-2">
+                      Nom complet *
+                    </label>
                     <input
-                      type="text" id="nom" name="nom" required value={formData.nom} onChange={handleChange}
-                      aria-invalid={!!errors.nom} aria-describedby={errors.nom ? 'nom-err' : undefined}
+                      type="text"
+                      id="nom"
+                      name="nom"
+                      required
+                      value={formData.nom}
+                      onChange={handleChange}
+                      aria-invalid={!!errors.nom}
+                      aria-describedby={errors.nom ? 'nom-err' : undefined}
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${errors.nom ? 'border-red-300' : 'border-border'}`}
                       placeholder="Votre nom complet"
                     />
@@ -199,10 +330,18 @@ const ContactPage = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">Email *</label>
+                    <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                      Email *
+                    </label>
                     <input
-                      type="email" id="email" name="email" required value={formData.email} onChange={handleChange}
-                      aria-invalid={!!errors.email} aria-describedby={errors.email ? 'email-err' : undefined}
+                      type="email"
+                      id="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      aria-invalid={!!errors.email}
+                      aria-describedby={errors.email ? 'email-err' : undefined}
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${errors.email ? 'border-red-300' : 'border-border'}`}
                       placeholder="votre.email@exemple.com"
                     />
@@ -210,10 +349,17 @@ const ContactPage = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="sujet" className="block text-sm font-medium text-foreground mb-2">Sujet *</label>
+                    <label htmlFor="sujet" className="block text-sm font-medium text-foreground mb-2">
+                      Sujet *
+                    </label>
                     <select
-                      id="sujet" name="sujet" required value={formData.sujet} onChange={handleChange}
-                      aria-invalid={!!errors.sujet} aria-describedby={errors.sujet ? 'sujet-err' : undefined}
+                      id="sujet"
+                      name="sujet"
+                      required
+                      value={formData.sujet}
+                      onChange={handleChange}
+                      aria-invalid={!!errors.sujet}
+                      aria-describedby={errors.sujet ? 'sujet-err' : undefined}
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${errors.sujet ? 'border-red-300' : 'border-border'}`}
                     >
                       <option value="">Sélectionnez un sujet</option>
@@ -228,10 +374,18 @@ const ContactPage = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">Message *</label>
+                    <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
+                      Message *
+                    </label>
                     <textarea
-                      id="message" name="message" required rows={6} value={formData.message} onChange={handleChange}
-                      aria-invalid={!!errors.message} aria-describedby={errors.message ? 'message-err' : undefined}
+                      id="message"
+                      name="message"
+                      required
+                      rows={6}
+                      value={formData.message}
+                      onChange={handleChange}
+                      aria-invalid={!!errors.message}
+                      aria-describedby={errors.message ? 'message-err' : undefined}
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none ${errors.message ? 'border-red-300' : 'border-border'}`}
                       placeholder="Décrivez votre demande ou votre message..."
                     />
@@ -259,65 +413,56 @@ const ContactPage = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {bureaux.map((bureau) => (
-                <div key={bureau.slug} className="bg-white rounded-xl p-6 shadow-sm border border-border">
+              {bureaux.map((bureau, index) => (
+                <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
                   <div className="flex items-center mb-4">
                     <Building className="h-6 w-6 text-primary mr-3" />
                     <h3 className="text-lg font-semibold text-foreground">{bureau.ville}</h3>
                   </div>
-
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    {/* Responsable en premier */}
+                  <div className=\"space-y-2 text-sm text-muted-foreground\">
+                    {/* Responsable d'abord */}
                     {bureau.responsable && (
-                      <p><span className="font-medium text-foreground">Responsable:</span> {bureau.responsable}</p>
+                      <p><span className=\"font-medium text-foreground\">Responsable:<\/span> {bureau.responsable}</p>
                     )}
-                    {bureau.distinctions && (<p className="italic">{bureau.distinctions}</p>)}
+                    {bureau.distinctions && (<p className=\"italic\">{bureau.distinctions}</p>)}
 
                     {/* Téléphones (multiples) */}
                     {Array.isArray(bureau.telephones) && bureau.telephones.length > 0 && (
-                      <div className="space-y-1">
+                      <div className=\"space-y-1\">
                         {bureau.telephones.map((tel, i) => (
-                          <p key={i}><a className="hover:underline" href={`tel:${tel.replace(/\s+/g, '')}`}>{tel}</a></p>
+                          <p key={i}><a className=\"hover:underline\" href={`tel:${tel.replace(/\s+/g, '')}`}>{tel}</a></p>
                         ))}
                       </div>
                     )}
 
                     {/* Emails (multiples) */}
                     {Array.isArray(bureau.emails) && bureau.emails.length > 0 && (
-                      <p className="flex flex-wrap gap-2">
+                      <p className=\"flex flex-wrap gap-2\">
                         {bureau.emails.map((em, i) => (
-                          <a key={i} href={`mailto:${em}`} className="hover:underline">{em}</a>
+                          <a key={i} href={`mailto:${em}`} className=\"hover:underline\">{em}</a>
                         ))}
                       </p>
                     )}
 
                     {/* Adresse & zones */}
-                    {bureau.adresse && <p><span className="font-medium text-foreground">Adresse:</span> {bureau.adresse}</p>}
-                    {Array.isArray(bureau.zones) && bureau.zones.length > 0 && (
-                      <p><span className="font-medium text-foreground">Zones couvertes:</span> {bureau.zones.join(', ')}</p>
-                    )}
-                    {!Array.isArray(bureau.zones) && bureau.zones && (
-                      <p><span className="font-medium text-foreground">Zones couvertes:</span> {bureau.zones}</p>
-                    )}
-
-                    {/* Partenaires/Bailleurs auto */}
-                    {partnersByBureau[bureau.ville]?.length > 0 && (
-                      <p><span className="font-medium text-foreground">Partenaires/Bailleurs:</span> {partnersByBureau[bureau.ville].join(', ')}</p>
-                    )}
+                    {bureau.adresse && <p><span className=\"font-medium text-foreground\">Adresse:<\/span> {bureau.adresse}</p>}
+                    {bureau.zones && <p><span className=\"font-medium text-foreground\">Zones couvertes:<\/span> {bureau.zones}</p>}
 
                     {/* Site web éventuel */}
                     {bureau.siteWeb && (
-                      <p><a href={bureau.siteWeb} target="_blank" rel="noreferrer" className="hover:underline">{bureau.siteWeb}</a></p>
+                      <p><a href={bureau.siteWeb} target=\"_blank\" rel=\"noreferrer\" className=\"hover:underline\">{bureau.siteWeb}</a></p>
                     )}
 
                     {/* Lien fiche détails */}
-                    <div className="pt-2">
-                      <Button asChild size="sm">
-                        <Link to={`/bureaux/${bureau.slug}`}>Voir la fiche</Link>
-                      </Button>
-                    </div>
+                    {bureau.slug && (
+                      <div className=\"pt-2\">
+                        <Button asChild size=\"sm\">
+                          <Link to={`/bureaux/${bureau.slug}`}>Voir la fiche</Link>
+                        </Button>
+                      </div>
+                    )}
 
-                    <span className="inline-block bg-primary/10 text-primary px-2 py-1 rounded text-xs">{bureau.type}</span>
+                    <span className=\"inline-block bg-primary/10 text-primary px-2 py-1 rounded text-xs\">{bureau.type}</span>
                   </div>
                 </div>
               ))}
@@ -326,7 +471,7 @@ const ContactPage = () => {
         </div>
       </section>
 
-      {/* Horaires & infos pratiques */}
+      {/* Horaires et informations pratiques */}
       <section className="py-16 bg-gradient-to-br from-primary/5 to-accent/5">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
