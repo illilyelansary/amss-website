@@ -3,18 +3,17 @@ import { Button } from '@/components/ui/button'
 import { useMemo, useState } from 'react'
 
 /**
- * AMSS — Page Contact (GitHub + Netlify, sans API)
- * - Formulaire géré par Netlify Forms (data-netlify)
- * - Anti-spam (honeypot) Netlify
- * - Bureaux avec téléphones/emails multiples
- * - Partenaires (noms) déduits localement des données Projets (projetsData)
+ * AMSS — Page Contact (Netlify + données bureaux/partenaires à jour)
+ * - Formulaire géré par Netlify (data-netlify), sans backend
+ * - Responsable affiché en premier
+ * - Téléphones / Emails multiples par bureau
+ * - Partenaires/Bailleurs complets par région (cartographie + projets)
  */
 
 const ContactPage = () => {
-  // --- Etat minimal pour retour visuel local (facultatif) ---
   const [status, setStatus] = useState({ type: '', message: '' })
 
-  // === Bureaux (coordonnées réelles) ===
+  // === Bureaux (coordonnées à jour) ===
   const bureaux = useMemo(() => ([
     {
       slug: 'tombouctou',
@@ -24,17 +23,24 @@ const ContactPage = () => {
       emails: ["mossainalbaraka@yahoo.fr", "mossa@ong-amss.org"],
       type: "Siège principal",
       responsable: "Moussa Inalbaraka Cissé",
-      zones: ["Tombouctou", "Diré", "Goundam", "Niafunké", "Foum Elba", "Gourma-Rharous"]
+      zones: "Région de Tombouctou"
     },
     {
       slug: 'bamako',
       ville: "Bamako",
       adresse: "BP 153 Bamako",
-      telephones: ["+223 20 20 27 28"],
-      emails: [],
+      telephones: ["+223 76 02 32 25", "+223 66 02 32 25", "+223 20 20 27 28"],
+      emails: [
+        "elmehdi.agwakina@ong-amss.org",
+        "elmehdw@yahoo.fr",
+        "ong.amss@yahoo.com",
+        "amss@ong-amss.org"
+      ],
       type: "Bureau de coordination",
-      responsable: "",
-      zones: ["Bamako"]
+      responsable: "Dr Elmehdi Ag Wakina — Directeur des Programmes",
+      distinctions: "Officier de l'Ordre National du Mali ; Président de la Plateforme des ONG Nationales actives dans l'Humanitaire",
+      siteWeb: "https://www.ong-amss.org",
+      zones: "Coordination nationale"
     },
     {
       slug: 'gao',
@@ -44,7 +50,7 @@ const ContactPage = () => {
       emails: [],
       type: "Bureau régional",
       responsable: "MOUSSA SAGARA",
-      zones: ["Gao", "Ménaka", "Kidal"]
+      zones: "Régions de Gao, Ménaka et Kidal"
     },
     {
       slug: 'sikasso',
@@ -54,7 +60,7 @@ const ContactPage = () => {
       emails: ["aboubacrine@ong-amss.org", "aboubacrine14@gmail.com"],
       type: "Bureau régional",
       responsable: "Mohamed Aboubacrine Ag Mohamed",
-      zones: ["Sikasso", "Koutiala", "Bougouni"]
+      zones: "Sikasso – Koutiala – Bougouni"
     },
     {
       slug: 'mopti',
@@ -64,7 +70,7 @@ const ContactPage = () => {
       emails: ["oumaryanogo@ong-amss.org"],
       type: "Bureau régional",
       responsable: "Oumar Yanogo",
-      zones: ["Mopti", "Bandiagara", "Bankass", "Djenné", "Douentza", "Koro", "Ténenkou", "Youwarou"]
+      zones: "Région de Mopti"
     },
     {
       slug: 'segou',
@@ -74,35 +80,24 @@ const ContactPage = () => {
       emails: ["medagabdallah@ong-amss.org"],
       type: "Bureau régional",
       responsable: "Mohamed Ag Abdallah",
-      zones: ["Ségou", "Barouéli", "Tominian", "San", "Bla", "Niono", "Macina"]
+      zones: "Région de Ségou"
     }
   ]), [])
 
-  // === Partenaires (noms) par bureau, sans API ===
-  // On agrège depuis projetsData en matching "region" ~ zones du bureau
-  const partnersByBureau = useMemo(() => {
-    const byBureau = {}
-    const norm = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-
-    const allProjects = [...projetsData.enCours, ...projetsData.termines]
-    bureaux.forEach((b) => {
-      const donors = new Set()
-      allProjects.forEach((p) => {
-        const regionStr = String(p.region || '')
-        const hasMatch = b.zones.some((z) => norm(regionStr).includes(norm(z)))
-        if (hasMatch) {
-          // "donor" peut contenir plusieurs bailleurs séparés par "/"
-          String(p.donor || '')
-            .split('/')
-            .map((s) => s.trim())
-            .filter(Boolean)
-            .forEach((d) => donors.add(d))
-        }
-      })
-      byBureau[b.ville] = Array.from(donors).sort((a, b) => a.localeCompare(b))
-    })
-    return byBureau
-  }, [bureaux])
+  // === Partenaires/Bailleurs par région (consolidés cartographie + projets) ===
+  const partnersByBureau = useMemo(() => ({
+    "Bureau de Tombouctou (siège de l'AMSS)": [
+      "Fondation Stromme","UNHCR","CORDAID (Organisation Inter - Eglises de Coopération Pays-Bas)",
+      "Welt Hunger Hilfe","Plan International Mali","UNICEF","PPLM","ECHO","USAID","AECID","OXFAM",
+      "PNUD","BIT (Bureau International du Travail)","UNESCO","FAO","OCHA","IRC","CARE International",
+      "AAH","CRS","DRC","Médecins du Monde","Action contre la Faim","Save the Children","NRC","GIZ","CIDA","Coopération Suisse"
+    ],
+    "Base d'AMSS Gao": ["UNHCR","UNFPA","ACF","PLAN","FHRAOC"],
+    "Base d'AMSS Mopti": ["UNHCR","AEN","CRS","UNFPA"],
+    "Base d'AMSS Ségou": ["UNHCR","EDUCO","Ayuda En Accion","CAEB","Cordaid","CRS","EUMC","ACF"],
+    "Base de Sikasso": ["DDC","UE"]
+    // Bamako = coordination nationale (pas de région d’intervention propre)
+  }), [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -139,9 +134,9 @@ const ContactPage = () => {
                 <Phone className="h-12 w-12 text-accent mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-foreground mb-4">Téléphones</h3>
                 <div className="space-y-2 text-muted-foreground">
-                  <p>Tombouctou: <a className="hover:underline" href="tel:+22376042132">+223 76 04 21 32</a> / <a className="hover:underline" href="tel:+22366713812">+223 66 71 38 12</a></p>
+                  <p>Tombouctou: <a className="hover:underline" href="tel:+22321921048">+223 21 92 10 48</a></p>
                   <p>Bamako: <a className="hover:underline" href="tel:+22320202728">+223 20 20 27 28</a></p>
-                  <p>Mobile: <a className="hover:underline" href="tel:+22366023225">+223 66 02 32 25</a></p>
+                  <p>Mobile: <a className="hover:underline" href="tel:+22376023225">+223 76 02 32 25</a> / <a className="hover:underline" href="tel:+22366023225">+223 66 02 32 25</a></p>
                 </div>
               </div>
 
@@ -170,7 +165,7 @@ const ContactPage = () => {
         </div>
       </section>
 
-      {/* Formulaire de contact — Netlify Forms (sans API) */}
+      {/* Formulaire de contact — Netlify */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
@@ -191,59 +186,39 @@ const ContactPage = () => {
               </div>
 
               <div className="bg-white rounded-xl p-8 shadow-sm border border-border">
-                {/* IMPORTANT Netlify: data-netlify, name, hidden input form-name + honeypot */}
                 <form
                   name="contact"
                   method="POST"
                   data-netlify="true"
                   data-netlify-honeypot="bot-field"
-                  // action="/merci" // <-- décommente si tu crées une page /merci
                   className="space-y-6"
                 >
                   {/* Honeypot */}
                   <input type="hidden" name="form-name" value="contact" />
-                  <p className="hidden">
-                    <label>
-                      Ne pas remplir: <input name="bot-field" />
-                    </label>
-                  </p>
+                  <p className="hidden"><label>Ne pas remplir: <input name="bot-field" /></label></p>
 
                   <div>
-                    <label htmlFor="nom" className="block text-sm font-medium text-foreground mb-2">
-                      Nom complet *
-                    </label>
+                    <label htmlFor="nom" className="block text-sm font-medium text-foreground mb-2">Nom complet *</label>
                     <input
-                      type="text"
-                      id="nom"
-                      name="nom"
-                      required
+                      type="text" id="nom" name="nom" required
                       className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="Votre nom complet"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
-                      Email *
-                    </label>
+                    <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">Email *</label>
                     <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      required
+                      type="email" id="email" name="email" required
                       className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="votre.email@exemple.com"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="sujet" className="block text-sm font-medium text-foreground mb-2">
-                      Sujet *
-                    </label>
+                    <label htmlFor="sujet" className="block text-sm font-medium text-foreground mb-2">Sujet *</label>
                     <select
-                      id="sujet"
-                      name="sujet"
-                      required
+                      id="sujet" name="sujet" required
                       className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     >
                       <option value="">Sélectionnez un sujet</option>
@@ -257,14 +232,9 @@ const ContactPage = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
-                      Message *
-                    </label>
+                    <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">Message *</label>
                     <textarea
-                      id="message"
-                      name="message"
-                      required
-                      rows={6}
+                      id="message" name="message" required rows={6}
                       className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                       placeholder="Décrivez votre demande ou votre message..."
                     />
@@ -297,22 +267,25 @@ const ContactPage = () => {
                     <Building className="h-6 w-6 text-primary mr-3" />
                     <h3 className="text-lg font-semibold text-foreground">{bureau.ville}</h3>
                   </div>
+
                   <div className="space-y-2 text-sm text-muted-foreground">
-                    {bureau.adresse && <p>{bureau.adresse}</p>}
+                    {/* Responsable d'abord */}
+                    {bureau.responsable && (
+                      <p><span className="font-medium text-foreground">Responsable:</span> {bureau.responsable}</p>
+                    )}
+                    {bureau.distinctions && (<p className="italic">{bureau.distinctions}</p>)}
 
                     {/* Téléphones (multiples) */}
-                    {bureau.telephones?.length > 0 && (
+                    {Array.isArray(bureau.telephones) && bureau.telephones.length > 0 && (
                       <div className="space-y-1">
                         {bureau.telephones.map((tel, i) => (
-                          <p key={i}>
-                            <a className="hover:underline" href={`tel:${tel.replace(/\s+/g, '')}`}>{tel}</a>
-                          </p>
+                          <p key={i}><a className="hover:underline" href={"tel:" + tel.replace(/\s+/g, '')}>{tel}</a></p>
                         ))}
                       </div>
                     )}
 
                     {/* Emails (multiples) */}
-                    {bureau.emails?.length > 0 && (
+                    {Array.isArray(bureau.emails) && bureau.emails.length > 0 && (
                       <p className="flex flex-wrap gap-2">
                         {bureau.emails.map((em, i) => (
                           <a key={i} href={`mailto:${em}`} className="hover:underline">{em}</a>
@@ -320,16 +293,18 @@ const ContactPage = () => {
                       </p>
                     )}
 
-                    {bureau.responsable && (
-                      <p><span className="font-medium text-foreground">Responsable:</span> {bureau.responsable}</p>
-                    )}
-                    {bureau.zones?.length > 0 && (
-                      <p><span className="font-medium text-foreground">Zones couvertes:</span> {bureau.zones.join(', ')}</p>
+                    {/* Adresse & zones */}
+                    {bureau.adresse && <p><span className="font-medium text-foreground">Adresse:</span> {bureau.adresse}</p>}
+                    {bureau.zones && <p><span className="font-medium text-foreground">Zones couvertes:</span> {bureau.zones}</p>}
+
+                    {/* Partenaires/Bailleurs complets */}
+                    {Array.isArray(partnersByBureau[bureau.ville]) && partnersByBureau[bureau.ville].length > 0 && (
+                      <p><span className="font-medium text-foreground">Partenaires/Bailleurs:</span> {partnersByBureau[bureau.ville].join(', ')}</p>
                     )}
 
-                    {/* Partenaires (noms) — déduits localement depuis projetsData */}
-                    {Array.isArray(partnersByBureau[bureau.ville]) && partnersByBureau[bureau.ville].length > 0 && (
-                      <p><span className="font-medium text-foreground">Partenaires:</span> {partnersByBureau[bureau.ville].join(', ')}</p>
+                    {/* Site web éventuel */}
+                    {bureau.siteWeb && (
+                      <p><a href={bureau.siteWeb} target="_blank" rel="noreferrer" className="hover:underline">{bureau.siteWeb}</a></p>
                     )}
 
                     <span className="inline-block bg-primary/10 text-primary px-2 py-1 rounded text-xs">{bureau.type}</span>
@@ -375,26 +350,3 @@ const ContactPage = () => {
 }
 
 export default ContactPage
-
-/* =================== Données Projets (à remplacer par tes vraies données) =================== */
-/* 
-   👉 Colle ici le contenu (tableaux) utilisé dans ta page Projets pour que l’agrégation fonctionne hors-API.
-   Format attendu : projetsData.enCours et projetsData.termines = tableaux d’objets { region: string, donor: string }
-   - region : texte libre contenant la/les régions (ex: "Gao, Kidal, Ménaka")
-   - donor : liste de bailleurs/partenaires séparés par "/" (ex: "UNHCR / UNFPA / ACF")
-*/
-
-const projetsData = {
-  enCours: [
-    // EXEMPLES (remplace par tes vraies entrées)
-    { region: "Gao, Ménaka", donor: "UNHCR / UNFPA" },
-    { region: "Ségou, San, Bla", donor: "EDUCO / AECID" },
-    { region: "Mopti, Douentza, Koro", donor: "CRS / ECHO" },
-    { region: "Tombouctou, Diré, Goundam", donor: "CORDaid / UNHCR" },
-  ],
-  termines: [
-    // EXEMPLES (remplace par tes vraies entrées)
-    { region: "Sikasso, Bougouni", donor: "DDC / UE" },
-    { region: "Kidal", donor: "PLAN / ACF" },
-  ]
-}
