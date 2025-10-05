@@ -1,37 +1,29 @@
 // src/pages/EducationPage.jsx
-import { useMemo } from 'react'
-import { hasCanon } from '@/utils/domainesCanon'
+import React, { useMemo } from 'react'
 import { GraduationCap, BookOpen, Users, Target, Award, TrendingUp, MapPin, Building2, Clock, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
+
+// données projets
 import { projetsEnCours, projetsTermines } from '../data/projetsData'
+
+// images
 import educationSahel from '../assets/education-sahel.jpg'
 import educationMali from '../assets/education-mali.jpg'
 
+// domaines canoniques
+import { hasCanon } from '@/utils/domainesCanon'
+
+// Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'EDUCATION'
 
-const EDU_CANON = 'Éducation'
-
-const norm = (s) =>
-  String(s || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-
-const CANON_KEY = 'EDUCATION'
-const predicateCanon = (p) => hasCanon(p, CANON_KEY)
-
-
+// Utils d'affichage
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v)
 const fmt = (n) => (isNum(n) ? n.toLocaleString('fr-FR') : 'N/D')
 
 function ProjectCard({ p }) {
-  const enCours =
-    norm(p.status).includes('en cours') || norm(p.status) === 'en cours' || norm(p.status) === 'en'
-  const termine =
-    norm(p.status).includes('termin') || norm(p.status) === 'termine' || norm(p.status) === 'terminé'
-
+  const status = String(p.status || '').toLowerCase()
+  const enCours = status.includes('en cours') || status === 'en' || status === 'en-cours'
   return (
     <div className="bg-white rounded-xl p-5 shadow-sm border border-border">
       <div className="flex items-center justify-between text-xs mb-2">
@@ -55,10 +47,10 @@ function ProjectCard({ p }) {
       {p.excerpt && <div className="text-sm text-muted-foreground line-clamp-3">{p.excerpt}</div>}
 
       <div className="mt-3 text-xs text-muted-foreground space-y-1">
-        {p.donor && (
+        {(p.bailleur || p.donor) && (
           <div className="inline-flex items-center gap-1">
             <Building2 className="h-3 w-3" />
-            <strong>Bailleur:</strong>&nbsp;{p.donor}
+            <strong>Bailleur:</strong>&nbsp;{p.bailleur || p.donor}
           </div>
         )}
         {p.region && (
@@ -78,14 +70,14 @@ function ProjectCard({ p }) {
   )
 }
 
-const EducationPage = () => {
-  // Sélectionne les projets d'Éducation (en cours & terminés)
+export default function EducationPage() {
+  // Sélectionne les projets Éducation (en cours & terminés) via le domaine canon
   const projetsEduEnCours = useMemo(
-    () => (projetsEnCours || []).filter((p) => hasDomainCanon(p.domain, EDU_CANON)),
+    () => (projetsEnCours || []).filter((p) => hasCanon(p, CANON_KEY)),
     []
   )
   const projetsEduTermines = useMemo(
-    () => (projetsTermines || []).filter((p) => hasDomainCanon(p.domain, EDU_CANON)),
+    () => (projetsTermines || []).filter((p) => hasCanon(p, CANON_KEY)),
     []
   )
 
@@ -104,11 +96,22 @@ const EducationPage = () => {
               innovants d&apos;alphabétisation, de scolarisation accélérée et de formation
               professionnelle pour tous.
             </p>
+            <div className="mt-6 flex flex-wrap gap-3 justify-center">
+              <Link to="/projets?domain=Éducation">
+                <Button variant="default" size="lg" className="gap-2">
+                  Voir les projets Éducation
+                  <GraduationCap className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Link to="/projets">
+                <Button variant="outline" size="lg">Tous les projets</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Nos programmes */}
+      {/* Nos Programmes Éducatifs */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
@@ -254,7 +257,7 @@ const EducationPage = () => {
         </div>
       </section>
 
-      {/* 🔎 Projets d'Éducation — En cours */}
+      {/* Projets d'Éducation — En cours */}
       <section id="projets-education" className="py-16 bg-muted/20 scroll-mt-24">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
@@ -267,8 +270,8 @@ const EducationPage = () => {
               <div className="text-sm text-muted-foreground">Aucun projet en cours pour ce domaine.</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projetsEduEnCours.map((p) => (
-                  <ProjectCard key={`edu-en-${p.id}`} p={p} />
+                {projetsEduEnCours.map((p, i) => (
+                  <ProjectCard key={`edu-en-${i}`} p={p} />
                 ))}
               </div>
             )}
@@ -276,7 +279,7 @@ const EducationPage = () => {
         </div>
       </section>
 
-      {/* ✅ Projets d'Éducation — Terminés */}
+      {/* Projets d'Éducation — Terminés */}
       <section className="py-16 bg-muted/10">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
@@ -288,8 +291,8 @@ const EducationPage = () => {
               <div className="text-sm text-muted-foreground">Aucun projet terminé pour ce domaine.</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projetsEduTermines.map((p) => (
-                  <ProjectCard key={`edu-out-${p.id}`} p={p} />
+                {projetsEduTermines.map((p, i) => (
+                  <ProjectCard key={`edu-out-${i}`} p={p} />
                 ))}
               </div>
             )}
@@ -349,5 +352,3 @@ const EducationPage = () => {
     </div>
   )
 }
-
-export default EducationPage
