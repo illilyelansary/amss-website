@@ -10,7 +10,8 @@ import {
   CheckCircle,
   Users,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Building2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { projetsEnCours, projetsTermines } from '../data/projetsData'
@@ -182,10 +183,35 @@ const PartenairesPage = () => {
     })
   }, [partnerIndex])
 
+  // STATISTIQUES INTRO & BADGES
+  const stats = useMemo(() => {
+    const partnersActifs = partners.filter(p => (p._projects?.length || 0) > 0)
+    const nbPartenairesActifs = partnersActifs.length
+    const nbEnCours = allProjects.filter(p => String(p._status || p.status).toLowerCase().includes('cours')).length
+    const nbTermines = allProjects.length - nbEnCours
+    const regions = new Set()
+    let benef = 0
+    allProjects.forEach(p => {
+      if (p.region) regions.add(p.region)
+      benef += Number(p.beneficiaries || 0) || 0
+    })
+    return {
+      nbPartenairesActifs,
+      nbTotalProjets: allProjects.length,
+      nbEnCours,
+      nbTermines,
+      nbRegions: regions.size,
+      benefTotal: benef
+    }
+  }, [partners, allProjects])
+
   // État d'ouverture/fermeture des listes (pliable)
   const [open, setOpen] = useState({}) // { [acronym]: boolean }
   const toggle = (acr) => setOpen(prev => ({ ...prev, [acr]: !prev[acr] }))
 
+  // ——————————————————————————————————————————
+  // RENDER
+  // ——————————————————————————————————————————
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
@@ -196,8 +222,66 @@ const PartenairesPage = () => {
               Nos Partenaires
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              L’AMSS collabore avec des partenaires nationaux et internationaux pour maximiser son impact.
+              L’AMSS collabore avec des bailleurs, agences onusiennes, ONG internationales et nationales
+              pour maximiser l’impact humanitaire et le développement durable dans nos zones d’intervention.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Introduction + Chiffres clés */}
+      <section className="py-12 bg-white/60 border-y">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
+              {/* Texte d'introduction */}
+              <div className="lg:col-span-2 bg-white border rounded-xl p-6 shadow-sm">
+                <h2 className="text-2xl font-semibold text-foreground mb-3">Des alliances pour agir vite et durablement</h2>
+                <p className="text-muted-foreground leading-relaxed">
+                  Nos partenariats s’articulent autour de programmes intégrés (Éducation, Santé &amp; Nutrition, WASH,
+                  Protection, Gouvernance &amp; Paix, Sécurité alimentaire). Ensemble, nous co-construisons des solutions,
+                  mutualisons les expertises et assurons la durabilité des acquis pour les communautés.
+                </p>
+                <p className="text-muted-foreground leading-relaxed mt-3">
+                  Cette page regroupe l’ensemble de nos partenaires identifiés dans la base de projets et indique, pour chacun,
+                  le nombre de projets associés. Dépliez un partenaire pour consulter la liste détaillée.
+                </p>
+              </div>
+
+              {/* Chiffres clés */}
+              <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard
+                  icon={<Handshake className="h-5 w-5" />}
+                  label="Partenaires actifs"
+                  value={stats.nbPartenairesActifs}
+                />
+                <StatCard
+                  icon={<Building2 className="h-5 w-5" />}
+                  label="Projets (total)"
+                  value={stats.nbTotalProjets}
+                />
+                <StatCard
+                  icon={<Clock className="h-5 w-5" />}
+                  label="En cours"
+                  value={stats.nbEnCours}
+                />
+                <StatCard
+                  icon={<CheckCircle className="h-5 w-5" />}
+                  label="Terminés"
+                  value={stats.nbTermines}
+                />
+                <StatCard
+                  icon={<MapPin className="h-5 w-5" />}
+                  label="Régions couvertes"
+                  value={stats.nbRegions}
+                />
+                <StatCard
+                  icon={<Users className="h-5 w-5" />}
+                  label="Bénéficiaires (est.)"
+                  value={stats.benefTotal.toLocaleString('fr-FR')}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -365,6 +449,20 @@ const PartenairesPage = () => {
           </div>
         </div>
       </section>
+    </div>
+  )
+}
+
+// ——————————————————————————————————————————
+// Composants internes
+// ——————————————————————————————————————————
+function StatCard({ icon, label, value }) {
+  return (
+    <div className="bg-white border rounded-xl p-5 shadow-sm">
+      <div className="text-sm text-muted-foreground">{label}</div>
+      <div className="mt-1 flex items-center gap-2 text-2xl font-semibold">
+        {icon} {value}
+      </div>
     </div>
   )
 }
