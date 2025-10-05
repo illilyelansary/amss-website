@@ -1,9 +1,9 @@
 // src/pages/ProjetsPage.jsx
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Clock, CheckCircle, FileText, ArrowRight, Handshake, Filter, Search, Users } from 'lucide-react'
+import { Clock, CheckCircle, FileText, ArrowRight, Handshake, Filter, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { projetsEnCours, projetsTermines, rapports } from '../data/projetsData'
+import { projetsEnCours, projetsTermines, rapports as rapportsRaw } from '@/data/projetsData'
 
 if (import.meta.env.DEV) {
   // eslint-disable-next-line no-console
@@ -27,6 +27,12 @@ const splitDomains = (label) =>
 const splitRegions = (label) =>
   String(label || '')
     .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+const splitDonors = (label) =>
+  String(label || '')
+    .split(/[\/,;|]+/)
     .map((s) => s.trim())
     .filter(Boolean)
 
@@ -87,15 +93,23 @@ export default function ProjetsPage() {
   const params = new URLSearchParams(search)
 
   // ========= Données & listes pour filtres =========
+  // Normalisation: ajoute _status et _domain (domain|domaine|sector|secteur), garde donor depuis donor|bailleur
   const allProjects = useMemo(() => {
-    const encours = (projetsEnCours || []).map((p) => ({ ...p, _status: 'En cours' }))
-    const termines = (projetsTermines || []).map((p) => ({ ...p, _status: 'Terminé' }))
+    const normalize = (p) => ({
+      ...p,
+      _status: p._status || p.status || undefined, // gardé tel quel si présent
+      _domain: p.domain || p.domaine || p.sector || p.secteur || '',
+      donor: p.donor ?? p.bailleur ?? p.bailleurs ?? '',
+    })
+
+    const encours = (projetsEnCours || []).map((p) => ({ ...normalize(p), _status: 'En cours' }))
+    const termines = (projetsTermines || []).map((p) => ({ ...normalize(p), _status: 'Terminé' }))
     return [...encours, ...termines]
   }, [])
 
   const domainOptions = useMemo(() => {
     const set = new Set()
-    allProjects.forEach((p) => splitDomains(p.domain).forEach((d) => set.add(d)))
+    allProjects.forEach((p) => splitDomains(p._domain).forEach((d) => set.add(d)))
     return ['Tous', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
   }, [allProjects])
 
@@ -107,13 +121,7 @@ export default function ProjetsPage() {
 
   const donorOptions = useMemo(() => {
     const set = new Set()
-    allProjects.forEach((p) =>
-      String(p.donor || '')
-        .split('/')
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .forEach((d) => set.add(d))
-    )
+    allProjects.forEach((p) => splitDonors(p.donor).forEach((d) => set.add(d)))
     return ['Tous', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
   }, [allProjects])
 
@@ -141,7 +149,7 @@ export default function ProjetsPage() {
     if (urlDonor !== selectedDonor) setSelectedDonor(urlDonor)
     if (urlStatus !== statusScope) setStatusScope(urlStatus)
     if (urlUsaid !== usaidOnly) setUsaidOnly(urlUsaid)
-  }, [search])
+  }, [search]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll initial + au changement de hash
   useEffect(() => {
@@ -159,20 +167,17 @@ export default function ProjetsPage() {
     const q = norm(searchTerm)
     return allProjects.filter((p) => {
       const hay = norm(
-        `${p.title} ${p.excerpt || ''} ${p.donor || ''} ${p.region || ''} ${p.domain || ''}`
+        `${p.title} ${p.excerpt || ''} ${p.donor || ''} ${p.region || ''} ${p._domain || ''}`
       )
       const matchSearch = q === '' || hay.includes(q)
 
-      const partsDomain = splitDomains(p.domain).map(norm)
+      const partsDomain = splitDomains(p._domain).map(norm)
       const matchDomain = selectedDomain === 'Tous' || partsDomain.includes(norm(selectedDomain))
 
       const partsRegion = splitRegions(p.region)
       const matchRegion = selectedRegion === 'Toutes' || partsRegion.includes(selectedRegion)
 
-      const partsDonor = String(p.donor || '')
-        .split('/')
-        .map((s) => s.trim())
-        .filter(Boolean)
+      const partsDonor = splitDonors(p.donor)
       const matchDonor = selectedDonor === 'Tous' || partsDonor.includes(selectedDonor)
 
       const matchStatus = statusScope === 'Tous' || p._status === statusScope
@@ -239,6 +244,9 @@ export default function ProjetsPage() {
     'Fonds Humanitaire Mali',
   ]
   const partenairesNationaux = ['PONAH', 'CAEB', 'FONGIM', 'EDUCO', 'ADEFIM', 'THINK PEACE', 'FEMAPH', 'ARGA']
+
+  // Rapports (garde-fou)
+  const rapports = Array.isArray(rapportsRaw) ? rapportsRaw : []
 
   return (
     <div className="min-h-screen bg-background">
@@ -433,7 +441,7 @@ export default function ProjetsPage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Domaine :</span>
-                        <span className="font-medium text-right">{p.domain || 'N/D'}</span>
+                        <span className="font-medium text-right">{p._domain || 'N/D'}</span>
                       </div>
                     </div>
                   </article>
