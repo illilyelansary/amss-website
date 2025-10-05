@@ -1,308 +1,167 @@
 // src/pages/SantePage.jsx
 import React, { useMemo } from 'react'
-import { hasCanon } from '@/utils/domainesCanon'
 import { Link } from 'react-router-dom'
-import { Heart, Users, Activity, Shield, TrendingUp, Stethoscope, Clock, CheckCircle } from 'lucide-react'
+import { HeartPulse, Stethoscope, Baby, Syringe, Users, TrendingUp, MapPin, ArrowRight, CheckCircle, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import santeMali from '../assets/sante-mali.jpg'
-import santeNutrition from '../assets/sante-nutrition.jpg'
-
-const CANON_KEY = 'SANTE'
-
-// ⚠️ Données projets
 import { projetsEnCours, projetsTermines } from '../data/projetsData'
+import { hasCanon } from '@/utils/domainesCanon'
 
-// normalisation simple (sans accents/majuscules)
-const norm = (s = '') =>
-  String(s)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-
-// match “Santé & Nutrition” (et variantes)
+// Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'SANTE'
-const predicateCanon = (p) => hasCanon(p, CANON_KEY)
 
-
-const formatNB = (n) => {
-  const v = Number(n)
-  return Number.isFinite(v) ? v.toLocaleString('fr-FR') : 'N/D'
+const safeYear = (value) => {
+  if (!value) return 'N/D'
+  const y = new Date(value)
+  return Number.isNaN(y.getTime()) ? 'N/D' : y.getFullYear()
 }
 
-const ProjectCard = ({ p, statusColor = 'text-green-600', dot = 'bg-green-500' }) => (
-  <article className="bg-white rounded-xl p-6 shadow-sm border border-border">
-    <div className="flex items-center mb-4">
-      <div className={`w-3 h-3 rounded-full mr-2 ${dot}`} />
-      <span className={`text-sm font-medium ${statusColor}`}>
-        {p.status || 'En cours'}
-      </span>
-      {p.usaidNote && (
-        <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 border border-red-200">
-          Suspendu (USAID)
-        </span>
-      )}
-    </div>
+const n = (x) => new Intl.NumberFormat('fr-FR').format(Number(x || 0))
 
-    <h3 className="text-lg font-semibold text-foreground mb-3">{p.title}</h3>
-    {p.excerpt && <p className="text-muted-foreground text-sm mb-4">{p.excerpt}</p>}
+export default function SantePage() {
+  // Listes filtrées via domaine canon (auto-alimentées depuis projetsData)
+  const santeEnCours = useMemo(() => (projetsEnCours || []).filter(p => hasCanon(p, CANON_KEY)), [])
+  const santeTermines = useMemo(() => (projetsTermines || []).filter(p => hasCanon(p, CANON_KEY)), [])
 
-    <div className="space-y-2 text-sm">
-      <div className="flex justify-between">
-        <span className="text-muted-foreground">Région :</span>
-        <span className="font-medium text-right">{p.region || 'N/D'}</span>
-      </div>
-      <div className="flex justify-between">
-        <span className="text-muted-foreground">Bailleur :</span>
-        <span className="font-medium text-right">{p.donor || 'N/D'}</span>
-      </div>
-      <div className="flex justify-between">
-        <span className="text-muted-foreground">Bénéficiaires :</span>
-        <span className="font-medium text-right">{formatNB(p.beneficiaries)}</span>
-      </div>
-      {p.domain && (
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Domaine :</span>
-          <span className="font-medium text-right">{p.domain}</span>
-        </div>
-      )}
-    </div>
-  </article>
-)
-
-const SantePage = () => {
-  // ---- Sélection des projets Santé &/ou Nutrition ----
-  const santeEnCours = useMemo(
-    () => (projetsEnCours||[]).filter(p=>hasCanon(p, CANON_KEY)),
-    []
-  )
-  const santeTermines = useMemo(
-    () => (projetsTermines||[]).filter(p=>hasCanon(p, CANON_KEY)),
-    []
+  const totalBenef = useMemo(
+    () => santeEnCours.reduce((acc, p) => acc + Number(p.beneficiaries || 0), 0),
+    [santeEnCours]
   )
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-red-50 to-pink-100">
+      {/* Hero */}
+      <section className="py-20 bg-gradient-to-br from-rose-50 to-red-100">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <Heart className="h-16 w-16 text-red-600 mx-auto mb-6" />
+            <HeartPulse className="h-16 w-16 text-red-600 mx-auto mb-6" />
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Santé et Nutrition
+              Santé & Nutrition
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              L&apos;AMSS œuvre pour l&apos;amélioration de l&apos;accès aux soins de santé de qualité
-              et la lutte contre la malnutrition dans les communautés vulnérables du Mali.
+              Santé communautaire, SR/PF, vaccination, prévention et prise en charge de la malnutrition.
             </p>
+            <div className="mt-6 flex gap-3 justify-center">
+              <Link to="/projets?domain=Santé%20%26%20Nutrition">
+                <Button size="lg" className="gap-2">
+                  Voir les projets
+                  <Stethoscope className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Link to="/projets">
+                <Button size="lg" variant="outline">Tous les projets</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Nos programmes (statique) */}
-      <section className="py-16">
+      {/* Indicateurs clés */}
+      <section className="py-12 bg-white/60 border-y">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-foreground mb-4">
-                Nos Interventions Santé
-              </h2>
-              <p className="text-xl text-muted-foreground">
-                Des programmes intégrés pour une meilleure santé communautaire
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow">
-                <div className="bg-red-50 w-16 h-16 rounded-lg flex items-center justify-center mb-4">
-                  <Stethoscope className="h-8 w-8 text-red-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-3">Santé de la Reproduction</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Accès aux services SR/PF et santé maternelle dans les zones reculées.
-                </p>
-                <div className="text-sm text-red-600 font-medium">Focus: Femmes & adolescentes</div>
-              </div>
-
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow">
-                <div className="bg-orange-50 w-16 h-16 rounded-lg flex items-center justify-center mb-4">
-                  <Activity className="h-8 w-8 text-orange-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-3">Nutrition Communautaire</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Prévention et PEC de la malnutrition aiguë et chronique chez les moins de 5 ans.
-                </p>
-                <div className="text-sm text-orange-600 font-medium">Cible: Enfants 0–5 ans</div>
-              </div>
-
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow">
-                <div className="bg-green-50 w-16 h-16 rounded-lg flex items-center justify-center mb-4">
-                  <Shield className="h-8 w-8 text-green-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-3">Prévention & Vaccination</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Sensibilisation et campagnes contre les maladies évitables.
-                </p>
-                <div className="text-sm text-green-600 font-medium">Couverture: Communautés entières</div>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <Stat icon={<Users className="h-5 w-5" />} label="Projets en cours" value={santeEnCours.length} />
+            <Stat icon={<CheckCircle className="h-5 w-5" />} label="Projets terminés" value={santeTermines.length} />
+            <Stat icon={<TrendingUp className="h-5 w-5" />} label="Bénéficiaires (en cours)" value={n(totalBenef)} />
           </div>
         </div>
       </section>
 
-      {/* Image & résultats */}
+      {/* Axes d’intervention */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <Card title="Santé communautaire" icon={<Users className="h-7 w-7 text-red-600" />}>
+              Renforcement des ASC/RECO, PEC communautaire et référencement.
+            </Card>
+            <Card title="SR/PF" icon={<Stethoscope className="h-7 w-7 text-pink-600" />}>
+              Accès aux services de santé sexuelle et reproductive, planification familiale.
+            </Card>
+            <Card title="Nutrition" icon={<Baby className="h-7 w-7 text-orange-600" />}>
+              Prévention et PEC de la malnutrition aiguë (MAS/MAM).
+            </Card>
+            <Card title="Vaccination" icon={<Syringe className="h-7 w-7 text-emerald-600" />}>
+              Appui aux campagnes de vaccination, chaîne du froid, mobilisation sociale.
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Projets en cours */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="flex items-center gap-3 mb-8">
+            <Clock className="h-8 w-8 text-primary" />
+            <h2 className="text-3xl font-bold text-foreground">Projets en cours</h2>
+          </div>
+
+          {santeEnCours.length === 0 ? (
+            <p className="text-muted-foreground">Aucun projet en cours pour la Santé & Nutrition.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {santeEnCours.map((p, i) => (
+                <ProjectCard key={i} p={p} statusColor="green" />
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-8">
+            <Link to="/projets#cours">
+              <Button className="inline-flex items-center">
+                Voir tous les projets
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Projets terminés */}
       <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <img src={santeMali} alt="Santé au Mali" className="rounded-2xl shadow-lg w-full" />
-              </div>
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="flex items-center gap-3 mb-8">
+            <CheckCircle className="h-8 w-8 text-accent" />
+            <h2 className="text-3xl font-bold text-foreground">Projets terminés</h2>
+          </div>
 
-              <div>
-                <h2 className="text-3xl font-bold text-foreground mb-6">Impact Santé 2024</h2>
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-red-100 p-3 rounded-lg"><Heart className="h-6 w-6 text-red-600" /></div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Santé Maternelle</h3>
-                      <p className="text-muted-foreground">2 500+ femmes ont bénéficié de CPN</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-orange-100 p-3 rounded-lg"><Activity className="h-6 w-6 text-orange-600" /></div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Nutrition Infantile</h3>
-                      <p className="text-muted-foreground">1 800+ enfants traités pour MAS</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-green-100 p-3 rounded-lg"><Shield className="h-6 w-6 text-green-600" /></div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Vaccination</h3>
-                      <p className="text-muted-foreground">≈85% de couverture dans nos zones</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {santeTermines.length === 0 ? (
+            <p className="text-muted-foreground">Aucun projet terminé pour la Santé & Nutrition.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {santeTermines.map((p, i) => (
+                <ProjectCard key={i} p={p} statusColor="blue" withYears />
+              ))}
             </div>
+          )}
+        </div>
+      </section>
+
+      {/* Approche & présence */}
+      <section className="py-16 bg-white/60 border-y">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Kpi title="Approche intégrée" icon={<HeartPulse className="h-5 w-5" />}>
+              Prévention, PEC, référencement, communication pour le changement social.
+            </Kpi>
+            <Kpi title="Zones d’intervention" icon={<MapPin className="h-5 w-5" />}>
+              Timbuktu • Gao • Mopti • Ségou • Koulikoro • Bamako
+            </Kpi>
+            <Kpi title="Partenaires" icon={<Users className="h-5 w-5" />}>
+              Ministère de la Santé, UNICEF, PAM, OMS, ONG locales
+            </Kpi>
           </div>
         </div>
       </section>
 
-      {/* Projets Santé — EN COURS */}
-      <section id="projets-sante" className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center gap-3 mb-8">
-              <Clock className="h-8 w-8 text-primary" />
-              <h2 className="text-3xl font-bold text-foreground">Projets Santé &amp; Nutrition — En Cours</h2>
-            </div>
-
-            {santeEnCours.length === 0 ? (
-              <p className="text-muted-foreground">Aucun projet santé en cours pour le moment.</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {santeEnCours.map((p, i) => (
-                  <ProjectCard key={i} p={p} statusColor={p.usaidNote ? 'text-red-600' : 'text-green-600'} dot={p.usaidNote ? 'bg-red-500' : 'bg-green-500'} />
-                ))}
-              </div>
-            )}
-
-            <div className="text-center mt-8">
-              <Link to="/projets#cours">
-                <Button className="inline-flex items-center">Voir tous les projets <Clock className="ml-2 h-4 w-4" /></Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Projets Santé — TERMINÉS */}
-      <section id="projets-sante-termines" className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center gap-3 mb-8">
-              <CheckCircle className="h-8 w-8 text-accent" />
-              <h2 className="text-3xl font-bold text-foreground">Projets Santé &amp; Nutrition — Terminés</h2>
-            </div>
-
-            {santeTermines.length === 0 ? (
-              <p className="text-muted-foreground">Aucun projet santé terminé listé.</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {santeTermines.map((p, i) => (
-                  <ProjectCard key={i} p={p} statusColor="text-blue-600" dot="bg-blue-500" />
-                ))}
-              </div>
-            )}
-
-            <div className="text-center mt-8">
-              <Link to="/projets#termines">
-                <Button variant="outline" className="inline-flex items-center">Voir les projets terminés <CheckCircle className="ml-2 h-4 w-4" /></Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Approche intégrée (statique) */}
+      {/* CTA */}
       <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-3xl font-bold text-foreground mb-6">
-                  Approche Intégrée Santé–Nutrition
-                </h2>
-                <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Nous combinons santé, nutrition et mobilisation communautaire pour maximiser l&apos;impact.
-                </p>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3"><div className="w-2 h-2 bg-red-600 rounded-full" /><span className="text-muted-foreground">CSCom renforcés</span></div>
-                  <div className="flex items-center space-x-3"><div className="w-2 h-2 bg-orange-600 rounded-full" /><span className="text-muted-foreground">UNAs / démonstrations culinaires</span></div>
-                  <div className="flex items-center space-x-3"><div className="w-2 h-2 bg-green-600 rounded-full" /><span className="text-muted-foreground">Sensibilisation & référencement</span></div>
-                  <div className="flex items-center space-x-3"><div className="w-2 h-2 bg-blue-600 rounded-full" /><span className="text-muted-foreground">Formation continue du personnel</span></div>
-                </div>
-              </div>
-              <div>
-                <img src={santeNutrition} alt="Santé et Nutrition" className="rounded-2xl shadow-lg w-full" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Statistiques (statique) */}
-      <section className="py-16 bg-gradient-to-br from-red-50 to-orange-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-foreground mb-4">Impact de nos Programmes Santé</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="text-center"><div className="text-4xl font-bold text-red-600 mb-2">15 000+</div><div className="text-sm text-muted-foreground">Consultations médicales</div></div>
-              <div className="text-center"><div className="text-4xl font-bold text-orange-600 mb-2">2 500+</div><div className="text-sm text-muted-foreground">Femmes suivies</div></div>
-              <div className="text-center"><div className="text-4xl font-bold text-green-600 mb-2">1 800+</div><div className="text-sm text-muted-foreground">Enfants traités</div></div>
-              <div className="text-center"><div className="text-4xl font-bold text-blue-600 mb-2">200+</div><div className="text-sm text-muted-foreground">Agents formés</div></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Call to action */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-6">
-              Soutenez la Santé au Sahel
-            </h2>
-            <p className="text-xl text-muted-foreground mb-8">
-              Chaque vie compte. Aidez-nous à améliorer l&apos;accès aux soins de santé.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/don"><Button size="lg" className="text-lg px-8 py-3">Faire un Don</Button></Link>
-              <Link to="/partenaires"><Button variant="outline" size="lg" className="text-lg px-8 py-3">Devenir Partenaire</Button></Link>
-            </div>
+        <div className="container mx-auto px-4 max-w-2xl text-center">
+          <h2 className="text-3xl font-bold mb-6">Améliorer la santé des communautés</h2>
+          <p className="text-xl text-muted-foreground mb-8">
+            Rejoignez nos partenaires pour renforcer la santé et la nutrition au Sahel.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/don"><Button size="lg" className="text-lg px-8 py-3">Faire un Don</Button></Link>
+            <Link to="/partenaires"><Button variant="outline" size="lg" className="text-lg px-8 py-3">Devenir Partenaire</Button></Link>
           </div>
         </div>
       </section>
@@ -310,4 +169,54 @@ const SantePage = () => {
   )
 }
 
-export default SantePage
+function Stat({ icon, label, value }) {
+  return (
+    <div className="bg-white rounded-xl p-5 shadow-sm border">
+      <div className="text-sm text-muted-foreground">{label}</div>
+      <div className="text-2xl font-semibold mt-1 flex items-center gap-2">
+        {icon}{value}
+      </div>
+    </div>
+  )
+}
+
+function Card({ title, icon, children }) {
+  return (
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow">
+      <div className="bg-rose-50 w-16 h-16 rounded-lg flex items-center justify-center mb-4">{icon}</div>
+      <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground">{children}</p>
+    </div>
+  )
+}
+
+function Kpi({ title, icon, children }) {
+  return (
+    <div className="bg-white rounded-xl p-5 shadow-sm border">
+      <div className="text-sm text-muted-foreground">{title}</div>
+      <div className="mt-2 flex items-center gap-2">{icon}{children}</div>
+    </div>
+  )
+}
+
+function ProjectCard({ p, statusColor = 'green', withYears = false }) {
+  return (
+    <article className="bg-white rounded-xl p-6 shadow-sm border border-border">
+      <div className="flex items-center mb-3">
+        <div className={`w-3 h-3 rounded-full mr-2 ${statusColor === 'green' ? 'bg-green-500' : 'bg-blue-500'}`} />
+        <span className={`text-sm font-medium ${statusColor === 'green' ? 'text-green-600' : 'text-blue-600'}`}>
+          {statusColor === 'green' ? (p.status || 'En cours') : 'Terminé'}
+        </span>
+      </div>
+      <h3 className="text-lg font-semibold text-foreground mb-2">{p.title}</h3>
+      {p.excerpt && <p className="text-muted-foreground text-sm mb-4">{p.excerpt}</p>}
+      <div className="space-y-2 text-sm">
+        {withYears ? (
+          <div className="flex justify-between"><span className="text-muted-foreground">Période :</span><span className="font-medium text-right">{safeYear(p.startDate)}–{safeYear(p.endDate)}</span></div>
+        ) : null}
+        <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right">{p.region || 'N/D'}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Bailleur :</span><span className="font-medium text-right">{p.bailleur || p.donor || 'N/D'}</span></div>
+      </div>
+    </article>
+  )
+}
