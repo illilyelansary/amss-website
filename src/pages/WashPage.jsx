@@ -1,11 +1,8 @@
 // src/pages/WashPage.jsx
 import React, { useMemo } from 'react'
-import { hasCanon } from '@/utils/domainesCanon'
 import { Link } from 'react-router-dom'
 import { Droplets, Waves, Sparkles, Users, TrendingUp, MapPin, ArrowRight, CheckCircle, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
-const CANON_KEY = 'WASH'
 
 // images “vitrine”
 import amssTerrainActivites from '../assets/amss-terrain-activites.jpeg'
@@ -14,25 +11,26 @@ import projetTablesBancs from '../assets/projet-tables-bancs-amss.jpeg'
 // données projets (déjà normalisées par migrate-projets)
 import { projetsEnCours, projetsTermines } from '../data/projetsData'
 
-// utils locaux
-const splitDomains = (label) =>
-  String(label || '')
-    .split(/[,/|;]+/)
-    .map(s => s.trim())
-    .filter(Boolean)
+// domaines canoniques
+import { hasCanon } from '@/utils/domainesCanon'
 
+// Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'WASH'
-const predicateCanon = (p) => hasCanon(p, CANON_KEY)
 
+const safeYear = (value) => {
+  if (!value) return 'N/D'
+  const y = new Date(value)
+  return Number.isNaN(y.getTime()) ? 'N/D' : y.getFullYear()
+}
 
 const WashPage = () => {
-  // listes WASH (en cours / terminés)
+  // Listes filtrées via domaine canon (auto-alimentées depuis projetsData)
   const washEnCours = useMemo(
-    () => (projetsEnCours || []).filter(p => isWashDomain(p.domain)),
+    () => (projetsEnCours || []).filter(p => hasCanon(p, CANON_KEY)),
     []
   )
   const washTermines = useMemo(
-    () => (projetsTermines || []).filter(p => isWashDomain(p.domain)),
+    () => (projetsTermines || []).filter(p => hasCanon(p, CANON_KEY)),
     []
   )
 
@@ -210,8 +208,8 @@ const WashPage = () => {
 
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right">{p.region || 'N/D'}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Bailleur :</span><span className="font-medium text-right">{p.donor || 'N/D'}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Domaine :</span><span className="font-medium text-right">{p.domain || 'WASH'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Bailleur :</span><span className="font-medium text-right">{p.bailleur || p.donor || 'N/D'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Domaine :</span><span className="font-medium text-right">{p.domaine || p.domain || 'WASH'}</span></div>
                     </div>
                   </article>
                 ))}
