@@ -1,99 +1,165 @@
 // src/pages/ProjetsTerminesPage.jsx
-import React, { useMemo, useState } from 'react'
-import { Calendar, MapPin, Users, DollarSign, CheckCircle, Filter, Award } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { CheckCircle, Filter, Search, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { projetsTermines } from '../data/projetsData'
+import { projetsTermines } from '@/data/projetsData'
 
-const ProjetsTerminesPage = () => {
-  const [filtreRegion, setFiltreRegion] = useState('Toutes')
-  const [filtreDomaine, setFiltreDomaine] = useState('Tous')
-  const [filtreAnnee, setFiltreAnnee] = useState('Toutes')
+if (import.meta.env.DEV) {
+  // eslint-disable-next-line no-console
+  console.log('projetsTermines:', projetsTermines?.length)
+}
 
-  // Options de filtres (stables)
-  const regions = useMemo(() => {
-    const vals = Array.from(new Set(projetsTermines.map(p => p.region).filter(Boolean)))
-    return ['Toutes', ...vals]
-  }, [])
-  const domaines = useMemo(() => {
-    const vals = Array.from(new Set(projetsTermines.map(p => p.domain).filter(Boolean)))
-    return ['Tous', ...vals]
-  }, [])
-  const annees = useMemo(() => {
-    const years = Array.from(new Set(
-      projetsTermines
-        .map(p => new Date(p.endDate).getFullYear())
-        .filter(y => !isNaN(y))
-    )).sort((a, b) => b - a)
-    return ['Toutes', ...years]
-  }, [])
+// --- Helpers ---
+const norm = (s) =>
+  String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
 
-  // Filtres appliqués
-  const projetsFiltres = useMemo(() => {
-    return projetsTermines.filter(p => {
-      const regionMatch = filtreRegion === 'Toutes' || p.region === filtreRegion
-      const domaineMatch = filtreDomaine === 'Tous' || p.domain === filtreDomaine
-      const anneeMatch = filtreAnnee === 'Toutes' || new Date(p.endDate).getFullYear() === Number(filtreAnnee)
-      return regionMatch && domaineMatch && anneeMatch
+const splitDomains = (label) =>
+  String(label || '')
+    .split(/[,/|;]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+const splitRegions = (label) =>
+  String(label || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+const splitDonors = (label) =>
+  String(label || '')
+    .split(/[\/,;|]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+const toNumber = (v) => {
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  if (v == null) return 0
+  const n = parseFloat(String(v).replace(/[^\d.-]/g, ''))
+  return Number.isFinite(n) ? n : 0
+}
+
+const safeYear = (value) => {
+  if (!value) return 'N/D'
+  const y = new Date(value)
+  return Number.isNaN(y.getTime()) ? 'N/D' : y.getFullYear()
+}
+
+export default function ProjetsTerminesPage() {
+  const { hash, search } = useLocation()
+  const params = new URLSearchParams(search)
+
+  // Normalisation des projets (domain/donor)
+  const items = useMemo(() => {
+    const normalize = (p) => ({
+      ...p,
+      _domain: p.domain || p.domaine || p.sector || p.secteur || '',
+      donor: p.donor ?? p.bailleur ?? p.bailleurs ?? '',
+      _status: 'Terminé',
     })
-  }, [filtreRegion, filtreDomaine, filtreAnnee])
+    return (projetsTermines || []).map(normalize)
+  }, [])
 
-  // Helpers d'affichage
-  const formatDate = (d) => {
-    if (!d) return '—'
-    try {
-      return new Date(d).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })
-    } catch { return String(d) }
-  }
-  const formatNumber = (n) => new Intl.NumberFormat('fr-FR').format(Number(n || 0))
-  const getDuree = (startDate, endDate) => {
-    const start = new Date(startDate); const end = new Date(endDate)
-    if (isNaN(start) || isNaN(end)) return '—'
-    const diffDays = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24))
-    const diffMonths = Math.round(diffDays / 30)
-    if (diffMonths < 12) return `${diffMonths} mois`
-    const years = Math.floor(diffMonths / 12); const months = diffMonths % 12
-    return months ? `${years} an(s) ${months} mois` : `${years} an(s)`
+  // Options filtres
+  const domainOptions = useMemo(() => {
+    const set = new Set()
+    items.forEach((p) => splitDomains(p._domain).forEach((d) => set.add(d)))
+    return ['Tous', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
+  }, [items])
+
+  const regionOptions = useMemo(() => {
+    const set = new Set()
+    items.forEach((p) => splitRegions(p.region).forEach((r) => set.add(r)))
+    return ['Toutes', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
+  }, [items])
+
+  const donorOptions = useMemo(() => {
+    const set = new Set()
+    items.forEach((p) => splitDonors(p.donor).forEach((d) => set.add(d)))
+    return ['Tous', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
+  }, [items])
+
+  // État filtres (prefill via URL)
+  const [searchTerm, setSearchTerm] = useState(params.get('q') || '')
+  const [selectedDomain, setSelectedDomain] = useState(params.get('domain') || 'Tous')
+  const [selectedRegion, setSelectedRegion] = useState(params.get('region') || 'Toutes')
+  const [selectedDonor, setSelectedDonor] = useState(params.get('donor') || 'Tous')
+
+  // Sync si URL change
+  useEffect(() => {
+    const p = new URLSearchParams(search)
+    const urlDomain = p.get('domain') || 'Tous'
+    const urlQ = p.get('q') || ''
+    const urlRegion = p.get('region') || 'Toutes'
+    const urlDonor = p.get('donor') || 'Tous'
+    if (urlDomain !== selectedDomain) setSelectedDomain(urlDomain)
+    if (urlQ !== searchTerm) setSearchTerm(urlQ)
+    if (urlRegion !== selectedRegion) setSelectedRegion(urlRegion)
+    if (urlDonor !== selectedDonor) setSelectedDonor(urlDonor)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search])
+
+  // Scroll vers ancre
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      return
+    }
+    const id = hash.replace('#', '')
+    ancreScroll(id)
+  }, [hash])
+
+  const ancreScroll = (id) => {
+    const el = document.getElementById(id)
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
   }
 
-  // Compteurs en-tête (projets terminés uniquement)
-  const totalBenef = useMemo(
-    () => formatNumber(projetsTermines.reduce((s,p)=> s + Number(p.beneficiaries||0), 0)),
-    []
-  )
-  const nbRegions = useMemo(() => new Set(projetsTermines.map(p => p.region)).size, [])
-  const nbDomaines = useMemo(() => new Set(projetsTermines.map(p => p.domain)).size, [])
+  // Filtres
+  const filtered = useMemo(() => {
+    const q = norm(searchTerm)
+    return items.filter((p) => {
+      const hay = norm(`${p.title} ${p.excerpt || ''} ${p.donor || ''} ${p.region || ''} ${p._domain || ''}`)
+      const matchSearch = q === '' || hay.includes(q)
+      const matchDomain = selectedDomain === 'Tous' || splitDomains(p._domain).map(norm).includes(norm(selectedDomain))
+      const matchRegion = selectedRegion === 'Toutes' || splitRegions(p.region).includes(selectedRegion)
+      const matchDonor = selectedDonor === 'Tous' || splitDonors(p.donor).includes(selectedDonor)
+      return matchSearch && matchDomain && matchRegion && matchDonor
+    })
+  }, [items, searchTerm, selectedDomain, selectedRegion, selectedDonor])
+
+  // Compteurs
+  const counters = useMemo(() => {
+    const totalBenef = filtered.reduce((acc, p) => acc + toNumber(p.beneficiaries), 0)
+    return {
+      nb: filtered.length,
+      totalBenef: new Intl.NumberFormat('fr-FR').format(totalBenef),
+    }
+  }, [filtered])
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="py-20 bg-gradient-to-br from-green-50 to-emerald-100">
+      <section className="py-14 md:py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-6" />
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Projets Terminés
-            </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-              Découvrez les réalisations et l'impact des projets que l'AMSS a menés à bien au service des populations vulnérables du Mali.
+          <div className="max-w-5xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 md:mb-6">Projets Terminés</h1>
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+              Réalisations finalisées et clôturées par l’AMSS.
             </p>
 
-            {/* Compteurs */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mt-12">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-green-600 mb-2">{projetsTermines.length}</div>
-                <div className="text-sm text-muted-foreground">Projets réalisés</div>
+            {/* Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mt-8">
+              <div className="rounded-2xl bg-white p-5 shadow-sm border">
+                <div className="text-sm text-muted-foreground">Nombre de projets</div>
+                <div className="text-3xl font-semibold mt-1">{counters.nb}</div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-2">{totalBenef}+</div>
-                <div className="text-sm text-muted-foreground">Bénéficiaires touchés</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-purple-600 mb-2">{nbRegions}</div>
-                <div className="text-sm text-muted-foreground">Régions impactées</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-orange-600 mb-2">{nbDomaines}</div>
-                <div className="text-sm text-muted-foreground">Domaines d’intervention</div>
+              <div className="rounded-2xl bg-white p-5 shadow-sm border">
+                <div className="text-sm text-muted-foreground">Bénéficiaires (cumulés)</div>
+                <div className="text-3xl font-semibold mt-1">{counters.totalBenef}</div>
               </div>
             </div>
           </div>
@@ -101,95 +167,114 @@ const ProjetsTerminesPage = () => {
       </section>
 
       {/* Filtres */}
-      <section className="py-8 bg-white/80 border-y">
+      <section className="pt-2 pb-6 bg-white/60 border-y">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="bg-white rounded-xl p-4 shadow-sm border">
-              <div className="flex items-center gap-3 mb-4">
-                <Filter className="h-5 w-5 text-foreground/70" />
-                <h2 className="text-xl font-semibold">Filtrer les projets</h2>
+            <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
+              <Filter className="h-4 w-4" />
+              <span>Filtrer les projets</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <div className="relative md:col-span-2">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Rechercher (titre, région, bailleur, …)"
+                  className="w-full pl-9 pr-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Région</label>
-                  <select className="w-full border rounded-lg p-2" value={filtreRegion} onChange={(e)=>setFiltreRegion(e.target.value)}>
-                    {regions.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Domaine</label>
-                  <select className="w-full border rounded-lg p-2" value={filtreDomaine} onChange={(e)=>setFiltreDomaine(e.target.value)}>
-                    {domaines.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm text-muted-foreground mb-1">Année de fin</label>
-                  <select className="w-full border rounded-lg p-2" value={filtreAnnee} onChange={(e)=>setFiltreAnnee(e.target.value)}>
-                    {annees.map(a => <option key={a} value={a}>{a}</option>)}
-                  </select>
-                </div>
-                <div className="flex items-end">
-                  <Button variant="outline" className="w-full" onClick={() => {
-                    setFiltreRegion('Toutes'); setFiltreDomaine('Tous'); setFiltreAnnee('Toutes')
-                  }}>
-                    Réinitialiser
-                  </Button>
-                </div>
-              </div>
+
+              <select
+                value={selectedDomain}
+                onChange={(e) => setSelectedDomain(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                {domainOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+
+              <select
+                value={selectedRegion}
+                onChange={(e) => setSelectedRegion(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                {regionOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+
+              <select
+                value={selectedDonor}
+                onChange={(e) => setSelectedDonor(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                {donorOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
       </section>
 
       {/* Liste */}
-      <section className="py-12">
+      <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-            {projetsFiltres.map((projet, idx) => (
-              <div key={idx} className="bg-white rounded-xl p-6 shadow-sm border border-border">
-                <div className="flex items-center gap-2 mb-3">
-                  <Award className="h-5 w-5 text-green-600" />
-                  <span className="text-sm font-medium text-green-700">Terminé</span>
-                </div>
+          <div className="max-w-6xl mx-auto">
+            {filtered.length === 0 ? (
+              <p className="text-muted-foreground">Aucun projet ne correspond aux filtres.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filtered.map((p, index) => (
+                  <article key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
+                    <div className="flex items-center mb-4">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full mr-2" />
+                      <span className="text-sm font-medium text-blue-600">Terminé</span>
+                    </div>
 
-                <h3 className="text-xl font-semibold text-foreground mb-2">{projet.title}</h3>
-                <p className="text-muted-foreground mb-4">{projet.excerpt}</p>
+                    <h3 className="text-lg font-semibold text-foreground mb-3">{p.title}</h3>
+                    {p.excerpt && <p className="text-muted-foreground text-sm mb-4">{p.excerpt}</p>}
 
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 opacity-70" />
-                    <span className="font-medium">{projet.region}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 opacity-70" />
-                    <span>{formatNumber(projet.beneficiaries)} bénéficiaires</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 opacity-70" />
-                    <span>Du {formatDate(projet.startDate)} au {formatDate(projet.endDate)} ({getDuree(projet.startDate, projet.endDate)})</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 opacity-70" />
-                    <span>{projet.budget || '—'}</span>
-                  </div>
-                </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Région :</span>
+                        <span className="font-medium text-right">{p.region || 'N/D'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Période :</span>
+                        <span className="font-medium text-right">
+                          {safeYear(p.startDate)}–{safeYear(p.endDate)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Bailleur :</span>
+                        <span className="font-medium text-right">
+                          {p.donor || 'N/D'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Bénéficiaires :</span>
+                        <span className="font-medium text-right">
+                          {toNumber(p.beneficiaries).toLocaleString('fr-FR')}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            )}
 
-      {/* CTA */}
-      <section className="py-16 bg-gradient-to-br from-primary/5 to-accent/5">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-6">Envie d'en savoir plus ?</h2>
-            <p className="text-xl text-muted-foreground mb-8">
-              Parcourez nos autres domaines d'intervention et nos rapports d'activité détaillés.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="text-lg px-8 py-3">Nos domaines</Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 py-3">Nos rapports d'activité</Button>
+            <div className="text-center mt-10">
+              <Link to="/projets" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                <Button variant="outline" className="inline-flex items-center">
+                  Voir la page “Nos Projets”
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -197,5 +282,3 @@ const ProjetsTerminesPage = () => {
     </div>
   )
 }
-
-export default ProjetsTerminesPage
