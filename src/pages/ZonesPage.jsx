@@ -1,6 +1,20 @@
 // src/pages/ZonesPage.jsx
 import React, { useEffect, useMemo, useState, useCallback } from 'react'
-import { MapPin, ArrowRight, Users, CheckCircle, Clock, Filter, RefreshCw, Building2, Layers, Search, AlertTriangle } from 'lucide-react'
+import {
+  MapPin,
+  ArrowRight,
+  Users,
+  CheckCircle,
+  Clock,
+  Filter,
+  RefreshCw,
+  Building2,
+  Layers,
+  Search,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react'
 import { projetsEnCours, projetsTermines } from '../data/projetsData'
 
 /* ------------------------ Helpers ------------------------ */
@@ -88,7 +102,7 @@ const projectStatus = (p) => {
 function MiniMapZones({ onSelect, zoneStats }) {
   /**
    * Carte schématique (non-géo) : positions approximatives pour un aperçu compact.
-   * Chaque zone est un bouton SVG. Les zones sans résultats filtrés sont estompées si hideEmptyZones=true.
+   * Chaque zone est un bouton SVG.
    */
   const positions = {
     taoudenni: { x: 110, y: 30 },
@@ -105,9 +119,7 @@ function MiniMapZones({ onSelect, zoneStats }) {
     <div className="w-full">
       <div className="text-sm text-muted-foreground mb-2">Mini-carte (schématique)</div>
       <svg viewBox="0 0 260 210" className="w-full h-64 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border">
-        {/* Fond */}
         <rect x="1" y="1" width="258" height="208" rx="12" ry="12" fill="transparent" />
-
         {zones.map(z => {
           const pos = positions[z.key]
           if (!pos) return null
@@ -237,6 +249,10 @@ export default function ZonesPage() {
   }
   const fmt = (n) => isNum(n) ? n.toLocaleString('fr-FR') : 'N/D'
   const safeKey = (zKey, p, idx) => `${zKey}-${p.id ?? normalize(p.title).slice(0,40)}-${idx}`
+
+  // État d'ouverture/fermeture par zone (pliable) — par défaut TOUT est fermé
+  const [open, setOpen] = useState({}) // { [zoneKey]: boolean }
+  const toggleZone = (key) => setOpen(prev => ({ ...prev, [key]: !prev[key] }))
 
   /* -------------------- Render ------------------------ */
   return (
@@ -382,6 +398,8 @@ export default function ZonesPage() {
               // Si l’option "masquer" est active et aucun résultat filtré -> on saute
               if (hideEmptyZones && filtered.length === 0) return null
 
+              const isOpen = !!open[z.key]
+
               return (
                 <div key={z.key} id={`zone-${z.key}`} className="scroll-mt-24">
                   {/* Titre & description */}
@@ -394,7 +412,7 @@ export default function ZonesPage() {
                   </p>
 
                   {/* Chiffres clés */}
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
                     <div className="rounded-xl bg-white border p-4 flex items-center gap-3 shadow-sm">
                       <Layers className="h-5 w-5 text-primary" />
                       <div>
@@ -432,14 +450,30 @@ export default function ZonesPage() {
                     </div>
                   </div>
 
-                  {/* Résultats filtrés */}
-                  {filtered.length === 0 ? (
-                    <div className="text-sm text-muted-foreground flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      Aucun projet ne correspond aux filtres actuels.
+                  {/* Résumé + bouton d'ouverture */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm text-muted-foreground">
+                      {filtered.length === 0
+                        ? 'Aucun projet ne correspond aux filtres actuels.'
+                        : `Projets correspondant aux filtres : ${filtered.length}`}
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    {filtered.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => toggleZone(z.key)}
+                        className="inline-flex items-center text-sm text-primary hover:underline"
+                        aria-expanded={isOpen}
+                        aria-controls={`list-${z.key}`}
+                      >
+                        {isOpen ? <>Plier <ChevronUp className="ml-1 h-4 w-4" /></> : <>Voir la liste des projets <ChevronDown className="ml-1 h-4 w-4" /></>}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Liste pliable — FERMÉE par défaut */}
+                  {isOpen && filtered.length > 0 && (
+                    <div id={`list-${z.key}`} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filtered.map((p, idx) => {
                         const st = projectStatus(p)
                         const isSusp = st === 'suspendu'
