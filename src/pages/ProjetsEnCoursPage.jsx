@@ -1,63 +1,200 @@
-import { Calendar, MapPin, Users, DollarSign, ExternalLink, Filter } from 'lucide-react'
+// src/pages/ProjetsEnCoursPage.jsx
+import React, { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { Clock, Filter, Search, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { projetsEnCours } from '../data/projetsData'
-import { useState } from 'react'
+import { projetsEnCours } from '@/data/projetsData'
 
-const ProjetsEnCoursPage = () => {
-  const [filtreRegion, setFiltreRegion] = useState('Toutes')
-  const [filtreDomaine, setFiltreDomaine] = useState('Tous')
+if (import.meta.env.DEV) {
+  // eslint-disable-next-line no-console
+  console.log('projetsEnCours:', projetsEnCours?.length)
+}
 
-  const regions = ['Toutes', ...new Set(projetsEnCours.map(projet => projet.region))]
-  const domaines = ['Tous', ...new Set(projetsEnCours.map(projet => projet.domain))]
+// --- Helpers ---
+const norm = (s) =>
+  String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
 
-  const projetsFiltres = projetsEnCours.filter(projet => {
-    const regionMatch = filtreRegion === 'Toutes' || projet.region === filtreRegion
-    const domaineMatch = filtreDomaine === 'Tous' || projet.domain === filtreDomaine
-    return regionMatch && domaineMatch
-  })
+const splitDomains = (label) =>
+  String(label || '')
+    .split(/[,/|;]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
 
-  // Mettre les projets USAID suspendus en tête de liste
-  projetsFiltres.sort((a,b) => (b.usaidNote === true) - (a.usaidNote === true))
+const splitRegions = (label) =>
+  String(label || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+const splitDonors = (label) =>
+  String(label || '')
+    .split(/[\/,;|]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+const toNumber = (v) => {
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  if (v == null) return 0
+  const n = parseFloat(String(v).replace(/[^\d.-]/g, ''))
+  return Number.isFinite(n) ? n : 0
+}
+
+// Essaie d’estimer les communes à partir du champ `region` (approximatif).
+const extractCommunes = (regionStr) => {
+  if (!regionStr) return { names: [], countHint: 0 }
+  const s = String(regionStr)
+  const mCount = s.match(/(\d+)\s*commune/i)
+  const countHint = mCount ? Number(mCount[1]) : 0
+  const inside = s.match(/\(([^)]+)\)/)?.[1] || ''
+  const listFromParentheses = inside
+    ? inside.split(/[,&/;]| et /i).map((t) => t.trim()).filter(Boolean)
+    : []
+  const fallbackList = !listFromParentheses.length
+    ? s.split(/[,&/;]| et /i).map((t) => t.trim()).filter(Boolean)
+    : []
+  const ignoreRe =
+    /(région|national|nord|centre|sahel|mali|cercle|commune|vill(e|age)|arrondissement|département)/i
+  const knownRegionsRe =
+    /(tombouctou|gao|ménaka|menaka|kidal|mopti|ségou|segou|koulikoro|bamako|diré|dire|goundam|niafunké|niafunke|gourma[- ]rharous|ansongo|sikasso|san)/i
+  const keep = (t) => t && !ignoreRe.test(t) && /[A-ZÀ-ÖØ-Ý]/.test(t[0]) && t.length > 2
+  const names = new Set(
+    (listFromParentheses.length ? listFromParentheses : fallbackList)
+      .map((v) => v.replace(/\b(Région de|Cercle de|Commune de|Commune|Région|Cercle)\b\s*/i, ''))
+      .map((v) => v.replace(/^\d+\s*communes?$/i, ''))
+      .map((v) => v.trim())
+      .filter(keep)
+      .filter((v) => !knownRegionsRe.test(v))
+  )
+  return { names: Array.from(names), countHint }
+}
+
+export default function ProjetsEnCoursPage() {
+  const { hash, search } = useLocation()
+  const params = new URLSearchParams(search)
+
+  // Normalisation des projets (domain/donor)
+  const items = useMemo(() => {
+    const normalize = (p) => ({
+      ...p,
+      _domain: p.domain || p.domaine || p.sector || p.secteur || '',
+      donor: p.donor ?? p.bailleur ?? p.bailleurs ?? '',
+      _status: 'En cours',
     })
-  }
+    return (projetsEnCours || []).map(normalize)
+  }, [])
 
-  const formatNumber = (number) => {
-    return new Intl.NumberFormat('fr-FR').format(number)
-  }
+  // Options filtres
+  const domainOptions = useMemo(() => {
+    const set = new Set()
+    items.forEach((p) => splitDomains(p._domain).forEach((d) => set.add(d)))
+    return ['Tous', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
+  }, [items])
+
+  const regionOptions = useMemo(() => {
+    const set = new Set()
+    items.forEach((p) => splitRegions(p.region).forEach((r) => set.add(r)))
+    return ['Toutes', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
+  }, [items])
+
+  const donorOptions = useMemo(() => {
+    const set = new Set()
+    items.forEach((p) => splitDonors(p.donor).forEach((d) => set.add(d)))
+    return ['Tous', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
+  }, [items])
+
+  // État filtres (prefill via URL)
+  const [searchTerm, setSearchTerm] = useState(params.get('q') || '')
+  const [selectedDomain, setSelectedDomain] = useState(params.get('domain') || 'Tous')
+  const [selectedRegion, setSelectedRegion] = useState(params.get('region') || 'Toutes')
+  const [selectedDonor, setSelectedDonor] = useState(params.get('donor') || 'Tous')
+  const [usaidOnly, setUsaidOnly] = useState(params.get('usaid') === '1')
+
+  // Sync si URL change
+  useEffect(() => {
+    const p = new URLSearchParams(search)
+    const urlDomain = p.get('domain') || 'Tous'
+    const urlQ = p.get('q') || ''
+    const urlRegion = p.get('region') || 'Toutes'
+    const urlDonor = p.get('donor') || 'Tous'
+    const urlUsaid = p.get('usaid') === '1'
+    if (urlDomain !== selectedDomain) setSelectedDomain(urlDomain)
+    if (urlQ !== searchTerm) setSearchTerm(urlQ)
+    if (urlRegion !== selectedRegion) setSelectedRegion(urlRegion)
+    if (urlDonor !== selectedDonor) setSelectedDonor(urlDonor)
+    if (urlUsaid !== usaidOnly) setUsaidOnly(urlUsaid)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search])
+
+  // Scroll vers ancre
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+      return
+    }
+    const id = hash.replace('#', '')
+    const el = document.getElementById(id)
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+  }, [hash])
+
+  // Filtres
+  const filtered = useMemo(() => {
+    const q = norm(searchTerm)
+    return items.filter((p) => {
+      const hay = norm(`${p.title} ${p.excerpt || ''} ${p.donor || ''} ${p.region || ''} ${p._domain || ''}`)
+      const matchSearch = q === '' || hay.includes(q)
+      const matchDomain = selectedDomain === 'Tous' || splitDomains(p._domain).map(norm).includes(norm(selectedDomain))
+      const matchRegion = selectedRegion === 'Toutes' || splitRegions(p.region).includes(selectedRegion)
+      const matchDonor = selectedDonor === 'Tous' || splitDonors(p.donor).includes(selectedDonor)
+      const matchUsaid = !usaidOnly || Boolean(p.usaidNote)
+      return matchSearch && matchDomain && matchRegion && matchDonor && matchUsaid
+    })
+  }, [items, searchTerm, selectedDomain, selectedRegion, selectedDonor, usaidOnly])
+
+  // Compteurs
+  const counters = useMemo(() => {
+    const totalBenef = filtered.reduce((acc, p) => acc + toNumber(p.beneficiaries), 0)
+    const communesSet = new Set()
+    let communesNumeric = 0
+    filtered.forEach((p) => {
+      const { names, countHint } = extractCommunes(p.region)
+      names.forEach((n) => communesSet.add(n.toLowerCase()))
+      communesNumeric += Number(countHint || 0)
+    })
+    return {
+      nb: filtered.length,
+      totalBenef: new Intl.NumberFormat('fr-FR').format(totalBenef),
+      totalCommunes: new Intl.NumberFormat('fr-FR').format(communesSet.size + communesNumeric),
+    }
+  }, [filtered])
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Hero */}
+      <section className="py-14 md:py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Nos Projets en Cours
-            </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-              Découvrez les projets actuellement mis en œuvre par l'AMSS pour améliorer 
-              les conditions de vie des populations vulnérables du Mali.
+          <div className="max-w-5xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 md:mb-6">Projets en Cours</h1>
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+              Liste des projets actuellement en mise en œuvre.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-2">{projetsEnCours.length}</div>
-                <div className="text-sm text-muted-foreground">Projets actifs</div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mt-8">
+              <div className="rounded-2xl bg-white p-5 shadow-sm border">
+                <div className="text-sm text-muted-foreground">Nombre de projets</div>
+                <div className="text-3xl font-semibold mt-1">{counters.nb}</div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-green-600 mb-2">
-                  {formatNumber(projetsEnCours.reduce((total, projet) => total + projet.beneficiaries, 0))}+
-                </div>
-                <div className="text-sm text-muted-foreground">Bénéficiaires</div>
+              <div className="rounded-2xl bg-white p-5 shadow-sm border">
+                <div className="text-sm text-muted-foreground">Bénéficiaires (cumulés)</div>
+                <div className="text-3xl font-semibold mt-1">{counters.totalBenef}</div>
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-orange-600 mb-2">8</div>
-                <div className="text-sm text-muted-foreground">Régions couvertes</div>
+              <div className="rounded-2xl bg-white p-5 shadow-sm border">
+                <div className="text-sm text-muted-foreground">Communes (≈)</div>
+                <div className="text-3xl font-semibold mt-1">{counters.totalCommunes}</div>
               </div>
             </div>
           </div>
@@ -65,182 +202,121 @@ const ProjetsEnCoursPage = () => {
       </section>
 
       {/* Filtres */}
-      <section className="py-8 bg-muted/30">
+      <section className="pt-2 pb-6 bg-white/60 border-y">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center space-x-2">
-                <Filter className="h-5 w-5 text-muted-foreground" />
-                <span className="font-medium">Filtrer par :</span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium">Région :</label>
-                <select 
-                  value={filtreRegion} 
-                  onChange={(e) => setFiltreRegion(e.target.value)}
-                  className="px-3 py-1 border border-border rounded-md bg-background"
-                >
-                  {regions.map(region => (
-                    <option key={region} value={region}>{region}</option>
-                  ))}
-                </select>
+            <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
+              <Filter className="h-4 w-4" />
+              <span>Filtrer les projets</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <div className="relative md:col-span-2">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Rechercher (titre, région, bailleur, …)"
+                  className="w-full pl-9 pr-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium">Domaine :</label>
-                <select 
-                  value={filtreDomaine} 
-                  onChange={(e) => setFiltreDomaine(e.target.value)}
-                  className="px-3 py-1 border border-border rounded-md bg-background"
-                >
-                  {domaines.map(domaine => (
-                    <option key={domaine} value={domaine}>{domaine}</option>
-                  ))}
-                </select>
-              </div>
+              <select
+                value={selectedDomain}
+                onChange={(e) => setSelectedDomain(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                {domainOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+
+              <select
+                value={selectedRegion}
+                onChange={(e) => setSelectedRegion(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                {regionOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+
+              <select
+                value={selectedDonor}
+                onChange={(e) => setSelectedDonor(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                {donorOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+
+              <label className="flex items-center gap-2 text-sm md:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={usaidOnly}
+                  onChange={(e) => setUsaidOnly(e.target.checked)}
+                  className="rounded border-border"
+                />
+                USAID uniquement
+              </label>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Liste des projets */}
+      {/* Liste */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 gap-8">
-              {projetsFiltres.map((projet) => (
-                <div key={projet.id} className="bg-white rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-                    {/* Image */}
-                    <div className="lg:col-span-1">
-                      <img 
-                        src={projet.image} 
-                        alt={projet.title}
-                        className="w-full h-64 lg:h-full object-cover"
-                      />
+            {filtered.length === 0 ? (
+              <p className="text-muted-foreground">Aucun projet ne correspond aux filtres.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filtered.map((p, index) => (
+                  <article key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
+                    <div className="flex items-center mb-4">
+                      <div className={`w-3 h-3 rounded-full mr-2 ${p.usaidNote ? 'bg-red-500' : 'bg-green-500'}`} />
+                      <span className={`text-sm font-medium ${p.usaidNote ? 'text-red-600' : 'text-green-600'}`}>
+                        {p.status || 'En cours'}
+                      </span>
+                      {p.usaidNote && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 border border-red-200">
+                          Suspendu (USAID)
+                        </span>
+                      )}
                     </div>
-                    
-                    {/* Contenu */}
-                    <div className="lg:col-span-2 p-6">
-                      <div className="flex flex-wrap items-center gap-2 mb-4">
-                        <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                          {projet.status}
-                        </span>
-                        <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                          {projet.domain}
-                        </span>
-                        <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
-                          {projet.region}
-                        </span>
 
-                      {projet.usaidNote && (
-                        <div className="mb-3">
-                          <span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
-                            Suspendu suite aux décisions du Gouvernement américain (USAID)
-                          </span>
-                        </div>
-                      )}
+                    <h3 className="text-lg font-semibold text-foreground mb-3">{p.title}</h3>
+                    {p.excerpt && <p className="text-muted-foreground text-sm mb-4">{p.excerpt}</p>}
 
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Région :</span>
+                        <span className="font-medium text-right">{p.region || 'N/D'}</span>
                       </div>
-
-                      <h3 className="text-2xl font-bold text-foreground mb-3">
-                        {projet.title}
-                      </h3>
-                      
-                      <p className="text-muted-foreground mb-4 leading-relaxed">
-                        {projet.excerpt}
-                      </p>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div className="flex items-center space-x-3">
-                          <Calendar className="h-5 w-5 text-blue-600" />
-                          <div>
-                            <div className="text-sm font-medium">Période</div>
-                            <div className="text-sm text-muted-foreground">
-                              {formatDate(projet.startDate)} - {formatDate(projet.endDate)}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-3">
-                          <MapPin className="h-5 w-5 text-green-600" />
-                          <div>
-                            <div className="text-sm font-medium">Région</div>
-                            <div className="text-sm text-muted-foreground">{projet.region}</div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-3">
-                          <Users className="h-5 w-5 text-purple-600" />
-                          <div>
-                            <div className="text-sm font-medium">Bénéficiaires</div>
-                            <div className="text-sm text-muted-foreground">
-                              {formatNumber(projet.beneficiaries)} personnes
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-3">
-                          <DollarSign className="h-5 w-5 text-orange-600" />
-                          <div>
-                            <div className="text-sm font-medium">Bailleur</div>
-                            <div className="text-sm text-muted-foreground">{projet.donor}</div>
-                          </div>
-                        </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Bailleur :</span>
+                        <span className="font-medium text-right">{p.donor || 'N/D'}</span>
                       </div>
-
-
-                      {projet.sources && (
-                        <div className="text-xs text-muted-foreground mb-4">
-                          Sources: {projet.sources.join(', ')}
-                        </div>
-                      )}
-
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <Button className="flex-1">
-                          Voir les détails
-                        </Button>
-                        <Button variant="outline" className="flex items-center space-x-2">
-                          <ExternalLink className="h-4 w-4" />
-                          <span>Plus d'infos</span>
-                        </Button>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Domaine :</span>
+                        <span className="font-medium text-right">{p._domain || 'N/D'}</span>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {projetsFiltres.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg">
-                  Aucun projet ne correspond aux filtres sélectionnés.
-                </p>
+                  </article>
+                ))}
               </div>
             )}
-          </div>
-        </div>
-      </section>
 
-      {/* Call to action */}
-      <section className="py-16 bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-6">
-              Soutenez Nos Projets
-            </h2>
-            <p className="text-xl text-muted-foreground mb-8">
-              Votre soutien nous permet de continuer à améliorer les conditions de vie 
-              des populations vulnérables du Mali.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="text-lg px-8 py-3">
-                Faire un Don
-              </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-                Devenir Partenaire
-              </Button>
+            <div className="text-center mt-10">
+              <Link to="/projets" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                <Button variant="outline" className="inline-flex items-center">
+                  Voir la page “Nos Projets”
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -248,6 +324,3 @@ const ProjetsEnCoursPage = () => {
     </div>
   )
 }
-
-export default ProjetsEnCoursPage
-
