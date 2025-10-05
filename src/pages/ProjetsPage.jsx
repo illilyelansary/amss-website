@@ -49,6 +49,12 @@ const toNumber = (v) => {
   const n = parseFloat(String(v).replace(/[^\d.-]/g, ''))
   return Number.isFinite(n) ? n : 0
 }
+// Bénéficiaires plausibles uniquement (seuil ajustable)
+const asBenef = (v) => {
+  const n = toNumber(v)
+  if (!Number.isFinite(n) || n <= 0) return 0
+  return n <= 500_000 ? n : 0 // ignore les valeurs aberrantes
+}
 
 // Essaie d’estimer les communes à partir du champ `region` (approximatif).
 const extractCommunes = (regionStr) => {
@@ -192,7 +198,7 @@ export default function ProjetsPage() {
 
   // --- Compteurs dynamiques (EN COURS filtrés) ---
   const counters = useMemo(() => {
-    const totalBenef = enCoursFiltered.reduce((acc, p) => acc + toNumber(p.beneficiaries), 0)
+    const totalBenef = enCoursFiltered.reduce((acc, p) => acc + asBenef(p.beneficiaries), 0)
     const communesSet = new Set()
     let communesNumeric = 0
     enCoursFiltered.forEach((p) => {
