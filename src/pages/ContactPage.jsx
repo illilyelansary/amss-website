@@ -1,6 +1,3 @@
-Voici **`src/pages/ContactPage.jsx`** complet, corrigé et à jour (liste des bureaux = **Nom + Type + Adresse + lien “Voir la fiche”** uniquement) :
-
-```jsx
 // src/pages/ContactPage.jsx
 import { MapPin, Phone, Mail, Clock, Send, Building, Globe, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
