@@ -11,22 +11,14 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
-  Building2
+  Building2,
+  Search
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { projetsEnCours, projetsTermines } from '../data/projetsData'
 
 /**
  * === PARTENAIRES — CATALOGUE DE RÉFÉRENCE ===
- * - acronym : sigle court
- * - name    : nom complet
- * - type    : nature du partenaire
- * - logo    : /public/assets/partenaires/...
- * - website : lien (facultatif)
- * - match   : alias utilisés pour identifier ce partenaire dans le champ "donor" (ou "bailleur") des projets
- *
- * Si un donateur n'est pas listé ici, il sera AJOUTÉ dynamiquement à l'affichage
- * (acronyme = libellé du donor/bailleur, logo = placeholder).
  */
 const STATIC_PARTNERS = [
   // ONU & agences
@@ -78,12 +70,6 @@ const STATIC_PARTNERS = [
 const norm = (s) =>
   (s || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 
-/**
- * Construit dynamiquement la table {acronym -> partenaire enrichi}
- * 1) seed avec STATIC_PARTNERS
- * 2) pour chaque projet, on tente de matcher donor/bailleur avec un alias
- * 3) si aucun match, on crée un partenaire "dynamique" à partir du libellé source
- */
 function buildPartnerIndexFromProjects(allProjects) {
   // 1) seed
   const index = {}
@@ -102,7 +88,6 @@ function buildPartnerIndexFromProjects(allProjects) {
     const donor = norm(donorSrc)
     if (!donor) return
 
-    // essaie de retrouver un alias connu dans le donor
     let matchedAcronym = null
     for (const alias in aliasToAcronym) {
       if (donor.includes(alias)) {
@@ -117,11 +102,11 @@ function buildPartnerIndexFromProjects(allProjects) {
     }
 
     // 3) aucun match => créer un partenaire "dynamique" basé sur le libellé source
-    const dynamicAcronym = donor.toUpperCase().slice(0, 32) // petit garde-fou
+    const dynamicAcronym = donor.toUpperCase().slice(0, 32)
     if (!index[dynamicAcronym]) {
       index[dynamicAcronym] = {
         acronym: dynamicAcronym,
-        name: donorSrc, // libellé tel que dans les données projets
+        name: donorSrc,
         type: 'Partenaire / Bailleur',
         logo: '/assets/partenaires/placeholder.png',
         website: '',
@@ -150,7 +135,6 @@ const sortProjects = (arr) => {
 
     const b1 = safeDate(p1.startDate); const e1 = safeDate(p1.endDate)
     const b2 = safeDate(p2.startDate); const e2 = safeDate(p2.endDate)
-    // comparer fin puis début (desc)
     const t1 = (e1?.getTime?.() || b1?.getTime?.() || 0)
     const t2 = (e2?.getTime?.() || b2?.getTime?.() || 0)
     return t2 - t1
@@ -163,7 +147,7 @@ const PartenairesPage = () => {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [])
 
-  // ⚠️ Source de vérité : projetsEnCours / projetsTermines
+  // Source de vérité : projetsEnCours / projetsTermines
   const allProjects = useMemo(() => {
     const encours = (projetsEnCours || []).map(p => ({ ...p, _status: 'En cours' }))
     const termines = (projetsTermines || []).map(p => ({ ...p, _status: 'Terminé' }))
@@ -175,17 +159,16 @@ const PartenairesPage = () => {
     [allProjects]
   )
 
-  const partners = useMemo(() => {
+  const partnersBase = useMemo(() => {
     return Object.values(partnerIndex).sort((a, b) => {
-      // trier par nombre de projets décroissant, puis alpha
       const d = (b._projects?.length || 0) - (a._projects?.length || 0)
       return d !== 0 ? d : a.acronym.localeCompare(b.acronym)
     })
   }, [partnerIndex])
 
-  // STATISTIQUES INTRO & BADGES
+  // STATISTIQUES INTRO
   const stats = useMemo(() => {
-    const partnersActifs = partners.filter(p => (p._projects?.length || 0) > 0)
+    const partnersActifs = partnersBase.filter(p => (p._projects?.length || 0) > 0)
     const nbPartenairesActifs = partnersActifs.length
     const nbEnCours = allProjects.filter(p => String(p._status || p.status).toLowerCase().includes('cours')).length
     const nbTermines = allProjects.length - nbEnCours
@@ -203,9 +186,19 @@ const PartenairesPage = () => {
       nbRegions: regions.size,
       benefTotal: benef
     }
-  }, [partners, allProjects])
+  }, [partnersBase, allProjects])
 
-  // État d'ouverture/fermeture des listes (pliable)
+  // Recherche partenaire
+  const [q, setQ] = useState('')
+  const partners = useMemo(() => {
+    const n = norm(q)
+    if (!n) return partnersBase
+    return partnersBase.filter(p =>
+      norm(p.acronym).includes(n) || norm(p.name).includes(n)
+    )
+  }, [q, partnersBase])
+
+  // Ouverture/fermeture des listes (pliable) — par défaut TOUT est fermé
   const [open, setOpen] = useState({}) // { [acronym]: boolean }
   const toggle = (acr) => setOpen(prev => ({ ...prev, [acr]: !prev[acr] }))
 
@@ -229,12 +222,12 @@ const PartenairesPage = () => {
         </div>
       </section>
 
-      {/* Introduction + Chiffres clés */}
+      {/* Introduction + Chiffres clés + Recherche */}
       <section className="py-12 bg-white/60 border-y">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
-              {/* Texte d'introduction */}
+              {/* Texte d'introduction + Recherche */}
               <div className="lg:col-span-2 bg-white border rounded-xl p-6 shadow-sm">
                 <h2 className="text-2xl font-semibold text-foreground mb-3">Des alliances pour agir vite et durablement</h2>
                 <p className="text-muted-foreground leading-relaxed">
@@ -244,8 +237,23 @@ const PartenairesPage = () => {
                 </p>
                 <p className="text-muted-foreground leading-relaxed mt-3">
                   Cette page regroupe l’ensemble de nos partenaires identifiés dans la base de projets et indique, pour chacun,
-                  le nombre de projets associés. Dépliez un partenaire pour consulter la liste détaillée.
+                  le nombre de projets associés. Cliquez sur <em>Voir la liste des projets</em> pour afficher la liste détaillée.
                 </p>
+
+                {/* Champ de recherche */}
+                <div className="mt-5">
+                  <label className="text-xs text-muted-foreground block mb-1">Rechercher un partenaire</label>
+                  <div className="relative">
+                    <Search className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={q}
+                      onChange={(e) => setQ(e.target.value)}
+                      placeholder="Ex. USAID, UNICEF, Fondation Strømme, Gouvernement du Mali…"
+                      className="w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Chiffres clés */}
@@ -290,145 +298,133 @@ const PartenairesPage = () => {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {partners.map((p) => {
-                const projectsRaw = p._projects || []
-                const projects = sortProjects(projectsRaw)
-                const count = projects.length
-                const hasSuspendedUSAID = p.acronym === 'USAID' && projects.some(pr => pr.usaidNote)
-                const isOpen = !!open[p.acronym]
+            {partners.length === 0 ? (
+              <div className="text-center text-muted-foreground">Aucun partenaire ne correspond à « {q} ».</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {partners.map((p) => {
+                  const projectsRaw = p._projects || []
+                  const projects = sortProjects(projectsRaw)
+                  const count = projects.length
+                  const hasSuspendedUSAID = p.acronym === 'USAID' && projects.some(pr => pr.usaidNote)
+                  const isOpen = !!open[p.acronym]
 
-                return (
-                  <div key={p.acronym} className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow">
-                    <div className="flex items-start gap-4">
-                      <img
-                        src={p.logo || '/assets/partenaires/placeholder.png'}
-                        alt={p.acronym}
-                        className="h-16 w-16 object-contain rounded-md border border-muted"
-                        onError={(e) => { e.currentTarget.src = '/assets/partenaires/placeholder.png' }}
-                      />
-                      <div className="flex-1">
-                        <div className="text-sm text-muted-foreground">{p.type || 'Partenaire'}</div>
-                        <h3 className="text-lg font-semibold text-foreground">
-                          {p.acronym} <span className="text-muted-foreground">— {p.name}</span>
-                        </h3>
-                        {p.website && (
-                          <a
-                            href={p.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center text-primary text-sm hover:underline mt-1"
-                          >
-                            <Globe className="h-4 w-4 mr-1" /> Site officiel
-                          </a>
-                        )}
-                        {hasSuspendedUSAID && (
-                          <div className="mt-2 inline-flex items-center text-xs px-2 py-1 rounded bg-red-100 text-red-700">
-                            Projets USAID suspendus (décision du Gouvernement américain)
+                  return (
+                    <div key={p.acronym} className="bg-white rounded-xl p-6 shadow-sm border border-border hover:shadow-lg transition-shadow">
+                      <div className="flex items-start gap-4">
+                        <img
+                          src={p.logo || '/assets/partenaires/placeholder.png'}
+                          alt={p.acronym}
+                          className="h-16 w-16 object-contain rounded-md border border-muted"
+                          onError={(e) => { e.currentTarget.src = '/assets/partenaires/placeholder.png' }}
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm text-muted-foreground">{p.type || 'Partenaire'}</div>
+                          <h3 className="text-lg font-semibold text-foreground">
+                            {p.acronym} <span className="text-muted-foreground">— {p.name}</span>
+                          </h3>
+                          {p.website && (
+                            <a
+                              href={p.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center text-primary text-sm hover:underline mt-1"
+                            >
+                              <Globe className="h-4 w-4 mr-1" /> Site officiel
+                            </a>
+                          )}
+                          {hasSuspendedUSAID && (
+                            <div className="mt-2 inline-flex items-center text-xs px-2 py-1 rounded bg-red-100 text-red-700">
+                              Projets USAID suspendus (décision du Gouvernement américain)
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Résumé & Contrôle d'ouverture */}
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Handshake className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-medium text-foreground">
+                              Projets associés <span className="text-muted-foreground">({count})</span>
+                            </span>
+                          </div>
+                          {count > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => toggle(p.acronym)}
+                              className="inline-flex items-center text-sm text-primary hover:underline"
+                              aria-expanded={isOpen}
+                              aria-controls={`projects-${p.acronym}`}
+                            >
+                              {isOpen ? <>Plier <ChevronUp className="ml-1 h-4 w-4" /></> : <>Voir la liste des projets <ChevronDown className="ml-1 h-4 w-4" /></>}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Liste pliable — FERMÉE par défaut. Rien n'est affiché tant qu'on n'a pas cliqué */}
+                        {isOpen && count > 0 && (
+                          <div id={`projects-${p.acronym}`} className="mt-3 space-y-3">
+                            {projects.map((pr, idx) => {
+                              const key = `${p.acronym}-${pr.id || idx}`
+                              const enCours = String(pr.status || pr._status || '').toLowerCase().includes('cours')
+                              return (
+                                <div key={key} className="border border-border rounded-lg p-3">
+                                  <div className="flex flex-wrap items-center gap-2 text-xs mb-2">
+                                    {enCours ? (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                                        <Clock className="h-3 w-3 mr-1" /> En cours
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                                        <CheckCircle className="h-3 w-3 mr-1" /> Terminé
+                                      </span>
+                                    )}
+                                    {pr.usaidNote && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">
+                                        Suspendu (USAID)
+                                      </span>
+                                    )}
+                                    {pr.region && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
+                                        <MapPin className="h-3 w-3 mr-1" /> {pr.region}
+                                      </span>
+                                    )}
+                                    {pr.beneficiaries ? (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
+                                        <Users className="h-3 w-3 mr-1" /> {Number(pr.beneficiaries).toLocaleString('fr-FR')}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <div className="font-medium">{pr.title}</div>
+                                  {pr.excerpt && (
+                                    <div className="text-sm text-muted-foreground mt-1">
+                                      {pr.excerpt}
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })}
+
+                            {/* Lien vers la page Projets filtrée par bailleur */}
+                            <div className="text-right">
+                              <Link
+                                to={`/projets?bailleur=${encodeURIComponent(p.name || p.acronym)}`}
+                                className="inline-flex items-center text-primary text-sm hover:underline"
+                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                              >
+                                Parcourir ces projets <ArrowRight className="ml-1 h-4 w-4" />
+                              </Link>
+                            </div>
                           </div>
                         )}
                       </div>
                     </div>
-
-                    {/* Résumé & Contrôle de repli */}
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Handshake className="h-4 w-4 text-primary" />
-                          <span className="text-sm font-medium text-foreground">
-                            Projets associés <span className="text-muted-foreground">({count})</span>
-                          </span>
-                        </div>
-                        {count > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => toggle(p.acronym)}
-                            className="inline-flex items-center text-sm text-primary hover:underline"
-                            aria-expanded={isOpen}
-                            aria-controls={`projects-${p.acronym}`}
-                          >
-                            {isOpen ? <>Replier <ChevronUp className="ml-1 h-4 w-4" /></> : <>Afficher la liste <ChevronDown className="ml-1 h-4 w-4" /></>}
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Liste pliable */}
-                      {count === 0 ? (
-                        <p className="text-sm text-muted-foreground mt-2">Aucun projet associé dans la base actuelle.</p>
-                      ) : (
-                        <div id={`projects-${p.acronym}`} className="mt-3 space-y-3">
-                          {(isOpen ? projects : projects.slice(0, 6)).map((pr, idx) => {
-                            const key = `${p.acronym}-${pr.id || idx}`
-                            const enCours = String(pr.status || pr._status || '').toLowerCase().includes('cours')
-                            return (
-                              <div key={key} className="border border-border rounded-lg p-3">
-                                <div className="flex flex-wrap items-center gap-2 text-xs mb-2">
-                                  {enCours ? (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
-                                      <Clock className="h-3 w-3 mr-1" /> En cours
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
-                                      <CheckCircle className="h-3 w-3 mr-1" /> Terminé
-                                    </span>
-                                  )}
-                                  {pr.usaidNote && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">
-                                      Suspendu (USAID)
-                                    </span>
-                                  )}
-                                  {pr.region && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
-                                      <MapPin className="h-3 w-3 mr-1" /> {pr.region}
-                                    </span>
-                                  )}
-                                  {pr.beneficiaries ? (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
-                                      <Users className="h-3 w-3 mr-1" /> {Number(pr.beneficiaries).toLocaleString('fr-FR')}
-                                    </span>
-                                  ) : null}
-                                </div>
-                                <div className="font-medium">{pr.title}</div>
-                                {pr.excerpt && (
-                                  <div className="text-sm text-muted-foreground mt-1">
-                                    {pr.excerpt}
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          })}
-
-                          {!isOpen && projects.length > 6 && (
-                            <div className="text-xs text-muted-foreground">
-                              + {projects.length - 6} autre(s) projet(s)
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Lien vers la page Projets filtrée par bailleur */}
-                      {count > 0 && (
-                        <div className="text-right mt-3">
-                          <Link
-                            to={`/projets?bailleur=${encodeURIComponent(p.name || p.acronym)}`}
-                            className="inline-flex items-center text-primary text-sm hover:underline"
-                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                          >
-                            Parcourir ces projets <ArrowRight className="ml-1 h-4 w-4" />
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
-            <div className="text-center mt-12">
-              <Link to="/projets" className="inline-flex items-center text-primary font-medium hover:underline">
-                Parcourir tous les projets <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       </section>
