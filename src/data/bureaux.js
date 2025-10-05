@@ -4,7 +4,7 @@ export const bureaux = [
     slug: 'tombouctou',
     ville: "Bureau de Tombouctou (siège de l'AMSS)",
     adresse: "Tombouctou/Quartier Hamabangou, Porte : 915, Route de Kabara en face de la BIM sa, BP : 152,",
-    telephones: ["+223 76 04 21 32", "+223 66 71 38 12"],
+    telephones: ["+223 21 92 10 48", "+223 76 04 21 32", "+223 66 71 38 12"],
     emails: ["mossainalbaraka@yahoo.fr", "mossa@ong-amss.org"],
     type: "Siège principal",
     responsable: "Moussa Inalbaraka Cissé",
@@ -17,10 +17,14 @@ export const bureaux = [
     ],
     coordsQuery: "Tombouctou Mali"
   },
+
   {
     slug: 'bamako',
     ville: "Bamako",
-    adresse: "BP 153 Bamako",
+    // ✅ nouvelle adresse physique (affichée sur la page Contact)
+    adresse: "Rue 737, Porte 419, Banankabougou, Bamako",
+    // ✅ on conserve la BP si besoin ailleurs
+    adressePostale: "BP 153 Bamako",
     telephones: ["+223 76 02 32 25", "+223 66 02 32 25", "+223 20 20 27 28"],
     emails: [
       "elmehdi.agwakina@ong-amss.org","elmehdw@yahoo.fr","ong.amss@yahoo.com","amss@ong-amss.org"
@@ -31,8 +35,10 @@ export const bureaux = [
     siteWeb: "https://www.ong-amss.org",
     zones: ["Coordination nationale"],
     partnersCarto: [],
-    coordsQuery: "Bamako Mali"
+    // ✅ Plus Code pour la carte
+    coordsQuery: "H3V4+FX Bamako"
   },
+
   {
     slug: 'gao',
     ville: "Base d'AMSS Gao",
@@ -45,6 +51,7 @@ export const bureaux = [
     partnersCarto: ["UNHCR","UNFPA","ACF","PLAN","FHRAOC"],
     coordsQuery: "Gao Mali"
   },
+
   {
     slug: 'sikasso',
     ville: "Base de Sikasso",
@@ -57,6 +64,7 @@ export const bureaux = [
     partnersCarto: ["DDC","UE"],
     coordsQuery: "Sikasso Mali"
   },
+
   {
     slug: 'mopti',
     ville: "Base d'AMSS Mopti",
@@ -69,6 +77,7 @@ export const bureaux = [
     partnersCarto: ["UNHCR","AEN","CRS","UNFPA"],
     coordsQuery: "Sévaré Mali"
   },
+
   {
     slug: 'segou',
     ville: "Base d'AMSS Ségou",
