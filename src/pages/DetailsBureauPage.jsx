@@ -4,198 +4,208 @@ import { useParams, Link } from 'react-router-dom'
 import { MapPin, Phone, Mail, Users, Globe, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+// Données & utils (conservent vos chemins existants)
 import { bureaux } from '@/data/bureaux'
-import { projetsEnCours, projetsTermines } from '@/data/projetsData' // <-- attention à la casse
+import { projetsEnCours, projetsTermines } from '@/data/projetsData'
 import { partnersForBureau } from '@/utils/partners'
 
 export default function DetailsBureauPage() {
   const { slug } = useParams()
 
-  // Trouver le bureau par son slug, sinon fallback sur le premier
+  // 1) Récupérer le bureau depuis le slug ; fallback = premier bureau
   const bureau = useMemo(() => {
     const s = String(slug || '').toLowerCase()
-    return bureaux.find(b => (b.slug || '').toLowerCase() === s) || bureaux[0]
+    const found =
+      Array.isArray(bureaux) &&
+      bureaux.find(
+        (b) =>
+          (b.slug && String(b.slug).toLowerCase() === s) ||
+          (b.ville && String(b.ville).toLowerCase().includes(s))
+      )
+    return found || (Array.isArray(bureaux) ? bureaux[0] : null)
   }, [slug])
 
-  // Partenaires/bailleurs déduits automatiquement (cartographie + projets)
-  const partners = useMemo(
-    () => partnersForBureau(bureau, projetsEnCours, projetsTermines),
-    [bureau]
-  )
+  // 2) Raccourcis & sécurités
+  const emails = (bureau?.emails || []).filter((e) => !!e?.trim())
+  const telephones = (bureau?.telephones || []).filter((t) => !!t?.trim())
+  const zones = bureau?.zones || []
+  const partners = partnersForBureau ? partnersForBureau(bureau?.slug) || [] : []
 
-  // Utilitaire pour nettoyer un numéro pour href tel:
-  const telHref = (t) => 'tel:' + String(t || '').replace(/\s+/g, '')
+  // 3) Construire le mailto du CTA (et fallback vers /contact si pas d'email)
+  const primaryEmail = emails[0]
+  const subject = bureau?.ville ? `Contact – ${bureau.ville}` : 'Contact bureau AMSS'
+  const body = `Bonjour,\n\nJe vous contacte à propos de...`
+  const mailtoHref = primaryEmail
+    ? `mailto:${primaryEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    : null
+
+  // 4) Projets (si vos données sont chargées ainsi)
+  const projetsActifs = Array.isArray(projetsEnCours) ? projetsEnCours.filter((p) => p?.bureau === bureau?.slug) : []
+  const projetsClotures = Array.isArray(projetsTermines) ? projetsTermines.filter((p) => p?.bureau === bureau?.slug) : []
+
+  if (!bureau) {
+    return (
+      <div className="container mx-auto max-w-5xl py-8">
+        <div className="flex items-center gap-2 mb-6">
+          <ArrowLeft className="h-4 w-4" />
+          <Link to="/bureaux" className="text-sm underline">
+            Retour aux bureaux
+          </Link>
+        </div>
+        <p className="text-muted-foreground">Bureau introuvable.</p>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="container mx-auto max-w-5xl py-8">
+      {/* Retour */}
+      <div className="flex items-center gap-2 mb-6">
+        <ArrowLeft className="h-4 w-4" />
+        <Link to="/bureaux" className="text-sm underline">
+          Retour aux bureaux
+        </Link>
+      </div>
+
       {/* En-tête */}
-      <section className="py-12 bg-gradient-to-br from-primary/10 to-accent/10">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto flex items-center justify-between">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-              {bureau.ville}
-            </h1>
-            <Button asChild variant="outline">
-              <Link to="/contact">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Retour
-              </Link>
-            </Button>
-          </div>
-          {bureau.type && (
-            <p className="max-w-5xl mx-auto text-muted-foreground mt-2">
-              {bureau.type}
-            </p>
-          )}
-        </div>
-      </section>
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold">{bureau.ville || 'Bureau AMSS'}</h1>
+        {bureau?.type && <p className="text-sm text-muted-foreground mt-1">{bureau.type}</p>}
+      </header>
 
-      {/* Carte + Coordonnées */}
-      <section className="py-10">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Carte */}
-            <div className="lg:col-span-2 rounded-xl overflow-hidden border border-border shadow-sm">
-              <iframe
-                title={`Carte ${bureau.ville}`}
-                src={`https://www.google.com/maps?q=${encodeURIComponent(
-                  bureau.coordsQuery || `${bureau.ville} Mali`
-                )}&output=embed`}
-                className="w-full h-[380px]"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
+      {/* Carte d’infos principales */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="rounded-2xl border p-4">
+          <h2 className="text-lg font-medium mb-4">Coordonnées</h2>
 
-            {/* Coordonnées */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-border space-y-4 text-sm text-muted-foreground">
-              {/* Responsable en premier */}
-              {(bureau.responsable || bureau.distinctions) && (
-                <div className="flex items-start gap-3">
-                  <Users className="h-5 w-5 text-primary mt-0.5" />
-                  <div>
-                    <div className="font-medium text-foreground mb-1">Responsable</div>
-                    {bureau.responsable && <div>{bureau.responsable}</div>}
-                    {bureau.distinctions && (
-                      <div className="italic">{bureau.distinctions}</div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Adresse */}
-              {bureau.adresse && (
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-primary mt-0.5" />
-                  <div>
-                    <div className="font-medium text-foreground mb-1">Adresse</div>
-                    <div>{bureau.adresse}</div>
-                  </div>
-                </div>
-              )}
-
-              {/* Téléphones (multiples) */}
-              {Array.isArray(bureau.telephones) && bureau.telephones.length > 0 && (
-                <div className="flex items-start gap-3">
-                  <Phone className="h-5 w-5 text-accent mt-0.5" />
-                  <div>
-                    <div className="font-medium text-foreground mb-1">Téléphone(s)</div>
-                    <div className="space-y-1">
-                      {bureau.telephones.map((t, i) => (
-                        <div key={i}>
-                          <a className="hover:underline" href={telHref(t)}>{t}</a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Emails (multiples) */}
-              {Array.isArray(bureau.emails) && bureau.emails.length > 0 && (
-                <div className="flex items-start gap-3">
-                  <Mail className="h-5 w-5 text-primary mt-0.5" />
-                  <div>
-                    <div className="font-medium text-foreground mb-1">Email(s)</div>
-                    <div className="flex flex-wrap gap-2">
-                      {bureau.emails.map((e, i) => (
-                        <a key={i} className="hover:underline" href={`mailto:${e}`}>
-                          {e}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Zones couvertes */}
-              {Array.isArray(bureau.zones) && bureau.zones.length > 0 && (
-                <div className="flex items-start gap-3">
-                  <Globe className="h-5 w-5 text-accent mt-0.5" />
-                  <div>
-                    <div className="font-medium text-foreground mb-1">Zones couvertes</div>
-                    <div className="flex flex-wrap gap-2">
-                      {bureau.zones.map((z, i) => (
-                        <span
-                          key={i}
-                          className="inline-block bg-primary/10 text-primary px-2 py-1 rounded text-xs"
-                        >
-                          {z}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Site web éventuel */}
-              {bureau.siteWeb && (
-                <div>
+          {/* Adresse */}
+          {bureau?.adresse && (
+            <div className="flex items-start gap-2 mb-3">
+              <MapPin className="h-4 w-4 mt-1" />
+              <div>
+                <p>{bureau.adresse}</p>
+                {bureau?.coordsQuery && (
                   <a
-                    className="hover:underline"
+                    className="text-sm underline text-muted-foreground"
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bureau.coordsQuery)}`}
                     target="_blank"
                     rel="noreferrer"
-                    href={bureau.siteWeb}
                   >
-                    {bureau.siteWeb}
+                    Ouvrir dans Google Maps
                   </a>
-                </div>
-              )}
-
-              {/* CTA */}
-              <div className="pt-2">
-                <Button asChild className="w-full">
-                  <Link to="/contact">Contacter ce bureau</Link>
-                </Button>
+                )}
               </div>
             </div>
+          )}
+
+          {/* Téléphones */}
+          {telephones.length > 0 && (
+            <div className="flex items-start gap-2 mb-3">
+              <Phone className="h-4 w-4 mt-1" />
+              <div className="flex flex-col gap-1">
+                {telephones.map((t) => (
+                  <a key={t} href={`tel:${t.replace(/\s+/g, '')}`} className="underline">
+                    {t}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Emails (liste) */}
+          {emails.length > 0 && (
+            <div className="flex items-start gap-2 mb-3">
+              <Mail className="h-4 w-4 mt-1" />
+              <div className="flex flex-col gap-1">
+                {emails.map((e) => (
+                  <a key={e} href={`mailto:${e}`} className="underline">
+                    {e}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Site web (optionnel) */}
+          {bureau?.siteWeb && (
+            <div className="flex items-start gap-2 mb-2">
+              <Globe className="h-4 w-4 mt-1" />
+              <a href={bureau.siteWeb} target="_blank" rel="noreferrer" className="underline">
+                {bureau.siteWeb}
+              </a>
+            </div>
+          )}
+
+          {/* CTA demandé */}
+          <div className="pt-2">
+            {mailtoHref ? (
+              <Button asChild className="w-full">
+                <a href={mailtoHref}>Contacter ce bureau</a>
+              </Button>
+            ) : (
+              <Button asChild className="w-full" variant="outline" title="Aucune adresse e-mail — redirection vers le formulaire">
+                <Link to="/contact">Contacter (formulaire)</Link>
+              </Button>
+            )}
           </div>
         </div>
-      </section>
 
-      {/* Partenaires / Bailleurs */}
-      <section className="py-8 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">
-              Partenaires/Bailleurs intervenant dans la zone
-            </h2>
-            {partners.length > 0 ? (
+        {/* Infos complémentaires */}
+        <div className="rounded-2xl border p-4">
+          <h2 className="text-lg font-medium mb-4">Informations</h2>
+          {bureau?.responsable && (
+            <p className="mb-2">
+              <span className="font-medium">Responsable :</span> {bureau.responsable}
+            </p>
+          )}
+          {zones.length > 0 && (
+            <p className="mb-2">
+              <span className="font-medium">Zones d’intervention :</span> {zones.join(', ')}
+            </p>
+          )}
+          {Array.isArray(partners) && partners.length > 0 && (
+            <div className="mt-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="h-4 w-4" />
+                <h3 className="font-medium">Partenaires</h3>
+              </div>
               <div className="flex flex-wrap gap-2">
-                {partners.map((p, i) => (
+                {partners.map((p) => (
                   <span
-                    key={i}
-                    className="inline-block bg-white border border-border rounded-lg px-3 py-1 text-sm text-foreground shadow-sm"
+                    key={p}
+                    className="text-xs border rounded-full px-2 py-1 bg-muted/30"
                   >
                     {p}
                   </span>
                 ))}
               </div>
-            ) : (
-              <p className="text-muted-foreground">Aucun partenaire associé trouvé.</p>
-            )}
-          </div>
+            </div>
+          )}
         </div>
+      </section>
+
+      {/* Projets */}
+      <section className="mt-8 space-y-6">
+        {projetsActifs.length > 0 && (
+          <div className="rounded-2xl border p-4">
+            <h2 className="text-lg font-medium mb-3">Projets en cours</h2>
+            <ul className="list-disc pl-5 space-y-1">
+              {projetsActifs.map((p) => (
+                <li key={p?.id || p?.titre}>{p?.titre || 'Projet'}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {projetsClotures.length > 0 && (
+          <div className="rounded-2xl border p-4">
+            <h2 className="text-lg font-medium mb-3">Projets terminés</h2>
+            <ul className="list-disc pl-5 space-y-1">
+              {projetsClotures.map((p) => (
+                <li key={p?.id || p?.titre}>{p?.titre || 'Projet'}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
     </div>
   )
