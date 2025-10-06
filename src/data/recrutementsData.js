@@ -30,7 +30,7 @@ const recrutementsData = {
       description:
         "Recrutement massif d'animateurs pour les centres d'alphabétisation dans le cadre de l'expansion des programmes éducatifs de l'AMSS.",
       competences: ["DEF minimum", "Expérience en alphabétisation", "Connaissance des langues locales"],
-      dateExpiration: "15 octobre 2025",
+      dateExpiration: "15 Janvier 2025",
       // pdfUrl: "/recrutements/2025-01-06-animateurs-alphabetisation.pdf",
     },
 
