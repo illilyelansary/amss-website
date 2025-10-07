@@ -30,7 +30,7 @@ const recrutementsData = {
       description:
         "Le Responsable communication pilote la stratégie de communication interne et/ou externe d’une entreprise ou organisation. Son rôle principal est de garantir la cohérence des messages transmis, d’assurer une visibilité optimale auprès des publics ciblés et de renforcer l’image de marque.",
          competences: ["Diplôme en Commmunication", "5 ans d'expérience minimum", "Maîtrise du français, de l'Anglais et langues locales"],
-      dateExpiration: "15 Octobre 2025",
+      dateExpiration: "08 Octobre 2025",
        pdfUrl: "/recrutements/chargecom.pdf",
     },
     {
