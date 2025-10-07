@@ -1,186 +1,194 @@
 // src/pages/ZonesPage.jsx
-import React, { useEffect, useMemo, useState, useCallback } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  MapPin,
-  ArrowRight,
-  Users,
-  CheckCircle,
-  Clock,
-  Filter,
-  RefreshCw,
-  Building2,
-  Layers,
-  Search,
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp
+  MapPin, ArrowRight, Users, CheckCircle, Clock, Filter, RefreshCw,
+  Building2, Layers, Search, AlertTriangle, ChevronDown, ChevronUp, Handshake
 } from 'lucide-react'
 import { projetsEnCours, projetsTermines } from '../data/projetsData'
 
-/* ------------------------ Helpers ------------------------ */
+// ---------- Utils communs ----------
 const normalize = (s) =>
   String(s || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
+    .trim()
 
-const isNum = (v) => typeof v === 'number' && Number.isFinite(v)
-const sum = (arr) => arr.reduce((a, b) => a + b, 0)
+const isFiniteNum = (n) => typeof n === 'number' && Number.isFinite(n)
+const toNumber = (v) => {
+  if (isFiniteNum(v)) return v
+  if (v == null) return 0
+  const n = parseFloat(String(v).replace(/[^\d.-]/g, ''))
+  return Number.isFinite(n) ? n : 0
+}
 
-/* -------------------- Zones & alias ---------------------- */
+// Garde-fou bénéficiaires : refuse NaN, négatifs, et valeurs manifestement aberrantes (> 500k / projet)
+const asBenef = (v) => {
+  const n = toNumber(v)
+  if (!Number.isFinite(n) || n <= 0) return 0
+  if (n > 500_000) return 0
+  return n
+}
+
+const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n)
+
+// Champ domaine/bailleur hétérogènes (domain|domaine|sector|secteur / donor|bailleur|bailleurs)
+const getDomain = (p) => p?.domain || p?.domaine || p?.sector || p?.secteur || ''
+const getDonor  = (p) => p?.donor ?? p?.bailleur ?? p?.bailleurs ?? ''
+const getPartners = (p) => p?.partners ?? p?.partenaires ?? ''
+
+const extractDomainTokens = (label) =>
+  String(label || '')
+    .split(/[,/|;]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+const splitMulti = (label) =>
+  String(label || '')
+    .split(/[\/,;|]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+const regionTokens = (label) =>
+  String(label || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+// ---------- Données zones ----------
 const zones = [
   { key: 'tombouctou', label: 'Tombouctou' },
-  { key: 'taoudenni', label: 'Taoudénit' },
   { key: 'gao', label: 'Gao' },
-  { key: 'menaka', label: 'Ménaka' },
   { key: 'kidal', label: 'Kidal' },
+  { key: 'menaka', label: 'Ménaka' },
   { key: 'mopti', label: 'Mopti' },
   { key: 'segou', label: 'Ségou' },
-  { key: 'sikasso', label: 'Sikasso' }
+  { key: 'sikasso', label: 'Sikasso' },
+  { key: 'koulikoro', label: 'Koulikoro' },
+  { key: 'bamako', label: 'Bamako' },
+  { key: 'san', label: 'San' },
 ]
 
 const zoneDescriptions = {
-  tombouctou:
-    "Grande région sahélienne touchée par les chocs climatiques et sécuritaires. L’AMSS y intervient sur la gouvernance locale, la protection, l’éducation et la sécurité alimentaire.",
-  taoudenni:
-    "Nouvelle région du Nord à très faible densité, confrontée à de grands défis d’accès aux services sociaux de base. Priorités : WASH, nutrition et protection.",
-  gao:
-    "Région marquée par des déplacements de populations. Priorités : protection de l’enfance, nutrition, cohésion sociale et relance économique.",
-  menaka:
-    "Contexte sécuritaire volatil nécessitant une réponse humanitaire agile. Priorités : assistance d’urgence, protection et services essentiels.",
-  kidal:
-    "Zone aride et difficile d’accès. Priorités : protection communautaire, gouvernance locale et services sociaux de base.",
-  mopti:
-    "Au centre du Mali et fortement touchée par la crise. Priorités : WASH, lutte contre les VBG, assistance d’urgence et relance.",
-  segou:
-    "Région de transition avec des besoins importants en nutrition et sécurité alimentaire ; actions en éducation et gouvernance.",
-  sikasso:
-    "Grand bassin agricole du sud. Priorités : éducation (PADEM), gouvernance locale et protection (PROTECT)."
+  tombouctou: 'Zone sahélienne avec forte intervention humanitaire et relèvement.',
+  gao: 'Appui aux communautés affectées par les crises et renforcement de la résilience.',
+  kidal: 'Interventions ciblées en contexte à accès difficile.',
+  menaka: 'Réponse aux déplacements et services sociaux de base.',
+  mopti: 'Stabilisation, cohésion sociale et services essentiels.',
+  segou: 'Développement local, gouvernance et services sociaux.',
+  sikasso: 'Sécurité alimentaire et moyens d’existence.',
+  koulikoro: 'Éducation, santé et gouvernance locale.',
+  bamako: 'Coordination, plaidoyer et projets urbains.',
+  san: 'Filets sociaux, sécurité alimentaire et éducation.',
 }
 
-const regionAliases = {
-  tombouctou: ['tombouctou'],
-  taoudenni: ['taoudenni', 'taoudéni', 'taoudenit', 'taoudénit', 'taoudeni'],
-  gao: ['gao'],
-  menaka: ['menaka', 'ménaka'],
+// Alias simples pour la détection d’appartenance régionale
+const aliases = {
+  tombouctou: ['tombouctou', 'timbuktu', 'diré', 'dire', 'goundam', 'niafunké', 'niafunke', 'gourma-rharous'],
+  gao: ['gao', 'ansongo'],
   kidal: ['kidal'],
-  mopti: ['mopti'],
-  segou: ['segou', 'ségou'],
-  sikasso: ['sikasso']
+  menaka: ['ménaka', 'menaka'],
+  mopti: ['mopti', 'bankass', 'bandiagara', 'djenné', 'djene', 'douentza', 'kere', 'ténénkou', 'tenenkou', 'koro'],
+  segou: ['ségou', 'segou', 'san (région historique)'],
+  sikasso: ['sikasso', 'koutiala', 'bougouni'],
+  koulikoro: ['koulikoro', 'kati', 'dioila', 'banamba', 'kolokani', 'nara'],
+  bamako: ['bamako'],
+  san: ['san'],
 }
 
-/** Tolère les régions multiples dans un champ (",", ";", "/", "|") */
-const regionTokens = (regionStr) =>
-  String(regionStr || '')
-    .split(/[;,\/|]/g)
-    .map(s => normalize(s.trim()))
-    .filter(Boolean)
-
-const matchesRegion = (projectRegion, zoneKey) => {
-  const tokens = regionTokens(projectRegion)
-  const aliases = (regionAliases[zoneKey] || [zoneKey]).map(normalize)
-  return tokens.some(tok => aliases.some(a => tok.includes(a)))
+const matchesRegion = (regionField, zoneKey) => {
+  const hay = normalize(regionField)
+  if (!hay) return false
+  return aliases[zoneKey]?.some((t) => hay.includes(normalize(t))) || false
 }
 
-/* --------------- Extraction Domaines/Donneurs ------------- */
-const extractDomainTokens = (domainStr) =>
-  String(domainStr || '')
-    .split(/[;,]/g)
-    .map((x) => x.trim())
-    .filter(Boolean)
-
-/* --------------- Statut projet (unifié) ------------------- */
-const projectStatus = (p) => {
-  const statusTxt = normalize(p.status)
-  const isSusp = p.usaidNote === true || statusTxt.includes('suspendu')
-  const isEn = p._statusFlag === 'en' || statusTxt.includes('en cours')
-  const isTerm = p._statusFlag === 'out' || statusTxt.includes('termin')
-  return isSusp ? 'suspendu' : (isEn ? 'en' : (isTerm ? 'termine' : 'inconnu'))
-}
-
-/* ---------------- Mini-carte cliquable (SVG) -------------- */
+// ---------- Mini-carte décorative ----------
 function MiniMapZones({ onSelect, zoneStats }) {
-  /**
-   * Carte schématique (non-géo) : positions approximatives pour un aperçu compact.
-   * Chaque zone est un bouton SVG.
-   */
   const positions = {
-    taoudenni: { x: 110, y: 30 },
-    tombouctou: { x: 70, y: 60 },
-    kidal: { x: 170, y: 55 },
-    gao: { x: 170, y: 90 },
-    menaka: { x: 210, y: 120 },
-    mopti: { x: 110, y: 115 },
-    segou: { x: 100, y: 150 },
-    sikasso: { x: 90, y: 185 },
+    tombouctou: { x: 55, y: 55 },
+    gao: { x: 120, y: 65 },
+    kidal: { x: 155, y: 45 },
+    menaka: { x: 160, y: 85 },
+    mopti: { x: 110, y: 100 },
+    segou: { x: 100, y: 130 },
+    sikasso: { x: 100, y: 165 },
+    koulikoro: { x: 135, y: 125 },
+    bamako: { x: 140, y: 150 },
+    san: { x: 120, y: 125 },
   }
-
   return (
     <div className="w-full">
       <div className="text-sm text-muted-foreground mb-2">Mini-carte (schématique)</div>
       <svg viewBox="0 0 260 210" className="w-full h-64 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border">
         <rect x="1" y="1" width="258" height="208" rx="12" ry="12" fill="transparent" />
-        {zones.map(z => {
+        {zones.map((z) => {
           const pos = positions[z.key]
           if (!pos) return null
           const hasAny = (zoneStats[z.key]?.filteredCount ?? 0) > 0
           return (
-            <g key={z.key} className="cursor-pointer"
-               onClick={() => onSelect?.(z.key)}
-               role="button" aria-label={`Aller à ${z.label}`}
-               tabIndex={0}
-               onKeyDown={(e)=>{ if(e.key==='Enter' || e.key===' ') onSelect?.(z.key) }}>
-              <circle cx={pos.x} cy={pos.y} r={18} className={hasAny ? 'fill-white stroke-current' : 'fill-muted stroke-muted-foreground/30'} strokeWidth="1.5" />
-              <text x={pos.x} y={pos.y-12} textAnchor="middle" className="text-[8px] fill-current">{z.label}</text>
-              <text x={pos.x} y={pos.y+4} textAnchor="middle" className="text-[9px] font-bold fill-current">{zoneStats[z.key]?.filteredCount ?? 0}</text>
-              <text x={pos.x} y={pos.y+14} textAnchor="middle" className="text-[7px] fill-current">proj.</text>
+            <g
+              key={z.key}
+              className="cursor-pointer"
+              onClick={() => onSelect?.(z.key)}
+              role="button"
+              aria-label={`Aller à ${z.label}`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') onSelect?.(z.key)
+              }}
+            >
+              <circle
+                cx={pos.x}
+                cy={pos.y}
+                r={18}
+                className={hasAny ? 'fill-white stroke-current' : 'fill-muted stroke-muted-foreground/30'}
+                strokeWidth="1.5"
+              />
+              <text x={pos.x} y={pos.y - 12} textAnchor="middle" className="text-[8px] fill-current">{z.label}</text>
+              <text x={pos.x} y={pos.y + 4} textAnchor="middle" className="text-[9px] font-bold fill-current">
+                {zoneStats[z.key]?.filteredCount ?? 0}
+              </text>
+              <text x={pos.x} y={pos.y + 14} textAnchor="middle" className="text-[7px] fill-current">proj.</text>
             </g>
           )
         })}
       </svg>
-      <div className="mt-2 text-xs text-muted-foreground">Astuce : cliquez sur un cercle pour accéder à la section correspondante.</div>
+      <div className="mt-2 text-xs text-muted-foreground">
+        Astuce : cliquez sur un cercle pour accéder à la section correspondante.
+      </div>
     </div>
   )
 }
 
 export default function ZonesPage() {
-  /* -------------------- Lifecycle -------------------- */
+  // Lifecycle
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' })
   }, [])
 
-  /* -------------------- Données ---------------------- */
-  const allEnCours = useMemo(
-    () => (projetsEnCours || []).map(p => ({ ...p, _statusFlag: 'en' })),
-    []
-  )
-  const allTermines = useMemo(
-    () => (projetsTermines || []).map(p => ({ ...p, _statusFlag: 'out' })),
-    []
-  )
+  // Données
+  const allEnCours = useMemo(() => (projetsEnCours || []).map((p) => ({ ...p, _statusFlag: 'en' })), [])
+  const allTermines = useMemo(() => (projetsTermines || []).map((p) => ({ ...p, _statusFlag: 'out' })), [])
   const allProjects = useMemo(() => [...allEnCours, ...allTermines], [allEnCours, allTermines])
 
-  /* -------------------- Filtres (UI) ----------------- */
+  // Filtres (UI)
   const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('all') // all | en | termine | suspendu
+  const [status, setStatus] = useState('all') // all | en | termine | suspendu (usaidNote)
   const [domain, setDomain] = useState('all')
   const [donor, setDonor] = useState('all')
   const [hideEmptyZones, setHideEmptyZones] = useState(false)
 
-  // Options de domaines & bailleurs depuis la data
+  // Options filtres (domaine/donneur normalisés)
   const domainOptions = useMemo(() => {
-    const setD = new Set()
-    allProjects.forEach(p => extractDomainTokens(p.domain).forEach(tok => setD.add(tok)))
-    return Array.from(setD).sort((a,b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }))
+    const set = new Set()
+    allProjects.forEach((p) => extractDomainTokens(getDomain(p)).forEach((d) => set.add(d)))
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }))
   }, [allProjects])
 
   const donorOptions = useMemo(() => {
-    const setB = new Set()
-    allProjects.forEach(p => {
-      const d = (p.donor || '').trim()
-      if (d) setB.add(d)
-    })
-    return Array.from(setB).sort((a,b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }))
+    const set = new Set()
+    allProjects.forEach((p) => splitMulti(getDonor(p)).forEach((d) => set.add(d)))
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }))
   }, [allProjects])
 
   const resetFilters = () => {
@@ -191,37 +199,44 @@ export default function ZonesPage() {
     setHideEmptyZones(false)
   }
 
-  const passesFilters = useCallback((p) => {
-    // statut
-    const st = projectStatus(p)
-    if (status !== 'all' && st !== status) return false
+  const passesFilters = useCallback(
+    (p) => {
+      // Statut
+      const st = p._statusFlag === 'en' ? 'en' : 'termine'
+      if (status !== 'all' && st !== status) return false
+      if (status === 'suspendu' && !p.usaidNote) return false
 
-    // domaine
-    if (domain !== 'all') {
-      const tokens = extractDomainTokens(p.domain).map(normalize)
-      if (!tokens.some(t => t === normalize(domain))) return false
-    }
+      // Domaine
+      if (domain !== 'all') {
+        const tokens = extractDomainTokens(getDomain(p)).map(normalize)
+        if (!tokens.some((t) => t === normalize(domain))) return false
+      }
 
-    // bailleur
-    if (donor !== 'all') {
-      if (String((p.donor || '').trim()) !== donor) return false
-    }
+      // Bailleur
+      if (donor !== 'all') {
+        const donors = splitMulti(getDonor(p))
+        if (!donors.includes(donor)) return false
+      }
 
-    // recherche plein texte
-    const hay = normalize(`${p.title} ${p.excerpt || ''} ${p.region || ''} ${p.donor || ''} ${p.domain || ''}`)
-    const needle = normalize(search.trim())
-    if (needle && !hay.includes(needle)) return false
+      // Recherche plein texte
+      const hay = normalize(
+        `${p.title} ${p.excerpt || ''} ${p.region || ''} ${getDonor(p)} ${getDomain(p)}`
+      )
+      const needle = normalize(search.trim())
+      if (needle && !hay.includes(needle)) return false
 
-    return true
-  }, [status, domain, donor, search])
+      return true
+    },
+    [status, domain, donor, search]
+  )
 
-  /* ----------- Pré-calcul par zone (listes) ----------- */
+  // Pré-calcul par zone
   const dataByZone = useMemo(() => {
     const out = {}
-    zones.forEach(z => {
+    zones.forEach((z) => {
       const full = [
-        ...allEnCours.filter(p => matchesRegion(p.region, z.key)),
-        ...allTermines.filter(p => matchesRegion(p.region, z.key))
+        ...allEnCours.filter((p) => matchesRegion(p.region, z.key)),
+        ...allTermines.filter((p) => matchesRegion(p.region, z.key)),
       ]
       const filtered = full.filter(passesFilters)
       out[z.key] = { full, filtered }
@@ -229,310 +244,300 @@ export default function ZonesPage() {
     return out
   }, [allEnCours, allTermines, passesFilters])
 
-  // Stats rapides pour la mini-carte
+  // Stats par zone (comptes + ensembles bailleurs/partenaires)
   const zoneStats = useMemo(() => {
-    const s = {}
-    zones.forEach(z => {
-      const pack = dataByZone[z.key] || { full: [], filtered: [] }
-      s[z.key] = {
-        total: pack.full.length,
-        filteredCount: pack.filtered.length,
+    const obj = {}
+    zones.forEach((z) => {
+      const list = dataByZone[z.key]?.filtered || []
+      const donorsSet = new Set()
+      const partnersSet = new Set()
+      let enCours = 0
+      let termines = 0
+      let benef = 0
+
+      list.forEach((p) => {
+        // status
+        if (p._statusFlag === 'en') enCours++
+        if (p._statusFlag === 'out') termines++
+
+        // bailleurs (peut contenir plusieurs séparés par / , ; |)
+        splitMulti(getDonor(p)).forEach((d) => d && donorsSet.add(d))
+
+        // partenaires (idem si disponible)
+        splitMulti(getPartners(p)).forEach((x) => x && partnersSet.add(x))
+
+        // bénéficiaires (garde-fou)
+        benef += asBenef(p.beneficiaries)
+      })
+
+      obj[z.key] = {
+        filteredCount: list.length,
+        enCours,
+        termines,
+        donors: Array.from(donorsSet).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' })),
+        partners: Array.from(partnersSet).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' })),
+        benef,
       }
     })
-    return s
+    return obj
   }, [dataByZone])
 
-  /* ---------------- UI helpers ---------------- */
-  const scrollToId = (id) => {
-    const el = document.getElementById(id)
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-  const fmt = (n) => isNum(n) ? n.toLocaleString('fr-FR') : 'N/D'
-  const safeKey = (zKey, p, idx) => `${zKey}-${p.id ?? normalize(p.title).slice(0,40)}-${idx}`
+  const [openZone, setOpenZone] = useState(null)
 
-  // État d'ouverture/fermeture par zone (pliable) — par défaut TOUT est fermé
-  const [open, setOpen] = useState({}) // { [zoneKey]: boolean }
-  const toggleZone = (key) => setOpen(prev => ({ ...prev, [key]: !prev[key] }))
-
-  /* -------------------- Render ------------------------ */
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="py-16 bg-gradient-to-br from-primary/10 to-accent/10" id="top">
+      <section className="py-14 md:py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Zones d’Intervention</h1>
-            <p className="text-lg md:text-xl text-muted-foreground">
-              Parcourez nos actions par région. Cliquez sur une région pour aller directement à sa section, et utilisez les filtres pour affiner l’affichage.
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 md:mb-6">
+              Zones d’Intervention
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+              Visualisez nos interventions par région : projets en cours/terminés, bailleurs, partenaires et
+              bénéficiaires estimés (avec garde-fou).
             </p>
           </div>
+        </div>
+      </section>
 
-          {/* Sous-menu des zones */}
-          <div className="max-w-5xl mx-auto mt-8 flex flex-wrap gap-2 justify-center">
-            {zones.map(z => (
-              <a
-                key={z.key}
-                href={`#zone-${z.key}`}
-                onClick={(e) => { e.preventDefault(); scrollToId(`zone-${z.key}`) }}
-                className="px-4 py-2 rounded-full bg-white border hover:bg-primary/10 hover:text-primary transition-colors text-sm"
-                title={`Aller à ${z.label}`}
-              >
-                {z.label}
-              </a>
-            ))}
-          </div>
-
-          {/* Panneau de filtres + mini-carte */}
-          <div className="max-w-6xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+      {/* Filtres + Mini-map */}
+      <section className="pt-2 pb-6 bg-white/60 border-y">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Filtres */}
-            <div className="lg:col-span-3 bg-white border border-border rounded-xl p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <Filter className="h-4 w-4 text-primary" />
-                <div className="font-medium">Filtrer les projets affichés</div>
+            <div>
+              <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
+                <Filter className="h-4 w-4" />
+                <span>Filtrer</span>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                {/* Recherche */}
-                <div className="md:col-span-2">
-                  <label className="text-xs text-muted-foreground mb-1 block">Recherche</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Titre, zone, bailleur, mot-clé…"
-                      className="w-full pl-9 pr-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    />
-                    <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  </div>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Rechercher (titre, région, bailleur, …)"
+                    className="w-full pl-9 pr-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 </div>
 
-                {/* Statut */}
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Statut</label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-white"
-                  >
-                    <option value="all">Tous les statuts</option>
-                    <option value="en">En cours</option>
-                    <option value="termine">Terminés</option>
-                    <option value="suspendu">Suspendu (USAID)</option>
-                  </select>
-                </div>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="all">Tous les statuts</option>
+                  <option value="en">En cours</option>
+                  <option value="termine">Terminés</option>
+                  <option value="suspendu">En pause (note USAID)</option>
+                </select>
 
-                {/* Domaine */}
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Domaine</label>
-                  <select
-                    value={domain}
-                    onChange={(e) => setDomain(e.target.value)}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-white"
-                  >
-                    <option value="all">Tous domaines</option>
-                    {domainOptions.map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
+                <select
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="all">Tous domaines</option>
+                  {domainOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
 
-                {/* Bailleur */}
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Bailleur</label>
-                  <select
-                    value={donor}
-                    onChange={(e) => setDonor(e.target.value)}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-white"
-                  >
-                    <option value="all">Tous bailleurs</option>
-                    {donorOptions.map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+                <select
+                  value={donor}
+                  onChange={(e) => setDonor(e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="all">Tous bailleurs</option>
+                  {donorOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
 
-              <div className="mt-3 flex items-center justify-between">
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
                     checked={hideEmptyZones}
                     onChange={(e) => setHideEmptyZones(e.target.checked)}
                   />
-                  Masquer les zones sans résultats
+                  Masquer les zones sans projet
                 </label>
 
                 <button
                   onClick={resetFilters}
-                  className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-md border border-border hover:bg-muted transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-muted"
                 >
-                  <RefreshCw className="h-4 w-4" />
-                  Réinitialiser
+                  <RefreshCw className="h-4 w-4" /> Réinitialiser
                 </button>
               </div>
             </div>
 
-            {/* Mini-carte */}
-            <div className="lg:col-span-2 bg-white border border-border rounded-xl p-4 shadow-sm">
-              <MiniMapZones onSelect={(key)=>scrollToId(`zone-${key}`)} zoneStats={zoneStats} />
+            {/* Mini-map */}
+            <div className="lg:col-span-2">
+              <MiniMapZones onSelect={(k) => setOpenZone(k)} zoneStats={zoneStats} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Sections par zone */}
-      <section className="py-16">
+      {/* Listing par zone */}
+      <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto space-y-14">
-            {zones.map(z => {
-              const { full = [], filtered = [] } = dataByZone[z.key] || {}
+          <div className="max-w-6xl mx-auto space-y-8">
+            {zones
+              .filter((z) => (hideEmptyZones ? (zoneStats[z.key]?.filteredCount || 0) > 0 : true))
+              .map((z) => {
+                const stats = zoneStats[z.key] || {
+                  filteredCount: 0,
+                  enCours: 0,
+                  termines: 0,
+                  donors: [],
+                  partners: [],
+                  benef: 0,
+                }
+                const open = openZone === z.key
+                const projects = dataByZone[z.key]?.filtered || []
 
-              // Chiffres clés basés sur l’ensemble des projets de la zone (non filtrés)
-              const total = full.length
-              const enCoursCount = full.filter(p => projectStatus(p) === 'en').length
-              const terminesCount = full.filter(p => projectStatus(p) === 'termine').length
-              const donorsSet = new Set(full.map(p => (p.donor || '').trim()).filter(Boolean))
-              const benefTotal = sum(full.map(p => (isNum(p.beneficiaries) ? p.beneficiaries : 0)))
-
-              // Si l’option "masquer" est active et aucun résultat filtré -> on saute
-              if (hideEmptyZones && filtered.length === 0) return null
-
-              const isOpen = !!open[z.key]
-
-              return (
-                <div key={z.key} id={`zone-${z.key}`} className="scroll-mt-24">
-                  {/* Titre & description */}
-                  <div className="flex items-center gap-3 mb-2">
-                    <MapPin className="h-6 w-6 text-primary" />
-                    <h2 className="text-2xl md:text-3xl font-bold">{z.label}</h2>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {zoneDescriptions[z.key] || "Zone d’intervention de l’AMSS."}
-                  </p>
-
-                  {/* Chiffres clés */}
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-                    <div className="rounded-xl bg-white border p-4 flex items-center gap-3 shadow-sm">
-                      <Layers className="h-5 w-5 text-primary" />
-                      <div>
-                        <div className="text-xs text-muted-foreground">Projets (total)</div>
-                        <div className="text-lg font-semibold">{total}</div>
+                return (
+                  <div key={z.key} className="bg-white rounded-xl border shadow-sm">
+                    <button
+                      className="w-full flex items-center justify-between px-5 py-4"
+                      onClick={() => setOpenZone(open ? null : z.key)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        <div className="text-left">
+                          <div className="text-lg font-semibold">{z.label}</div>
+                          <div className="text-sm text-muted-foreground">{zoneDescriptions[z.key]}</div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="rounded-xl bg-white border p-4 flex items-center gap-3 shadow-sm">
-                      <Clock className="h-5 w-5 text-green-600" />
-                      <div>
-                        <div className="text-xs text-muted-foreground">En cours</div>
-                        <div className="text-lg font-semibold">{enCoursCount}</div>
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-white border p-4 flex items-center gap-3 shadow-sm">
-                      <CheckCircle className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <div className="text-xs text-muted-foreground">Terminés</div>
-                        <div className="text-lg font-semibold">{terminesCount}</div>
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-white border p-4 flex items-center gap-3 shadow-sm">
-                      <Building2 className="h-5 w-5 text-accent" />
-                      <div>
-                        <div className="text-xs text-muted-foreground">Bailleurs</div>
-                        <div className="text-lg font-semibold">{donorsSet.size}</div>
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-white border p-4 flex items-center gap-3 shadow-sm">
-                      <Users className="h-5 w-5 text-primary" />
-                      <div>
-                        <div className="text-xs text-muted-foreground">Bénéficiaires (≈)</div>
-                        <div className="text-lg font-semibold">{fmt(benefTotal)}</div>
-                      </div>
-                    </div>
-                  </div>
+                      {open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                    </button>
 
-                  {/* Résumé + bouton d'ouverture */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm text-muted-foreground">
-                      {filtered.length === 0
-                        ? 'Aucun projet ne correspond aux filtres actuels.'
-                        : `Projets correspondant aux filtres : ${filtered.length}`}
-                    </div>
+                    {open && (
+                      <div className="px-5 pb-5">
+                        {/* Chiffres clés */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+                          <div className="rounded-lg border p-3">
+                            <div className="text-xs text-muted-foreground">Projets (filtres)</div>
+                            <div className="text-2xl font-semibold">{stats.filteredCount}</div>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <div className="text-xs text-muted-foreground">En cours</div>
+                            <div className="text-2xl font-semibold">{stats.enCours}</div>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <div className="text-xs text-muted-foreground">Terminés</div>
+                            <div className="text-2xl font-semibold">{stats.termines}</div>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <div className="text-xs text-muted-foreground">Bailleurs</div>
+                            <div className="text-2xl font-semibold">{stats.donors.length}</div>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <div className="text-xs text-muted-foreground">Partenaires</div>
+                            <div className="text-2xl font-semibold">{stats.partners.length}</div>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <div className="text-xs text-muted-foreground">Bénéficiaires (estimés)</div>
+                            <div className="text-2xl font-semibold">{fmt(stats.benef)}</div>
+                          </div>
+                        </div>
 
-                    {filtered.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => toggleZone(z.key)}
-                        className="inline-flex items-center text-sm text-primary hover:underline"
-                        aria-expanded={isOpen}
-                        aria-controls={`list-${z.key}`}
-                      >
-                        {isOpen ? <>Plier <ChevronUp className="ml-1 h-4 w-4" /></> : <>Voir la liste des projets <ChevronDown className="ml-1 h-4 w-4" /></>}
-                      </button>
+                        {/* Listes bailleurs & partenaires */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                          <div className="bg-white border rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Building2 className="h-4 w-4 text-primary" />
+                              <div className="font-medium">Bailleurs dans la région</div>
+                              <span className="ml-auto text-xs text-muted-foreground">{stats.donors.length}</span>
+                            </div>
+                            {stats.donors.length === 0 ? (
+                              <p className="text-sm text-muted-foreground">Aucun bailleur trouvé pour les filtres en cours.</p>
+                            ) : (
+                              <ul className="list-disc pl-5 text-sm space-y-1">
+                                {stats.donors.map((d) => (
+                                  <li key={d}>{d}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+
+                          <div className="bg-white border rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Handshake className="h-4 w-4 text-primary" />
+                              <div className="font-medium">Partenaires d’exécution</div>
+                              <span className="ml-auto text-xs text-muted-foreground">{stats.partners.length}</span>
+                            </div>
+                            {stats.partners.length === 0 ? (
+                              <p className="text-sm text-muted-foreground">Aucun partenaire saisi pour ces projets.</p>
+                            ) : (
+                              <ul className="list-disc pl-5 text-sm space-y-1">
+                                {stats.partners.map((p) => (
+                                  <li key={p}>{p}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Liste des projets */}
+                        {projects.length === 0 ? (
+                          <p className="text-muted-foreground">Aucun projet ne correspond aux filtres.</p>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {projects.map((p, idx) => {
+                              const benef = asBenef(p.beneficiaries)
+                              const doms = extractDomainTokens(getDomain(p)).join(' • ')
+                              const donors = splitMulti(getDonor(p)).join(' • ')
+                              return (
+                                <article key={idx} className="bg-white rounded-lg border p-4 shadow-sm">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    {p._statusFlag === 'en' ? (
+                                      <>
+                                        <Clock className="h-4 w-4 text-amber-600" />
+                                        <span className="text-xs font-medium text-amber-700">En cours</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle className="h-4 w-4 text-emerald-600" />
+                                        <span className="text-xs font-medium text-emerald-700">Terminé</span>
+                                      </>
+                                    )}
+                                    {p.usaidNote && (
+                                      <span className="ml-auto inline-flex items-center gap-1 text-[11px] text-red-700">
+                                        <AlertTriangle className="h-3 w-3" /> Note USAID
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <h3 className="font-semibold leading-snug mb-1">{p.title}</h3>
+                                  {p.excerpt && <p className="text-sm text-muted-foreground mb-3">{p.excerpt}</p>}
+
+                                  <div className="text-xs space-y-1">
+                                    <div><span className="text-muted-foreground">Région:</span> {p.region || 'N/D'}</div>
+                                    {doms && <div><span className="text-muted-foreground">Domaine:</span> {doms}</div>}
+                                    {donors && <div><span className="text-muted-foreground">Bailleur(s):</span> {donors}</div>}
+                                    {benef > 0 && (
+                                      <div><span className="text-muted-foreground">Bénéficiaires:</span> {fmt(benef)}</div>
+                                    )}
+                                  </div>
+                                </article>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
-
-                  {/* Liste pliable — FERMÉE par défaut */}
-                  {isOpen && filtered.length > 0 && (
-                    <div id={`list-${z.key}`} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filtered.map((p, idx) => {
-                        const st = projectStatus(p)
-                        const isSusp = st === 'suspendu'
-                        const isEn = st === 'en'
-                        const isTerm = st === 'termine'
-                        return (
-                          <div key={safeKey(z.key, p, idx)} className="bg-white border border-border rounded-xl p-5 shadow-sm">
-                            <div className="flex items-center justify-between text-xs mb-2 gap-2">
-                              {isEn && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-green-100 text-green-700">
-                                  <Clock className="h-3 w-3 mr-1" /> En cours
-                                </span>
-                              )}
-                              {isTerm && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-100 text-blue-700">
-                                  <CheckCircle className="h-3 w-3 mr-1" /> Terminé
-                                </span>
-                              )}
-                              {isSusp && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded bg-red-100 text-red-700 border border-red-200">
-                                  Suspendu (USAID)
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="font-medium mb-1">{p.title}</div>
-                            {p.excerpt && (
-                              <div className="text-sm text-muted-foreground line-clamp-3">{p.excerpt}</div>
-                            )}
-
-                            <div className="mt-3 text-xs text-muted-foreground space-y-1">
-                              {p.region && <div><strong>Zone:</strong> {p.region}</div>}
-                              {p.donor && <div><strong>Bailleur:</strong> {p.donor}</div>}
-                              {p.domain && <div><strong>Domaine:</strong> {p.domain}</div>}
-                              {isNum(p.beneficiaries) && (
-                                <div className="inline-flex items-center gap-1">
-                                  <Users className="h-3 w-3" />
-                                  {p.beneficiaries.toLocaleString('fr-FR')} bénéficiaires
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-
-                  <div className="mt-5">
-                    <a
-                      href="#top"
-                      onClick={(e)=>{e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' })}}
-                      className="inline-flex items-center text-primary hover:underline"
-                    >
-                      Retour en haut <ArrowRight className="ml-1 h-4 w-4" />
-                    </a>
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })}
           </div>
         </div>
       </section>
