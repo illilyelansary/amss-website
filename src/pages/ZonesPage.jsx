@@ -265,7 +265,7 @@ export default function ZonesPage() {
 
             {/* Carte géographique du Mali */}
             <div className="rounded-xl border bg-white p-3">
-              <div className="text-sm text-muted-foreground mb-2">Carte interactive (OpenStreetMap)</div>
+              <div className="text-sm text-muted-foreground mb-2">Carte interactive De nos Projets par Zone d'intervention</div>
               <div className="h-[380px] w-full overflow-hidden rounded-lg">
                 <MapContainer
                   center={[17, -3]} zoom={5} minZoom={4} maxZoom={12}
