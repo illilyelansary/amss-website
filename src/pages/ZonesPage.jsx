@@ -43,6 +43,8 @@ const zones = [
   { key: 'mopti',      label: 'Mopti' },
   { key: 'segou',      label: 'Ségou' },
   { key: 'sikasso',    label: 'Sikasso' },
+  { key: 'koulikoro',  label: 'Koulikoro' },   // ✅ ajouté
+  { key: 'bamako',     label: 'Bamako' },      // ✅ ajouté
 ]
 
 // Centroides approximatifs (lat, lng) pour clics sur la carte
@@ -55,6 +57,8 @@ const REGION_CENTROIDS = {
   mopti:      [14.49, -4.20],
   segou:      [13.44, -6.26],
   sikasso:    [11.32, -5.67],
+  koulikoro:  [12.86, -7.56], // ✅ ajouté
+  bamako:     [12.65, -8.00], // ✅ ajouté
 }
 
 // Appartenance d’un projet à une zone (via p.region en texte)
@@ -67,6 +71,8 @@ const aliases = {
   mopti:      ['mopti','bankass','bandiagara','djenné','djene','douentza','tenenkou','ténénkou','koro'],
   segou:      ['ségou','segou','san'],
   sikasso:    ['sikasso','koutiala','bougouni','yanfolila','kolondiéba','kolondieba'],
+  koulikoro:  ['koulikoro','kati','dioïla','dioila','banamba','kolokani','nara'],         // ✅ ajouté
+  bamako:     ['bamako','district de bamako'],                                            // ✅ ajouté
 }
 const matchesRegion = (regionField, zoneKey) => {
   const hay = normalize(regionField)
