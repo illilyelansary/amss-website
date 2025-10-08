@@ -19,20 +19,7 @@ const recrutementsData = {
       dateExpiration: "30 septembre 2025",
       // pdfUrl: "/recrutements/2025-05-13-superviseur-agriculture.pdf",
     },
-      {
-      id: 13,
-      category: 'emploi',
-      titre: "Responsable Communication",
-      lieu: "Tombouctou, Mali",
-      datePublication: "07 Octobre 2025",
-      type: "Consultation",
-      domaine: "Information et Communication",
-      description:
-        "Le Responsable communication pilote la stratégie de communication interne et/ou externe d’une entreprise ou organisation. Son rôle principal est de garantir la cohérence des messages transmis, d’assurer une visibilité optimale auprès des publics ciblés et de renforcer l’image de marque.",
-         competences: ["Diplôme en Commmunication", "5 ans d'expérience minimum", "Maîtrise du français, de l'Anglais et langues locales"],
-      dateExpiration: "08 Octobre 2025",
-       pdfUrl: "/recrutements/chargecom.pdf",
-    },
+  
     {
       id: 2,
       category: 'emploi',
