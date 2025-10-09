@@ -1,15 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ListTree, FilePieChart, Users, Handshake, ShieldAlert, FolderDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+// PDF.js (aperçu miniature + viewer intégré)
+import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.mjs'
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
+
 /**
- * 🔎 Configuration requise côté projet
- * 1) Télécharge le build officiel de PDF.js (version "generic") depuis https://github.com/mozilla/pdf.js/releases
- * 2) Place le dossier extrait dans `public/pdfjs/` afin d'avoir le viewer à l'URL: `/pdfjs/web/viewer.html`
- * 3) Héberge tes PDFs (ou place-les dans `public/docs/…`).
- * 4) Cet écran intègre le viewer PDF.js en iframe, avec téléchargement/impression désactivés
- *    et protections basiques (pas infaillibles) contre la copie.
+ * Rappels importants pour éviter « a refusé de se connecter » :
+ * 1) Héberge tes PDFs sur le même domaine (Netlify) dans public/docs/, puis référence-les via /docs/mon.pdf
+ *    → Les URLs externes (ex. https://ong-amss.org/...) peuvent refuser l'iframe (X-Frame-Options / frame-ancestors).
+ * 2) Le viewer PDF.js est copié par le script postinstall dans /public/pdfjs/ (voir scripts/copy-pdfjs.js)
  */
 
 const sections = [
@@ -20,24 +23,20 @@ const sections = [
   { id: 'documents', label: 'Documents à consulter' },
 ]
 
-// 👉 Renseigne ici la liste de tes documents (titres + URL du PDF)
 const DOCUMENTS = [
   { title: "Statuts et Règlement intérieur notariés", url: "/docs/Statuts-et-reglement-interieur-notaries.pdf" },
   { title: "Accord Cadre AMSS et Avenant", url: "/docs/Accord-Cadre-AMSS-et-Avenant.pdf" },
 ]
 
 function PdfViewer({ fileUrl, title }) {
-  // URL du viewer PDF.js local + options
   const viewerBase = '/pdfjs/web/viewer.html'
   const params = new URLSearchParams({
-    file: fileUrl,                     // chemin du PDF
-    disablePrint: 'true',              // désactive l'impression
-    disableDownload: 'true',           // désactive le bouton de téléchargement
-    hideOpenFile: 'true',              // cache le bouton "ouvrir un fichier"
-    // textLayerMode: '1',             // (optionnel) pour garder la sélection de texte (mettre 0 si tu veux la bloquer côté viewer)
+    file: fileUrl,
+    disablePrint: 'true',
+    disableDownload: 'true',
+    hideOpenFile: 'true'
   })
   const src = `${viewerBase}?${params.toString()}`
-
   return (
     <div className="w-full border rounded-xl overflow-hidden">
       <div className="px-4 py-2 text-sm font-medium border-b bg-muted/40 flex items-center justify-between">
@@ -47,7 +46,6 @@ function PdfViewer({ fileUrl, title }) {
       <iframe
         title={`PDF: ${title}`}
         src={src}
-        // ⚠️ Sandbox: on autorise scripts & same-origin (nécessaires au viewer) mais PAS les téléchargements
         sandbox="allow-scripts allow-same-origin"
         referrerPolicy="no-referrer"
         className="w-full"
@@ -57,11 +55,64 @@ function PdfViewer({ fileUrl, title }) {
   )
 }
 
+function PdfCard({ title, url }) {
+  const canvasRef = useRef(null)
+  const [error, setError] = useState('')
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function renderPreview() {
+      try {
+        // Nécessite que le PDF soit servi depuis le MÊME domaine (ex: /docs/..)
+        const loadingTask = pdfjsLib.getDocument(url)
+        const pdf = await loadingTask.promise
+        const page = await pdf.getPage(1)
+        const viewport = page.getViewport({ scale: 0.5 })
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const ctx = canvas.getContext('2d')
+        canvas.width = viewport.width
+        canvas.height = viewport.height
+        await page.render({ canvasContext: ctx, viewport }).promise
+      } catch (e) {
+        console.error(e)
+        setError("Aperçu indisponible — place le PDF dans public/docs/ et utilise une URL relative (ex. /docs/mon-fichier.pdf)")
+      }
+    }
+    renderPreview()
+    return ()=>{ cancelled = true }
+  }, [url])
+
+  return (
+    <div className="border rounded-xl overflow-hidden">
+      <div className="p-4 flex items-center justify-between">
+        <div>
+          <div className="font-medium">{title}</div>
+          <div className="text-xs text-muted-foreground">Aperçu (page 1) — clic pour consulter</div>
+        </div>
+        <Button size="sm" onClick={()=>setOpen(v=>!v)}>{open? 'Fermer' : 'Consulter'}</Button>
+      </div>
+      <div className="bg-muted/30 flex items-center justify-center" style={{minHeight: 220}}>
+        {error ? (
+          <div className="text-sm text-muted-foreground p-6 text-center">{error}</div>
+        ) : (
+          <canvas ref={canvasRef} style={{maxWidth:'100%', height:'auto'}} aria-label={`Aperçu de ${title}`} />
+        )}
+      </div>
+      {open && (
+        <div className="p-4">
+          <PdfViewer fileUrl={encodeURI(url)} title={title} />
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function TransparencePage() {
   const { hash } = useLocation()
   const [activeId, setActiveId] = useState(sections[0].id)
 
-  // Défilement vers une ancre si présente
   useEffect(() => {
     if (hash) {
       const el = document.getElementById(hash.slice(1))
@@ -71,7 +122,6 @@ export default function TransparencePage() {
     }
   }, [hash])
 
-  // Surbrillance section active
   useEffect(() => {
     const obs = new IntersectionObserver((entries)=>{
       const v = entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)
@@ -86,11 +136,9 @@ export default function TransparencePage() {
 
   const smooth = (e, id) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({behavior:'smooth', block:'start'}) }
 
-  // 🔒 Protections front contre la copie (limitées mais dissuasives)
   useEffect(() => {
     const prevent = (e) => e.preventDefault()
     const keydown = (e) => {
-      // Bloque quelques raccourcis courants (Ctrl/Cmd+S, P, U, C)
       if ((e.ctrlKey || e.metaKey) && ['s','p','u','c'].includes(e.key.toLowerCase())) {
         e.preventDefault()
       }
@@ -107,11 +155,11 @@ export default function TransparencePage() {
     }
   }, [])
 
-  const TocDesktop = useMemo(()=>(
+  const TocDesktop = useMemo(()=> (
     <nav className="hidden xl:block sticky top-24 self-start bg-white/80 backdrop-blur border rounded-2xl p-4 w-72">
       <div className="flex items-center gap-2 mb-3 text-sm font-medium"><ListTree className="h-4 w-4" />Sommaire</div>
       <ul className="space-y-2">
-        {sections.map(s=>(
+        {sections.map(s=> (
           <li key={s.id}>
             <a href={`#${s.id}`} onClick={(e)=>smooth(e,s.id)}
                className={`block text-sm px-2 py-1 rounded transition-colors ${activeId===s.id?'text-primary bg-primary/10':'text-muted-foreground hover:text-primary hover:bg-muted'}`}>
@@ -127,7 +175,7 @@ export default function TransparencePage() {
     <div className="xl:hidden sticky top-16 z-40 bg-white/95 backdrop-blur border-b">
       <div className="container mx-auto px-4 py-2 overflow-x-auto no-scrollbar">
         <div className="flex gap-2">
-          {sections.map(s=>(
+          {sections.map(s=> (
             <a key={s.id} href={`#${s.id}`} onClick={(e)=>smooth(e,s.id)}>
               <Button size="sm" variant={activeId===s.id?'default':'outline'}>{s.label}</Button>
             </a>
@@ -192,13 +240,13 @@ export default function TransparencePage() {
 
                 <div className="space-y-6">
                   {DOCUMENTS.map((doc) => (
-                    <PdfViewer key={doc.url} fileUrl={encodeURI(doc.url)} title={doc.title} />
+                    <PdfCard key={doc.url} title={doc.title} url={doc.url} />
                   ))}
                 </div>
 
                 <p className="text-xs text-muted-foreground mt-4">
-                  ⚠️ Malgré ces protections, aucune solution web ne peut empêcher totalement la copie (captures d’écran, photo, etc.).
-                  Pour renforcer la dissuasion, tu peux ajouter un filigrane sur les PDFs en amont.
+                  Si tu vois « a refusé de se connecter », c’est que le fichier est servi depuis un autre domaine bloqué en iframe.
+                  Place les PDF dans <code>public/docs/</code> et référence-les en URL relative (ex. <code>/docs/mon-fichier.pdf</code>).
                 </p>
               </div>
             </div>
