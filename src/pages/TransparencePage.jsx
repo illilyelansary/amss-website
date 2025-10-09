@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button'
 
 // PDF.js (aperçu miniature + viewer intégré)
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs'
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.mjs'
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
+// ✅ IMPORTANT : ne pas importer le worker en tant que « default » (ça casse avec Vite/Rollup)
+// On pointe vers le worker copié par scripts/copy-pdfjs.js dans public/pdfjs/build
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/build/pdf.worker.mjs'
 
 /**
  * Rappels importants pour éviter « a refusé de se connecter » :
@@ -24,8 +25,8 @@ const sections = [
 ]
 
 const DOCUMENTS = [
-  { title: "Statuts et Règlement intérieur notariés", url: "/docs/Statuts-et-reglement-interieur-notaries.pdf" },
-  { title: "Accord Cadre AMSS et Avenant", url: "/docs/Accord-Cadre-AMSS-et-Avenant.pdf" },
+  { title: 'Statuts et Règlement intérieur notariés', url: '/docs/Statuts-et-reglement-interieur-notaries.pdf' },
+  { title: 'Accord Cadre AMSS et Avenant', url: '/docs/Accord-Cadre-AMSS-et-Avenant.pdf' },
 ]
 
 function PdfViewer({ fileUrl, title }) {
@@ -34,7 +35,7 @@ function PdfViewer({ fileUrl, title }) {
     file: fileUrl,
     disablePrint: 'true',
     disableDownload: 'true',
-    hideOpenFile: 'true'
+    hideOpenFile: 'true',
   })
   const src = `${viewerBase}?${params.toString()}`
   return (
@@ -77,11 +78,11 @@ function PdfCard({ title, url }) {
         await page.render({ canvasContext: ctx, viewport }).promise
       } catch (e) {
         console.error(e)
-        setError("Aperçu indisponible — place le PDF dans public/docs/ et utilise une URL relative (ex. /docs/mon-fichier.pdf)")
+        setError('Aperçu indisponible — place le PDF dans public/docs/ et utilise une URL relative (ex. /docs/mon-fichier.pdf)')
       }
     }
     renderPreview()
-    return ()=>{ cancelled = true }
+    return () => { cancelled = true }
   }, [url])
 
   return (
@@ -91,13 +92,13 @@ function PdfCard({ title, url }) {
           <div className="font-medium">{title}</div>
           <div className="text-xs text-muted-foreground">Aperçu (page 1) — clic pour consulter</div>
         </div>
-        <Button size="sm" onClick={()=>setOpen(v=>!v)}>{open? 'Fermer' : 'Consulter'}</Button>
+        <Button size="sm" onClick={() => setOpen(v => !v)}>{open ? 'Fermer' : 'Consulter'}</Button>
       </div>
-      <div className="bg-muted/30 flex items-center justify-center" style={{minHeight: 220}}>
+      <div className="bg-muted/30 flex items-center justify-center" style={{ minHeight: 220 }}>
         {error ? (
           <div className="text-sm text-muted-foreground p-6 text-center">{error}</div>
         ) : (
-          <canvas ref={canvasRef} style={{maxWidth:'100%', height:'auto'}} aria-label={`Aperçu de ${title}`} />
+          <canvas ref={canvasRef} style={{ maxWidth: '100%', height: 'auto' }} aria-label={`Aperçu de ${title}`} />
         )}
       </div>
       {open && (
@@ -123,23 +124,23 @@ export default function TransparencePage() {
   }, [hash])
 
   useEffect(() => {
-    const obs = new IntersectionObserver((entries)=>{
-      const v = entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)
+    const obs = new IntersectionObserver((entries) => {
+      const v = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)
       if (v[0]) setActiveId(v[0].target.id)
-    }, { rootMargin:'0px 0px -70% 0px', threshold:[0.01,0.25,0.6]})
-    sections.forEach(s=>{
+    }, { rootMargin: '0px 0px -70% 0px', threshold: [0.01, 0.25, 0.6] })
+    sections.forEach(s => {
       const el = document.getElementById(s.id)
       if (el) obs.observe(el)
     })
-    return ()=>obs.disconnect()
+    return () => obs.disconnect()
   }, [])
 
-  const smooth = (e, id) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({behavior:'smooth', block:'start'}) }
+  const smooth = (e, id) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
 
   useEffect(() => {
     const prevent = (e) => e.preventDefault()
     const keydown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && ['s','p','u','c'].includes(e.key.toLowerCase())) {
+      if ((e.ctrlKey || e.metaKey) && ['s', 'p', 'u', 'c'].includes(e.key.toLowerCase())) {
         e.preventDefault()
       }
     }
@@ -155,14 +156,14 @@ export default function TransparencePage() {
     }
   }, [])
 
-  const TocDesktop = useMemo(()=> (
+  const TocDesktop = useMemo(() => (
     <nav className="hidden xl:block sticky top-24 self-start bg-white/80 backdrop-blur border rounded-2xl p-4 w-72">
       <div className="flex items-center gap-2 mb-3 text-sm font-medium"><ListTree className="h-4 w-4" />Sommaire</div>
       <ul className="space-y-2">
-        {sections.map(s=> (
+        {sections.map(s => (
           <li key={s.id}>
-            <a href={`#${s.id}`} onClick={(e)=>smooth(e,s.id)}
-               className={`block text-sm px-2 py-1 rounded transition-colors ${activeId===s.id?'text-primary bg-primary/10':'text-muted-foreground hover:text-primary hover:bg-muted'}`}>
+            <a href={`#${s.id}`} onClick={(e) => smooth(e, s.id)}
+               className={`block text-sm px-2 py-1 rounded transition-colors ${activeId === s.id ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-primary hover:bg-muted'}`}>
               {s.label}
             </a>
           </li>
@@ -175,9 +176,9 @@ export default function TransparencePage() {
     <div className="xl:hidden sticky top-16 z-40 bg-white/95 backdrop-blur border-b">
       <div className="container mx-auto px-4 py-2 overflow-x-auto no-scrollbar">
         <div className="flex gap-2">
-          {sections.map(s=> (
-            <a key={s.id} href={`#${s.id}`} onClick={(e)=>smooth(e,s.id)}>
-              <Button size="sm" variant={activeId===s.id?'default':'outline'}>{s.label}</Button>
+          {sections.map(s => (
+            <a key={s.id} href={`#${s.id}`} onClick={(e) => smooth(e, s.id)}>
+              <Button size="sm" variant={activeId === s.id ? 'default' : 'outline'}>{s.label}</Button>
             </a>
           ))}
         </div>
