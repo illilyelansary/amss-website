@@ -5,22 +5,56 @@
 [build.environment]
   NODE_VERSION = "20"
   PNPM_FLAGS = "--no-frozen-lockfile"
-  SKIP_MIGRATION = "1"   # >>> Empêche l'écrasement de src/data/projetsData.js pendant le build
+  SKIP_MIGRATION = "1"
 
+# --- EXCEPTIONS A LA SPA : servir les fichiers statiques tels quels ---
+# PDF.js viewer
+[[redirects]]
+  from = "/pdfjs/*"
+  to = "/pdfjs/:splat"
+  status = 200
+  force = true
+
+# Tes PDF
+[[redirects]]
+  from = "/docs/*"
+  to = "/docs/:splat"
+  status = 200
+  force = true
+
+# --- Catch-all SPA EN DERNIER ---
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
+# --- HEADERS ---
+# L’admin reste protégée
 [[headers]]
   for = "/admin/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
 
+# Autoriser le viewer PDF.js à être chargé en iframe depuis le même site
+[[headers]]
+  for = "/pdfjs/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    Content-Security-Policy = "frame-ancestors 'self';"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Autoriser l’affichage des PDFs par le viewer du même site
+[[headers]]
+  for = "/docs/*"
+  [headers.values]
+    Content-Security-Policy = "frame-ancestors 'self';"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# En-têtes par défaut (⚠️ surtout PAS DENY au global)
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
+    X-Frame-Options = "SAMEORIGIN"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
