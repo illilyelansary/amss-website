@@ -1,20 +1,67 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ListTree, FileSpreadsheet, FilePieChart, Users, Handshake, ShieldAlert, FolderDown } from 'lucide-react'
+import { ListTree, FilePieChart, Users, Handshake, ShieldAlert, FolderDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+
+/**
+ * 🔎 Configuration requise côté projet
+ * 1) Télécharge le build officiel de PDF.js (version "generic") depuis https://github.com/mozilla/pdf.js/releases
+ * 2) Place le dossier extrait dans `public/pdfjs/` afin d'avoir le viewer à l'URL: `/pdfjs/web/viewer.html`
+ * 3) Héberge tes PDFs (ou place-les dans `public/docs/…`).
+ * 4) Cet écran intègre le viewer PDF.js en iframe, avec téléchargement/impression désactivés
+ *    et protections basiques (pas infaillibles) contre la copie.
+ */
 
 const sections = [
   { id: 'principes', label: 'Nos principes' },
   { id: 'financements', label: 'Financements & gouvernance' },
   { id: 'rapports', label: 'Rapports & audits' },
   { id: 'redevabilite', label: 'Redevabilité & plaintes' },
-  { id: 'documents', label: 'Documents à télécharger' },
+  { id: 'documents', label: 'Documents à consulter' },
 ]
+
+// 👉 Renseigne ici la liste de tes documents (titres + URL du PDF)
+const DOCUMENTS = [
+  { title: "Statuts et Règlement intérieur notariés", url: "/docs/Statuts-et-reglement-interieur-notaries.pdf" },
+  { title: "Accord Cadre AMSS et Avenant", url: "/docs/Accord-Cadre-AMSS-et-Avenant.pdf" },
+]
+
+function PdfViewer({ fileUrl, title }) {
+  // URL du viewer PDF.js local + options
+  const viewerBase = '/pdfjs/web/viewer.html'
+  const params = new URLSearchParams({
+    file: fileUrl,                     // chemin du PDF
+    disablePrint: 'true',              // désactive l'impression
+    disableDownload: 'true',           // désactive le bouton de téléchargement
+    hideOpenFile: 'true',              // cache le bouton "ouvrir un fichier"
+    // textLayerMode: '1',             // (optionnel) pour garder la sélection de texte (mettre 0 si tu veux la bloquer côté viewer)
+  })
+  const src = `${viewerBase}?${params.toString()}`
+
+  return (
+    <div className="w-full border rounded-xl overflow-hidden">
+      <div className="px-4 py-2 text-sm font-medium border-b bg-muted/40 flex items-center justify-between">
+        <span>{title}</span>
+        <span className="text-xs text-muted-foreground">Consultation uniquement (téléchargement/print désactivés)</span>
+      </div>
+      <iframe
+        title={`PDF: ${title}`}
+        src={src}
+        // ⚠️ Sandbox: on autorise scripts & same-origin (nécessaires au viewer) mais PAS les téléchargements
+        sandbox="allow-scripts allow-same-origin"
+        referrerPolicy="no-referrer"
+        className="w-full"
+        style={{ height: 600 }}
+      />
+    </div>
+  )
+}
 
 export default function TransparencePage() {
   const { hash } = useLocation()
   const [activeId, setActiveId] = useState(sections[0].id)
 
+  // Défilement vers une ancre si présente
   useEffect(() => {
     if (hash) {
       const el = document.getElementById(hash.slice(1))
@@ -24,6 +71,7 @@ export default function TransparencePage() {
     }
   }, [hash])
 
+  // Surbrillance section active
   useEffect(() => {
     const obs = new IntersectionObserver((entries)=>{
       const v = entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)
@@ -37,6 +85,27 @@ export default function TransparencePage() {
   }, [])
 
   const smooth = (e, id) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({behavior:'smooth', block:'start'}) }
+
+  // 🔒 Protections front contre la copie (limitées mais dissuasives)
+  useEffect(() => {
+    const prevent = (e) => e.preventDefault()
+    const keydown = (e) => {
+      // Bloque quelques raccourcis courants (Ctrl/Cmd+S, P, U, C)
+      if ((e.ctrlKey || e.metaKey) && ['s','p','u','c'].includes(e.key.toLowerCase())) {
+        e.preventDefault()
+      }
+    }
+    document.addEventListener('contextmenu', prevent)
+    document.addEventListener('copy', prevent)
+    document.addEventListener('cut', prevent)
+    document.addEventListener('keydown', keydown)
+    return () => {
+      document.removeEventListener('contextmenu', prevent)
+      document.removeEventListener('copy', prevent)
+      document.removeEventListener('cut', prevent)
+      document.removeEventListener('keydown', keydown)
+    }
+  }, [])
 
   const TocDesktop = useMemo(()=>(
     <nav className="hidden xl:block sticky top-24 self-start bg-white/80 backdrop-blur border rounded-2xl p-4 w-72">
@@ -104,9 +173,9 @@ export default function TransparencePage() {
               <div id="rapports" className="scroll-mt-24">
                 <h2 className="text-2xl font-semibold mb-3 flex items-center gap-2"><FilePieChart className="h-5 w-5 text-primary" /> Rapports & audits</h2>
                 <ul className="text-muted-foreground list-disc pl-6 space-y-1">
-                  <li>Rapport d’activités annuel <em>(lien PDF à compléter)</em></li>
-                  <li>Rapports financiers et audits externes <em>(liens à compléter)</em></li>
-                  <li>Rapports de projets (sélection) <em>(liens à compléter)</em></li>
+                  <li>Rapport d’activités annuel (consultable ci-dessous)</li>
+                  <li>Rapports financiers et audits externes (consultables ci-dessous)</li>
+                  <li>Rapports de projets (sélection) (consultables ci-dessous)</li>
                 </ul>
               </div>
 
@@ -119,14 +188,18 @@ export default function TransparencePage() {
               </div>
 
               <div id="documents" className="scroll-mt-24">
-                <h2 className="text-2xl font-semibold mb-3 flex items-center gap-2"><FolderDown className="h-5 w-5 text-accent" /> Documents à télécharger</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Button variant="outline" asChild><a href="#" onClick={(e)=>e.preventDefault()}>Statuts de l’AMSS (PDF)</a></Button>
-                  <Button variant="outline" asChild><a href="#" onClick={(e)=>e.preventDefault()}>Politique anticorruption (PDF)</a></Button>
-                  <Button variant="outline" asChild><a href="#" onClick={(e)=>e.preventDefault()}>Charte de redevabilité (PDF)</a></Button>
-                  <Button variant="outline" asChild><a href="#" onClick={(e)=>e.preventDefault()}>Rapport annuel N-1 (PDF)</a></Button>
+                <h2 className="text-2xl font-semibold mb-3 flex items-center gap-2"><FolderDown className="h-5 w-5 text-accent" /> Documents à consulter</h2>
+
+                <div className="space-y-6">
+                  {DOCUMENTS.map((doc) => (
+                    <PdfViewer key={doc.url} fileUrl={encodeURI(doc.url)} title={doc.title} />
+                  ))}
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">Remplace ces liens par tes fichiers réels (hébergement ou dossier public).</p>
+
+                <p className="text-xs text-muted-foreground mt-4">
+                  ⚠️ Malgré ces protections, aucune solution web ne peut empêcher totalement la copie (captures d’écran, photo, etc.).
+                  Pour renforcer la dissuasion, tu peux ajouter un filigrane sur les PDFs en amont.
+                </p>
               </div>
             </div>
 
