@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lecteur PDF</title>
+  <style>
+    :root { --border:#e5e7eb; --muted:#6b7280; }
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,Helvetica,sans-serif;background:#fff;color:#111827}
+    .toolbar{position:sticky;top:0;display:flex;gap:.5rem;align-items:center;padding:.5rem .75rem;border-bottom:1px solid var(--border);background:#fff;z-index:10}
+    .viewer{display:flex;justify-content:center;align-items:flex-start;background:#f7f7f8;padding:1rem;min-height:calc(100vh - 48px)}
+    canvas{background:#fff;box-shadow:0 1px 8px rgba(0,0,0,.08);border-radius:8px;max-width:100%;height:auto}
+    button{padding:.4rem .6rem;border:1px solid var(--border);background:#fff;border-radius:6px;cursor:pointer}
+    .muted{color:var(--muted);font-size:.9rem}
+    *::selection{background:transparent}
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button id="prev" title="Page précédente">◀︎</button>
+    <span class="muted">Page <span id="pageNum">1</span>/<span id="pageCount">1</span></span>
+    <button id="next" title="Page suivante">▶︎</button>
+    <span style="flex:1"></span>
+    <button id="zoomOut" title="Zoom -">−</button>
+    <span class="muted">Zoom</span>
+    <button id="zoomIn" title="Zoom +">+</button>
+  </div>
+  <div class="viewer">
+    <canvas id="pdfCanvas" aria-label="Aperçu du document PDF"></canvas>
+  </div>
+
+  <script type="module">
+    import * as pdfjsLib from '/pdfjs/build/pdf.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/build/pdf.worker.mjs';
+
+    const q = new URLSearchParams(location.search);
+    const file = q.get('file');
+
+    const viewer = document.querySelector('.viewer');
+    const canvas = document.getElementById('pdfCanvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!file) {
+      viewer.innerHTML = '<div style="padding:2rem" class="muted">Paramètre “file” manquant. Exemple : <code>?file=/docs/mon.pdf</code></div>';
+    } else {
+      let pdf, pageNum = 1, scale = 1.2;
+
+      async function renderPage(){
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        document.getElementById('pageNum').textContent = pageNum;
+        document.getElementById('pageCount').textContent = pdf.numPages;
+      }
+
+      try {
+        const task = pdfjsLib.getDocument({ url: file });
+        pdf = await task.promise;
+        await renderPage();
+      } catch (e) {
+        console.error(e);
+        viewer.innerHTML = '<div style="padding:2rem" class="muted">Impossible de charger ce PDF. Vérifie l’URL <code>file</code>.</div>';
+      }
+
+      document.getElementById('prev').addEventListener('click', async () => {
+        if (pageNum <= 1) return; pageNum--; await renderPage();
+      });
+      document.getElementById('next').addEventListener('click', async () => {
+        if (!pdf || pageNum >= pdf.numPages) return; pageNum++; await renderPage();
+      });
+      document.getElementById('zoomIn').addEventListener('click', async () => { scale = Math.min(scale + 0.1, 3); await renderPage(); });
+      document.getElementById('zoomOut').addEventListener('click', async () => { scale = Math.max(scale - 0.1, 0.5); await renderPage(); });
+
+      // 🔒 Dissuasion : pas de clic droit / copier
+      document.addEventListener('contextmenu', e => e.preventDefault());
+      document.addEventListener('copy', e => e.preventDefault());
+    }
+  </script>
+</body>
+</html>
