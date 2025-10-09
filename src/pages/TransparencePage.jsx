@@ -246,8 +246,7 @@ export default function TransparencePage() {
                 </div>
 
                 <p className="text-xs text-muted-foreground mt-4">
-                  Si tu vois « a refusé de se connecter », c’est que le fichier est servi depuis un autre domaine bloqué en iframe.
-                  Place les PDF dans <code>public/docs/</code> et référence-les en URL relative (ex. <code>/docs/mon-fichier.pdf</code>).
+                  Si vous souhaitez recevoir une copie Merci de nous la demander par mail.
                 </p>
               </div>
             </div>
