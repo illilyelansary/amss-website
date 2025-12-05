@@ -236,7 +236,20 @@ const base = [
     partenaires: ['Ambassade du Royaume des Pays-Bas'],
     lieux: ['Bamako'],
     tags: ['Plaidoyer', 'Gouvernance', 'Partenaires']
-  }
+  },
+  {
+  id: 18,
+  titre: "Remise officielle des équipements et matériels scolaires – PADEM / Sikasso",
+  date: "04 décembre 2025",
+  dateISO: "2025-12-04",
+  categorie: "Éducation",
+  image: img("remise-materiels-scolaires-padem-sikasso.jpg"),
+  excerpt: "Dotation de 10 800 kits scolaires, matériels pédagogiques et équipements aux communes de Kignan, Missirikoro, Fama, Lobougoula et Tiankadi.",
+  contenu: "La cérémonie officielle de remise des équipements et matériels scolaires au profit des communes de Kignan, Missirikoro, Fama, Lobougoula et Tiankadi s’est tenue le 04 décembre 2025 à Sikasso dans le cadre du projet PADEM mis en œuvre par AMSS en consortium avec Save the Children, CAEB et Cordaid, grâce à l’appui financier de l’Union Européenne. L’événement, présidé par le représentant du Gouverneur, a réuni autorités administratives, services techniques, maires, DCAP, CGS, partenaires et médias. Au total, 10 800 kits scolaires, 100 malles pédagogiques, 500 tables-bancs, des matériels didactiques et des fournitures pour CDPE et SSA/P ont été remis, symbolisant un investissement majeur pour améliorer la qualité de l’éducation dans la région de Sikasso.",
+  lieux: ["Sikasso", "Kignan", "Missirikoro", "Fama", "Lobougoula", "Tiankadi"],
+  tags: ["Éducation", "PADEM", "KitsScolaires", "Sikasso", "UnionEuropéenne"]
+}
+
 ]
 
 // Export final avec slug
