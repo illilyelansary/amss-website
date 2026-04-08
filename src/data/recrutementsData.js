@@ -51,6 +51,30 @@ const recrutementsData = {
       // Si le nom de fichier contient des espaces/accents, garde exactement le même dans /public/recrutements
       pdfUrl: "/recrutements/Avis de recrutement chargé lélaboration des subventions_5.2020.pdf",
     },
+
+    // NOUVEL AVIS AJOUTÉ
+    {
+      id: 22,
+      category: 'marche',
+      titre: "Avis de Manifestation d'Intérêt - Base de données fournisseurs 2026-2028 (Réf: 001/03/2026)",
+      lieu: "Tombouctou, Bamako, Ségou, Mopti, Gao, Ménaka, Sikasso",
+      datePublication: "31 mars 2026",
+      type: "Prestation",
+      domaine: "Tous",
+      description:
+        "L'Association Malienne pour la Survie au Sahel (AMSS) lance un appel à manifestation d'intérêt pour sélectionner des personnes physiques ou morales en vue de constituer une base de données de fournisseurs et prestataires susceptibles de l'accompagner pour la fourniture de biens et services au cours de la période 2026-2028.",
+      competences: [
+        "Une Lettre de manifestation d'intérêt pour faire partie des fournisseurs et/ou prestataires",
+        "Fiche signalétique (description détaillée du postulant, domaine(s) commercial (aux), zone d'exécution de son activité etc...)",
+        "Une copie légalisée de l'extrait de l'inscription au registre de commerce (RCCM)",
+        "Une copie légalisée de la carte d'Identification fiscale (NIF)",
+        "Agrément pour les Entreprises et entités concernées",
+        "Carte Professionnelle pour les Entreprises et entités concernées",
+        "Une copie de la pièce d'identité du responsable de la société"
+      ],
+      dateExpiration: "15 avril 2026",
+      pdfUrl: "/recrutements/AVISSIGNE.pdf",
+    },
   ],
 
   archives: [
