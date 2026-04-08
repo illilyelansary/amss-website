@@ -212,8 +212,14 @@ const RecrutementPage = () => {
   const buildMailto = (titre) => {
     const subject = encodeURIComponent(`Candidature – ${titre}`)
     const body = encodeURIComponent(
-      `Bonjour,\n\nJe souhaite postuler au poste « ${titre} ».\n\nNom :\nTéléphone :\nLien CV (ou pièce jointe) :\nMessage :\n\nCordialement,`
+      `Bonjour,\n\nJe souhaite postuler à l'offre « ${titre} ».\n\nNom :\nTéléphone :\nLien CV (ou pièce jointe) :\nMessage :\n\nCordialement,`
     )
+    
+    // Si c'est l'avis de base de données fournisseurs, utiliser l'email de la logistique
+    if (titre.includes("Base de données fournisseurs") || titre.includes("001/03/2026")) {
+      return `mailto:amsslogistique@ong-amss.org?subject=${subject}&body=${body}`
+    }
+    
     return `mailto:recrutement@ong-amss.org?subject=${subject}&body=${body}`
   }
 
@@ -429,7 +435,9 @@ const RecrutementPage = () => {
 
                             {offre.competences && (
                               <div className="mb-4">
-                                <h4 className="font-medium text-foreground mb-2">Compétences requises :</h4>
+                                <h4 className="font-medium text-foreground mb-2">
+                                  {cat === CATEGORIES.MARCHE ? 'Pièces à fournir / Compétences :' : 'Compétences requises :'}
+                                </h4>
                                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                                   {offre.competences.map((c, i) => (
                                     <li key={i}>{c}</li>
@@ -514,7 +522,7 @@ const RecrutementPage = () => {
 
                             <h3 className="font-semibold text-foreground mb-1">{offre.titre}</h3>
 
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-2">
                               {offre.lieu && (
                                 <div className="flex items-center">
                                   <MapPin className="h-3 w-3 mr-1" />
