@@ -52,7 +52,7 @@ const recrutementsData = {
       pdfUrl: "/recrutements/Avis de recrutement chargé lélaboration des subventions_5.2020.pdf",
     },
 
-    // NOUVEL AVIS AJOUTÉ
+    // NOUVEL AVIS AJOUTÉ : Base de données fournisseurs
     {
       id: 22,
       category: 'marche',
@@ -74,6 +74,28 @@ const recrutementsData = {
       ],
       dateExpiration: "15 avril 2026",
       pdfUrl: "/recrutements/AVISSIGNE.pdf",
+    },
+    
+    // NOUVEL AVIS AJOUTÉ : Spécialiste Humanitaire PONAH
+    {
+      id: 23,
+      category: 'emploi',
+      titre: "Spécialiste Humanitaire - PONAH",
+      lieu: "Bamako avec déplacements dans les Régions",
+      datePublication: "29 avril 2026",
+      type: "CDD",
+      domaine: "Humanitaire",
+      description:
+        "La Plateforme des ONG Nationales Actives dans l'Humanitaire (PONAH) recherche un Spécialiste Humanitaire pour appuyer, accompagner et soutenir la Plateforme dans la coordination, la gestion de l'information, l'appui aux groupes thématiques et le renforcement des capacités.",
+      competences: [
+        "Master (Bac+5) en Sciences Sociales, Relations Internationales, Droit Humanitaire ou connexe",
+        "Minimum 5 ans d'expérience dans le secteur humanitaire",
+        "Expertise en plaidoyer et localisation de l'aide",
+        "Connaissance des protocoles de coordination (Clusters, EHP)",
+        "Excellente maîtrise du français (écrit et oral), anglais souhaité"
+      ],
+      dateExpiration: "11 mai 2026",
+      pdfUrl: "/recrutements/AvisderecrutementSpecialisteHumanitairePONAH.pdf",
     },
   ],
 
