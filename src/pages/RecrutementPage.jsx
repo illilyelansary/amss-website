@@ -220,6 +220,11 @@ const RecrutementPage = () => {
       return `mailto:amsslogistique@ong-amss.org?subject=${subject}&body=${body}`
     }
     
+    // Si c'est l'avis pour le Spécialiste Humanitaire PONAH, utiliser l'email PONAH
+    if (titre.includes("PONAH") || titre.includes("Spécialiste Humanitaire")) {
+      return `mailto:ponah.mali@gmail.com?subject=${subject}&body=${body}`
+    }
+    
     return `mailto:recrutement@ong-amss.org?subject=${subject}&body=${body}`
   }
 
