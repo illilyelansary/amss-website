@@ -157,18 +157,18 @@ const RecrutementPage = () => {
     setData({ enCours: stillOpen, archives: Array.from(archiveMap.values()) })
   }, [])
 
-  // Synchronisation catégorie + onglet avec l’URL (sous-menus + ancre)
+  // Synchronisation catégorie + onglet avec l'URL (sous-menus + ancre)
   useEffect(() => {
     // Catégorie via le chemin
     if (pathname.endsWith('/marches')) setCategoryFilter('marche')
     else if (pathname.endsWith('/emplois')) setCategoryFilter('emploi')
     else setCategoryFilter('tous')
 
-    // Onglet via l’ancre (#en-cours | #archives)
+    // Onglet via l'ancre (#en-cours | #archives)
     if (hash === '#archives') setActiveTab('archives')
     else setActiveTab('enCours')
 
-    // Scroll vers l’ancre (ou vers "en-cours" par défaut)
+    // Scroll vers l'ancre (ou vers "en-cours" par défaut)
     const id = (hash && hash.slice(1)) || 'en-cours'
     setTimeout(() => {
       const el = document.getElementById(id)
@@ -209,22 +209,24 @@ const RecrutementPage = () => {
   const filteredEnCours = byCategory(bySearchAndDomaine(data.enCours))
   const filteredArchives = byCategory(bySearchAndDomaine(data.archives))
 
+  // Routing des emails selon l'avis
   const buildMailto = (titre) => {
     const subject = encodeURIComponent(`Candidature – ${titre}`)
     const body = encodeURIComponent(
       `Bonjour,\n\nJe souhaite postuler à l'offre « ${titre} ».\n\nNom :\nTéléphone :\nLien CV (ou pièce jointe) :\nMessage :\n\nCordialement,`
     )
-    
-    // Si c'est l'avis de base de données fournisseurs, utiliser l'email de la logistique
-    if (titre.includes("Base de données fournisseurs") || titre.includes("001/03/2026")) {
+
+    // DAO Fournitures PADEM → logisticien AMSS BKO
+    if (titre.includes('PADEM') || titre.includes('DAO/AMSS/BKO/2026/001')) {
+      return `mailto:ahmadoumoussa971@gmail.com?subject=${subject}&body=${body}`
+    }
+
+    // Avis de manifestation d'intérêt fournisseurs → logistique AMSS
+    if (titre.includes('Base de données fournisseurs') || titre.includes('001/03/2026')) {
       return `mailto:amsslogistique@ong-amss.org?subject=${subject}&body=${body}`
     }
-    
-    // Si c'est l'avis pour le Spécialiste Humanitaire PONAH, utiliser l'email PONAH
-    if (titre.includes("PONAH") || titre.includes("Spécialiste Humanitaire")) {
-      return `mailto:ponah.mali@gmail.com?subject=${subject}&body=${body}`
-    }
-    
+
+    // Toutes les autres offres d'emploi AMSS
     return `mailto:recrutement@ong-amss.org?subject=${subject}&body=${body}`
   }
 
@@ -234,9 +236,9 @@ const RecrutementPage = () => {
       <section className="py-20 bg-gradient-to-br from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Recrutements & Appels d’offres</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Recrutements & Appels d'offres</h1>
             <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-              Consultez nos <strong>offres d’emploi</strong> et nos <strong>appels d’offres & prestations</strong>.
+              Consultez nos <strong>offres d'emploi</strong> et nos <strong>appels d'offres & prestations</strong>.
               Les avis expirés sont automatiquement archivés.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -261,7 +263,7 @@ const RecrutementPage = () => {
       <section className="py-8 bg-white border-b">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            {/* Catégories synchronisées à l’URL */}
+            {/* Catégories synchronisées à l'URL */}
             <div className="flex flex-wrap gap-2 mb-6">
               <Link
                 to="/recrutement#en-cours"
@@ -278,7 +280,7 @@ const RecrutementPage = () => {
                 }`}
               >
                 <Briefcase className="h-4 w-4 inline mr-2" />
-                Offres d’emploi
+                Offres d'emploi
               </Link>
               <Link
                 to="/recrutrement/marches#en-cours"
@@ -287,7 +289,7 @@ const RecrutementPage = () => {
                 }`}
               >
                 <FileSpreadsheet className="h-4 w-4 inline mr-2" />
-                Appels d’offres & Prestations
+                Appels d'offres & Prestations
               </Link>
             </div>
 
@@ -400,7 +402,7 @@ const RecrutementPage = () => {
                                   cat === CATEGORIES.MARCHE ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'
                                 }`}
                               >
-                                {cat === CATEGORIES.MARCHE ? 'Appel d’offres / Prestation' : 'Offre d’emploi'}
+                                {cat === CATEGORIES.MARCHE ? 'Appel d'offres / Prestation' : 'Offre d'emploi'}
                               </span>
                               {badge && (
                                 <span
@@ -441,7 +443,7 @@ const RecrutementPage = () => {
                             {offre.competences && (
                               <div className="mb-4">
                                 <h4 className="font-medium text-foreground mb-2">
-                                  {cat === CATEGORIES.MARCHE ? 'Pièces à fournir / Compétences :' : 'Compétences requises :'}
+                                  {cat === CATEGORIES.MARCHE ? 'Lots / Pièces à fournir :' : 'Compétences requises :'}
                                 </h4>
                                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                                   {offre.competences.map((c, i) => (
@@ -460,7 +462,7 @@ const RecrutementPage = () => {
                                 className="inline-flex items-center px-4 py-2 text-sm rounded-md border border-border hover:bg-muted/50 transition-colors"
                               >
                                 <FileDown className="h-4 w-4 mr-2" />
-                                Télécharger l’avis (PDF)
+                                Télécharger l'avis (PDF)
                               </a>
                             )}
                           </div>
@@ -468,12 +470,11 @@ const RecrutementPage = () => {
                           <div className="lg:text-right">
                             <div className="mb-4">
                               <p className="text-sm text-muted-foreground mb-1">Date limite :</p>
-                              <p className={`font-medium ${dleft < 0 ? 'text-red-600' : 'text-accent'}`}>
+                              <p className={`font-medium ${dleft != null && dleft < 0 ? 'text-red-600' : 'text-accent'}`}>
                                 {offre.dateExpiration || 'N/D'}
                               </p>
                             </div>
 
-                            {/* Postuler -> recrutement@ong-amss.org */}
                             <a
                               href={buildMailto(offre.titre)}
                               className="w-full lg:w-auto inline-block px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
@@ -518,7 +519,7 @@ const RecrutementPage = () => {
                                   cat === CATEGORIES.MARCHE ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'
                                 }`}
                               >
-                                {cat === CATEGORIES.MARCHE ? 'Appel d’offres / Prestation' : 'Offre d’emploi'}
+                                {cat === CATEGORIES.MARCHE ? 'Appel d'offres / Prestation' : 'Offre d'emploi'}
                               </span>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(offre.statut || 'Clôturé')}`}>
                                 {offre.statut || 'Clôturé'}
@@ -559,7 +560,7 @@ const RecrutementPage = () => {
                                   className="inline-flex items-center px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted/50 transition-colors"
                                 >
                                   <FileDown className="h-3 w-3 mr-2" />
-                                  Télécharger l’avis (PDF)
+                                  Télécharger l'avis (PDF)
                                 </a>
                               </div>
                             )}
