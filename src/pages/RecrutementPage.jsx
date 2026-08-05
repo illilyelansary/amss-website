@@ -402,7 +402,7 @@ const RecrutementPage = () => {
                                   cat === CATEGORIES.MARCHE ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'
                                 }`}
                               >
-                                {cat === CATEGORIES.MARCHE ? 'Appel d'offres / Prestation' : 'Offre d'emploi'}
+                                {cat === CATEGORIES.MARCHE ? "Appel d'offres / Prestation" : "Offre d'emploi"}
                               </span>
                               {badge && (
                                 <span
@@ -443,7 +443,7 @@ const RecrutementPage = () => {
                             {offre.competences && (
                               <div className="mb-4">
                                 <h4 className="font-medium text-foreground mb-2">
-                                  {cat === CATEGORIES.MARCHE ? 'Lots / Pièces à fournir :' : 'Compétences requises :'}
+                                  {cat === CATEGORIES.MARCHE ? "Lots / Pièces à fournir :" : "Compétences requises :"}
                                 </h4>
                                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                                   {offre.competences.map((c, i) => (
@@ -519,7 +519,7 @@ const RecrutementPage = () => {
                                   cat === CATEGORIES.MARCHE ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'
                                 }`}
                               >
-                                {cat === CATEGORIES.MARCHE ? 'Appel d'offres / Prestation' : 'Offre d'emploi'}
+                                {cat === CATEGORIES.MARCHE ? "Appel d'offres / Prestation" : "Offre d'emploi"}
                               </span>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(offre.statut || 'Clôturé')}`}>
                                 {offre.statut || 'Clôturé'}
