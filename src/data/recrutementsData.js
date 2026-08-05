@@ -19,7 +19,7 @@ const recrutementsData = {
       dateExpiration: "30 septembre 2025",
       // pdfUrl: "/recrutements/2025-05-13-superviseur-agriculture.pdf",
     },
-  
+
     {
       id: 2,
       category: 'emploi',
@@ -35,24 +35,22 @@ const recrutementsData = {
       // pdfUrl: "/recrutements/2025-01-06-animateurs-alphabetisation.pdf",
     },
 
-    // Exemple Marché / Prestation actif
     {
       id: 21,
       category: 'marche',
-      titre: "Chargé(e) de l’élaboration des subventions",
+      titre: "Chargé(e) de l'élaboration des subventions",
       lieu: "Sirakoro",
       datePublication: "02/10/2025",
       type: "Prestation",
       domaine: "Développement",
       description:
-        "La/le chargé(e) de l’élaboration des subventions travaillera avec les organisations viables qui font avancer le mandat du projet en complétant les activités directement mises en œuvre de l'AMSS.",
+        "La/le chargé(e) de l'élaboration des subventions travaillera avec les organisations viables qui font avancer le mandat du projet en complétant les activités directement mises en œuvre de l'AMSS.",
       competences: ["Très expérimenté(e)"],
       dateExpiration: "03 octobre 2025",
-      // Si le nom de fichier contient des espaces/accents, garde exactement le même dans /public/recrutements
       pdfUrl: "/recrutements/Avis de recrutement chargé lélaboration des subventions_5.2020.pdf",
     },
 
-    // NOUVEL AVIS AJOUTÉ : Base de données fournisseurs
+    // AVIS 1 : Base de données fournisseurs 2026-2028
     {
       id: 22,
       category: 'marche',
@@ -70,32 +68,32 @@ const recrutementsData = {
         "Une copie légalisée de la carte d'Identification fiscale (NIF)",
         "Agrément pour les Entreprises et entités concernées",
         "Carte Professionnelle pour les Entreprises et entités concernées",
-        "Une copie de la pièce d'identité du responsable de la société"
+        "Une copie de la pièce d'identité du responsable de la société",
       ],
       dateExpiration: "15 avril 2026",
       pdfUrl: "/recrutements/AVISSIGNE.pdf",
     },
-    
-    // NOUVEL AVIS AJOUTÉ : Spécialiste Humanitaire PONAH
+
+    // AVIS 2 : DAO Fournitures et Équipements PADEM
     {
-      id: 23,
-      category: 'emploi',
-      titre: "Spécialiste Humanitaire - PONAH",
-      lieu: "Bamako avec déplacements dans les Régions",
-      datePublication: "29 avril 2026",
-      type: "CDD",
-      domaine: "Humanitaire",
+      id: 24,
+      category: 'marche',
+      titre: "DAO - Achat de fournitures, équipements et matériels scolaires - Projet PADEM (Réf: DAO/AMSS/BKO/2026/001)",
+      lieu: "Région de Sikasso et district de Bamako",
+      datePublication: "05 août 2026",
+      type: "Prestation",
+      domaine: "Éducation",
       description:
-        "La Plateforme des ONG Nationales Actives dans l'Humanitaire (PONAH) recherche un Spécialiste Humanitaire pour appuyer, accompagner et soutenir la Plateforme dans la coordination, la gestion de l'information, l'appui aux groupes thématiques et le renforcement des capacités.",
+        "L'AMSS, en consortium avec Save the Children International Mali, lance un appel d'offres pour la fourniture et la livraison d'équipements, matériels scolaires et pédagogiques aux écoles et CDPE d'intervention du Projet d'Appui à la Décentralisation de l'Éducation au Mali (PADEM). Le marché est réparti en 5 lots. Le dossier d'appel d'offres complet peut être retiré dans les différents bureaux AMSS (Bamako, Sikasso) ou demandé par e-mail à : timbine@ong-amss.org (aspects techniques) ou dialloyao1@gmail.com (déroulement de l'appel d'offres).",
       competences: [
-        "Master (Bac+5) en Sciences Sociales, Relations Internationales, Droit Humanitaire ou connexe",
-        "Minimum 5 ans d'expérience dans le secteur humanitaire",
-        "Expertise en plaidoyer et localisation de l'aide",
-        "Connaissance des protocoles de coordination (Clusters, EHP)",
-        "Excellente maîtrise du français (écrit et oral), anglais souhaité"
+        "Lot 1 : Achat des équipements scolaires pour les écoles, les centres CDPE et SSA/P",
+        "Lot 2 : Achat des matériels pédagogiques scolaires pour les écoles, les centres CDPE et SSA/P",
+        "Lot 3 : Achat des articles divers pour les écoles, les centres CDPE et SSA/P",
+        "Lot 4 : Confection et impression des cahiers et livres avec mention visibilité du consortium PADEM",
+        "Lot 5 : Achat/fourniture des sacs avec logos du consortium pour les écoles, les centres SSA/P et CDPE",
       ],
-      dateExpiration: "11 mai 2026",
-      pdfUrl: "/recrutements/AvisderecrutementSpecialisteHumanitairePONAH.pdf",
+      dateExpiration: "26 août 2026",
+      pdfUrl: "/recrutements/DAOFournituresetEquipements_PADEM_AMSS2026.pdf",
     },
   ],
 
@@ -221,7 +219,6 @@ const recrutementsData = {
       description:
         "Gestionnaire pour la collecte, l'analyse et la diffusion de l'information institutionnelle.",
     },
-   
   ],
 };
 
