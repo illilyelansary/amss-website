@@ -2,6 +2,8 @@
 export const bureaux = [
   {
     slug: 'tombouctou',
+    // Régions administratives couvertes par la base (relie la base aux zones, projets et partenaires)
+    regions: ["Tombouctou","Taoudénit"],
     ville: "Bureau de Tombouctou (siège de l'AMSS)",
     adresse: "Tombouctou/Quartier Hamabangou, Porte : 915, Route de Kabara en face de la BIM sa, BP : 152,",
     telephones: ["+223 21 92 10 48", "+223 76 04 21 32", "+223 66 71 38 12"],
@@ -20,6 +22,8 @@ export const bureaux = [
 
   {
     slug: 'bamako',
+    // Régions administratives couvertes par la base (relie la base aux zones, projets et partenaires)
+    regions: ["Bamako","Koulikoro"],
     ville: "Bamako",
     // ✅ nouvelle adresse physique (affichée sur la page Contact)
     adresse: "Rue 737, Porte 419, Banankabougou, Bamako",
@@ -41,6 +45,8 @@ export const bureaux = [
 
   {
     slug: 'gao',
+    // Régions administratives couvertes par la base (relie la base aux zones, projets et partenaires)
+    regions: ["Gao","Ménaka","Kidal"],
     ville: "Base d'AMSS Gao",
     adresse: "Gao , Château seteur II",
     telephones: ["+223 76 94 78 58"],
@@ -54,6 +60,8 @@ export const bureaux = [
 
   {
     slug: 'sikasso',
+    // Régions administratives couvertes par la base (relie la base aux zones, projets et partenaires)
+    regions: ["Sikasso","Koutiala","Bougouni"],
     ville: "Base de Sikasso",
     adresse: "Sikasso/ Wayerma II derrière API",
     telephones: ["+223 74 72 79 67"],
@@ -67,6 +75,8 @@ export const bureaux = [
 
   {
     slug: 'mopti',
+    // Régions administratives couvertes par la base (relie la base aux zones, projets et partenaires)
+    regions: ["Mopti","Bandiagara","Douentza"],
     ville: "Base d'AMSS Mopti",
     adresse: "Mopti/Sevaré, Quartier Poudrière près de l’Hôpital Somine Dolo, en face de la mosquée",
     telephones: ["+223 76 14 13 71"],
@@ -80,6 +90,8 @@ export const bureaux = [
 
   {
     slug: 'segou',
+    // Régions administratives couvertes par la base (relie la base aux zones, projets et partenaires)
+    regions: ["Ségou","San"],
     ville: "Base d'AMSS Ségou",
     adresse: "Ségou; Sébougou près de l'université",
     telephones: ["+223 76 02 33 50"],

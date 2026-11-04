@@ -5,6 +5,7 @@
 import { writeFileSync, existsSync } from 'node:fs'
 import { actualites } from '../src/data/actualitesData.js'
 import { bureaux } from '../src/data/bureaux.js'
+import { projetsReseau, partenaires } from '../src/data/reseau.js'
 
 const SITE = 'https://www.ong-amss.org'
 const OUT = 'dist'
@@ -14,7 +15,7 @@ const pages = [
   '/securite-alimentaire', '/gouvernance', '/actualites', '/projets',
   '/projets-en-cours', '/projets-termines', '/rapports', '/partenaires', '/zones',
   '/recrutement', '/contact', '/don', '/transparence', '/mentions-legales',
-  '/politique-confidentialite',
+  '/politique-confidentialite', '/bureaux',
 ]
 
 const urls = [
@@ -23,6 +24,8 @@ const urls = [
   ...(Array.isArray(bureaux) ? bureaux : Object.values(bureaux || {}))
     .filter(b => b && b.slug)
     .map(b => ({ loc: `/bureaux/${b.slug}` })),
+  ...projetsReseau.map(p => ({ loc: `/projets/${p.slug}`, lastmod: p.endDate && p.endDate < new Date().toISOString().slice(0, 10) ? p.endDate : undefined })),
+  ...partenaires.map(p => ({ loc: `/partenaires/${p.slug}` })),
 ]
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')

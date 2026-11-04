@@ -5,8 +5,8 @@ import { MapPin, Phone, Mail, Users, Globe, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 import { bureaux } from '@/data/bureaux'
-import { projetsEnCours, projetsTermines } from '@/data/projetsData'
-import { partnersForBureau } from '@/utils/partners'
+import { basesBySlug } from '@/data/reseau'
+import { LiensZones, LiensPartenaires, ListeProjets } from '@/components/liens/Liens'
 
 export default function DetailsBureauPage() {
   const { slug } = useParams()
@@ -17,11 +17,10 @@ export default function DetailsBureauPage() {
     return (Array.isArray(bureaux) && bureaux.find(b => (b.slug || '').toLowerCase() === s)) || (Array.isArray(bureaux) ? bureaux[0] : null)
   }, [slug])
 
-  // 2) Partenaires/bailleurs (si votre util existe déjà)
-  const partners = useMemo(
-    () => (partnersForBureau ? partnersForBureau(bureau, projetsEnCours, projetsTermines) : []),
-    [bureau]
-  )
+  // 2) Liens calculés : régions, projets et partenaires de la base
+  const reseau = bureau ? basesBySlug.get(bureau.slug) : null
+  const projetsActifs = (reseau?.projets || []).filter((p) => p.status !== 'Terminé')
+  const projetsClos = (reseau?.projets || []).filter((p) => p.status === 'Terminé')
 
   // 3) Utils
   const telHref = (t) => 'tel:' + String(t || '').replace(/\s+/g, '')
@@ -148,18 +147,15 @@ export default function DetailsBureauPage() {
               )}
 
               {/* Zones couvertes */}
-              {Array.isArray(bureau.zones) && bureau.zones.length > 0 && (
+              {(reseau?.regions?.length > 0 || bureau.zones?.length > 0) && (
                 <div className="flex items-start gap-3">
                   <Globe className="h-5 w-5 text-accent mt-0.5" />
                   <div>
-                    <div className="font-medium text-foreground mb-1">Zones couvertes</div>
-                    <div className="flex flex-wrap gap-2">
-                      {bureau.zones.map((z, i) => (
-                        <span key={i} className="inline-block bg-primary/10 text-primary px-2 py-1 rounded text-xs">
-                          {z}
-                        </span>
-                      ))}
-                    </div>
+                    <div className="font-medium text-foreground mb-1">Régions couvertes</div>
+                    <LiensZones regions={reseau?.regions || []} vide="Coordination nationale" />
+                    {Array.isArray(bureau.zones) && bureau.zones.length > 0 && (
+                      <div className="text-xs text-muted-foreground mt-2">Localités : {bureau.zones.join(', ')}</div>
+                    )}
                   </div>
                 </div>
               )}
@@ -181,26 +177,27 @@ export default function DetailsBureauPage() {
         </div>
       </section>
 
-      {/* Partenaires / Bailleurs */}
+      {/* Projets et partenaires reliés à la base */}
       <section className="py-8 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">
-              Partenaires/Bailleurs intervenant dans la zone
-            </h2>
-            {Array.isArray(partners) && partners.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {partners.map((p, i) => (
-                  <span
-                    key={i}
-                    className="inline-block bg-white border border-border rounded-lg px-3 py-1 text-sm text-foreground shadow-sm"
-                  >
-                    {p}
-                  </span>
-                ))}
+          <div className="max-w-5xl mx-auto space-y-8">
+            <div>
+              <h2 className="text-2xl font-semibold text-foreground mb-3">Projets en cours dans la zone de la base ({projetsActifs.length})</h2>
+              <ListeProjets projets={projetsActifs} vide="Aucun projet en cours dans les régions couvertes par cette base." />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-foreground mb-3">Projets terminés ({projetsClos.length})</h2>
+              <ListeProjets projets={projetsClos} vide="Aucun projet terminé enregistré." />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-foreground mb-3">Partenaires et bailleurs des projets de la base</h2>
+              <LiensPartenaires slugs={(reseau?.partenaires || []).map((p) => p.slug)} vide="Aucun partenaire associé." />
+            </div>
+            {reseau?.partenairesHistoriques?.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Autres partenaires historiques de la base</h3>
+                <LiensPartenaires slugs={reseau.partenairesHistoriques.map((p) => p.slug)} />
               </div>
-            ) : (
-              <p className="text-muted-foreground">Aucun partenaire associé trouvé.</p>
             )}
           </div>
         </div>

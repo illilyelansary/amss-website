@@ -1,7 +1,7 @@
 // src/pages/RapportsPage.jsx
 import { FileText, Download, Calendar, Eye, Filter, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { rapports } from '../data/projetsData'
+import { rapports } from '@/data/reseau'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 

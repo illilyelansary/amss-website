@@ -3,10 +3,11 @@ import React, { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Wheat, Users, TrendingUp, Package as PackageIcon, MapPin, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { projetsEnCours, projetsTermines } from '../data/projetsData'
+import { projetsEnCours, projetsTermines } from '@/data/reseau'
 import amssTerrainActivites from '../assets/amss-terrain-activites.jpeg'
 import projetTablesBancs from '../assets/projet-tables-bancs-amss.jpeg'
 import { hasCanon } from '@/utils/domainesCanon'
+import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'SECALIM'
@@ -323,17 +324,17 @@ const SecuriteAlimentairePage = () => {
                         </span>
                       </div>
 
-                      <h3 className="text-lg font-semibold text-foreground mb-2">{p.title}</h3>
+                      <h3 className="text-lg font-semibold text-foreground mb-2"><TitreProjet p={p} /></h3>
                       {p.excerpt && <p className="text-sm text-muted-foreground mb-4">{p.excerpt}</p>}
 
                       <div className="space-y-1.5 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Région :</span>
-                          <span className="font-medium text-right">{p.region || 'N/D'}</span>
+                          <span className="font-medium text-right"><LiensZones regions={p.regions || []} /></span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Bailleur :</span>
-                          <span className="font-medium text-right">{p.bailleur || p.donor || 'N/D'}</span>
+                          <span className="font-medium text-right"><LiensPartenaires slugs={p.bailleurs || []} /></span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Domaines :</span>

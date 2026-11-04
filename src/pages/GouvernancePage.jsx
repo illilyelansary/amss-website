@@ -3,8 +3,9 @@ import React, { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Users, Landmark, Handshake, Megaphone, Scale, TrendingUp, MapPin, ArrowRight, CheckCircle, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { projetsEnCours, projetsTermines } from '../data/projetsData'
+import { projetsEnCours, projetsTermines } from '@/data/reseau'
 import { hasCanon } from '@/utils/domainesCanon'
+import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'GOUV'
@@ -187,14 +188,14 @@ function ProjectCard({ p, statusColor = 'green', withYears = false }) {
           {statusColor === 'green' ? (p.status || 'En cours') : 'Terminé'}
         </span>
       </div>
-      <h3 className="text-lg font-semibold text-foreground mb-2">{p.title}</h3>
+      <h3 className="text-lg font-semibold text-foreground mb-2"><TitreProjet p={p} /></h3>
       {p.excerpt && <p className="text-muted-foreground text-sm mb-4">{p.excerpt}</p>}
       <div className="space-y-2 text-sm">
         {withYears ? (
           <div className="flex justify-between"><span className="text-muted-foreground">Période :</span><span className="font-medium text-right">{safeYear(p.startDate)}–{safeYear(p.endDate)}</span></div>
         ) : null}
-        <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right">{p.region || 'N/D'}</span></div>
-        <div className="flex justify-between"><span className="text-muted-foreground">Bailleur :</span><span className="font-medium text-right">{p.bailleur || p.donor || 'N/D'}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right"><LiensZones regions={p.regions || []} /></span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Bailleur :</span><span className="font-medium text-right"><LiensPartenaires slugs={p.bailleurs || []} /></span></div>
       </div>
     </article>
   )

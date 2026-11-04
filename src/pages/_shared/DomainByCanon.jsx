@@ -2,8 +2,9 @@
 import React, { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { projetsEnCours, projetsTermines } from '@/data/projetsData'
+import { projetsEnCours, projetsTermines } from '@/data/reseau'
 import { hasCanon, canonLabel } from '@/utils/domainesCanon'
+import { TitreProjet } from '@/components/liens/Liens'
 
 const n = (x) => new Intl.NumberFormat('fr-FR').format(Number(x || 0))
 
@@ -70,7 +71,7 @@ function Block({ title, items, empty }) {
             <li key={idx} className="py-3">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="font-medium">{p.title}</div>
+                  <div className="font-medium"><TitreProjet p={p} /></div>
                   <div className="text-xs text-muted-foreground">
                     {p.bailleur ? <>Bailleur : {p.bailleur} • </> : null}
                     {p.region ? <>Région : {p.region}</> : null}

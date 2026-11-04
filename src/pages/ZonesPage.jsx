@@ -6,7 +6,9 @@ import {
 } from 'lucide-react'
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
-import { projetsEnCours, projetsTermines } from '@/data/projetsData'
+import { useLocation } from 'react-router-dom'
+import { projetsEnCours, projetsTermines, zonesByLabel } from '@/data/reseau'
+import { TitreProjet, LiensZones, LiensPartenaires, LiensBases } from '@/components/liens/Liens'
 
 // ========== Helpers ==========
 const normalize = (s) =>
@@ -29,7 +31,6 @@ const asBenef = (v) => {
 // Normalisation (FR/EN)
 const getDomain   = (p) => p?.domain || p?.domaine || p?.sector || p?.secteur || ''
 const getDonor    = (p) => p?.donor ?? p?.bailleur ?? p?.bailleurs ?? ''
-const getPartners = (p) => p?.partners ?? p?.partenaires ?? ''
 const extractDomainTokens = (label) => String(label || '').split(/[,/|;]+/).map(s => s.trim()).filter(Boolean)
 const splitMulti = (label) => String(label || '').split(/[\/,;|]+/).map(s => s.trim()).filter(Boolean)
 
@@ -96,7 +97,8 @@ function ChipsZones({ onClick }) {
 }
 
 export default function ZonesPage() {
-  useEffect(() => window.scrollTo({ top: 0, behavior: 'auto' }), [])
+  const { hash } = useLocation()
+  useEffect(() => { if (!hash) window.scrollTo({ top: 0, behavior: 'auto' }) }, [hash])
 
   // Données normalisées
   const allEnCours = useMemo(() => (projetsEnCours || []).map(p => ({ ...p, _statusFlag: 'en' })), [])
@@ -167,8 +169,8 @@ export default function ZonesPage() {
       list.forEach((p) => {
         if (p._statusFlag === 'en') enCours++
         if (p._statusFlag === 'out') termines++
-        splitMulti(getDonor(p)).forEach(d => d && donorsSet.add(d))
-        splitMulti(getPartners(p)).forEach(x => x && partnersSet.add(x))
+        ;(p.bailleurs || []).forEach(d => donorsSet.add(d))
+        ;(p.miseEnOeuvre || []).forEach(x => partnersSet.add(x))
         benef += asBenef(p.beneficiaries)
       })
 
@@ -189,6 +191,15 @@ export default function ZonesPage() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
   const focusZone = (key) => { setOpenZone(key); scrollToZone(key) }
+
+  // Lien direct vers une zone (menu, fiches projet/partenaire/base) : /zones#zone-gao
+  useEffect(() => {
+    const m = String(hash || '').match(/^#zone-([a-z]+)/)
+    if (!m || !zones.some((z) => z.key === m[1])) return
+    setOpenZone(m[1])
+    const t = setTimeout(() => scrollToZone(m[1]), 80)
+    return () => clearTimeout(t)
+  }, [hash])
 
   return (
     <div className="min-h-screen bg-background" id="top">
@@ -353,8 +364,14 @@ export default function ZonesPage() {
                           <div className="rounded-xl bg-white border p-4"><div className="text-xs text-muted-foreground">Bénéficiaires (≈)</div><div className="text-2xl font-semibold">{fmt(stats.benef)}</div></div>
                         </div>
 
+                        {/* Base(s) AMSS couvrant la zone */}
+                        <div className="mb-4 rounded-xl border bg-white p-4 flex flex-wrap items-center gap-2 text-sm">
+                          <span className="font-medium inline-flex items-center gap-2"><Building2 className="h-4 w-4 text-primary" /> Base AMSS :</span>
+                          <LiensBases slugs={zonesByLabel.get(z.label)?.bases || []} vide="Suivi depuis la coordination" />
+                        </div>
+
                         {/* Bailleurs & partenaires (repliable) */}
-                        <details className="mb-4 rounded-xl border bg-white p-4">
+                        <details className="mb-4 rounded-xl border bg-white p-4" open>
                           <summary className="cursor-pointer font-medium">Bailleurs & partenaires</summary>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                             <div>
@@ -362,18 +379,14 @@ export default function ZonesPage() {
                                 <Building2 className="h-4 w-4 text-primary" />
                                 Bailleurs ({stats.donors.length})
                               </div>
-                              {stats.donors.length
-                                ? <ul className="list-disc pl-5 text-sm space-y-1">{stats.donors.map((d)=> <li key={d}>{d}</li>)}</ul>
-                                : <p className="text-sm text-muted-foreground">Aucun bailleur trouvé.</p>}
+                              <LiensPartenaires slugs={stats.donors} vide="Aucun bailleur trouvé." />
                             </div>
                             <div>
                               <div className="flex items-center gap-2 mb-1 text-sm font-medium">
                                 <Handshake className="h-4 w-4 text-primary" />
                                 Partenaires ({stats.partners.length})
                               </div>
-                              {stats.partners.length
-                                ? <ul className="list-disc pl-5 text-sm space-y-1">{stats.partners.map((p)=> <li key={p}>{p}</li>)}</ul>
-                                : <p className="text-sm text-muted-foreground">Aucun partenaire saisi.</p>}
+                              <LiensPartenaires slugs={stats.partners} vide="Aucun partenaire saisi." />
                             </div>
                           </div>
                         </details>
@@ -390,7 +403,6 @@ export default function ZonesPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                               {projects.map((p, idxP) => {
                                 const b = asBenef(p.beneficiaries)
-                                const donors = splitMulti(getDonor(p)).join(' • ')
                                 const domains = extractDomainTokens(getDomain(p)).join(' • ')
                                 return (
                                   <article key={idxP} className="bg-white rounded-lg border p-4">
@@ -413,12 +425,12 @@ export default function ZonesPage() {
                                       )}
                                     </div>
 
-                                    <h3 className="font-semibold leading-snug">{p.title}</h3>
+                                    <h3 className="font-semibold leading-snug"><TitreProjet p={p} /></h3>
                                     {p.excerpt && <p className="text-sm text-muted-foreground mb-2">{p.excerpt}</p>}
                                     <div className="text-xs space-y-1">
-                                      <div><span className="text-muted-foreground">Région :</span> {p.region || 'N/D'}</div>
+                                      <div><span className="text-muted-foreground">Régions :</span> <LiensZones regions={p.regions || []} icon={false} /></div>
                                       {domains && <div><span className="text-muted-foreground">Domaine :</span> {domains}</div>}
-                                      {donors && <div><span className="text-muted-foreground">Bailleur(s) :</span> {donors}</div>}
+                                      {p.bailleurs?.length > 0 && <div><span className="text-muted-foreground">Bailleur(s) :</span> <LiensPartenaires slugs={p.bailleurs} /></div>}
                                       {b > 0 && (
                                         <div className="inline-flex items-center gap-1">
                                           <Users className="h-3 w-3" />

@@ -42,6 +42,9 @@ const BadgeEmployePage = BADGE_ENABLED ? lazy(() => import('./pages/BadgeEmploye
 
 // ⬇️ NEW
 const DetailsBureauPage = lazy(() => import('./pages/DetailsBureauPage'))
+const BasesPage = lazy(() => import('./pages/BasesPage'))
+const ProjetDetailPage = lazy(() => import('./pages/ProjetDetailPage'))
+const PartenaireDetailPage = lazy(() => import('./pages/PartenaireDetailPage'))
 
 // Données (pour redirection legacy id -> slug)
 import { actualites } from './data/actualitesData'
@@ -114,7 +117,10 @@ function App() {
             )}
 
             {/* ⬇️ NEW: fiche détails bureau */}
+            <Route path="/bureaux" element={<BasesPage />} />
             <Route path="/bureaux/:slug" element={<DetailsBureauPage />} />
+            <Route path="/projets/:slug" element={<ProjetDetailPage />} />
+            <Route path="/partenaires/:slug" element={<PartenaireDetailPage />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

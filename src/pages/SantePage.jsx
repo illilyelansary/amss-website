@@ -20,10 +20,11 @@ import santeMali from '../assets/sante-mali.jpg'
 import santeNutrition from '../assets/sante-nutrition.jpg'
 
 // données projets
-import { projetsEnCours, projetsTermines } from '../data/projetsData'
+import { projetsEnCours, projetsTermines } from '@/data/reseau'
 
 // domaines canoniques
 import { hasCanon } from '@/utils/domainesCanon'
+import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'SANTE'
@@ -54,17 +55,17 @@ function ProjectCard({ p, ended = false }) {
         )}
       </div>
 
-      <h3 className="text-lg font-semibold text-foreground mb-2">{p.title}</h3>
+      <h3 className="text-lg font-semibold text-foreground mb-2"><TitreProjet p={p} /></h3>
       {p.excerpt && <p className="text-muted-foreground text-sm mb-4">{p.excerpt}</p>}
 
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
           <span className="text-muted-foreground">Région :</span>
-          <span className="font-medium text-right">{p.region || 'N/D'}</span>
+          <span className="font-medium text-right"><LiensZones regions={p.regions || []} /></span>
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Bailleur :</span>
-          <span className="font-medium text-right">{p.bailleur || p.donor || 'N/D'}</span>
+          <span className="font-medium text-right"><LiensPartenaires slugs={p.bailleurs || []} /></span>
         </div>
         {'beneficiaries' in p && (
           <div className="flex justify-between">

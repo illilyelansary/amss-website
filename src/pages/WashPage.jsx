@@ -9,10 +9,11 @@ import amssTerrainActivites from '../assets/amss-terrain-activites.jpeg'
 import projetTablesBancs from '../assets/projet-tables-bancs-amss.jpeg'
 
 // données projets (déjà normalisées par migrate-projets)
-import { projetsEnCours, projetsTermines } from '../data/projetsData'
+import { projetsEnCours, projetsTermines } from '@/data/reseau'
 
 // domaines canoniques
 import { hasCanon } from '@/utils/domainesCanon'
+import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'WASH'
@@ -203,12 +204,12 @@ const WashPage = () => {
                       <div className="w-3 h-3 bg-green-500 rounded-full mr-2" />
                       <span className="text-sm font-medium text-green-600">{p.status || 'En cours'}</span>
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">{p.title}</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-2"><TitreProjet p={p} /></h3>
                     {p.excerpt && <p className="text-muted-foreground text-sm mb-4">{p.excerpt}</p>}
 
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right">{p.region || 'N/D'}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Bailleur :</span><span className="font-medium text-right">{p.bailleur || p.donor || 'N/D'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right"><LiensZones regions={p.regions || []} /></span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Bailleur :</span><span className="font-medium text-right"><LiensPartenaires slugs={p.bailleurs || []} /></span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">Domaine :</span><span className="font-medium text-right">{p.domaine || p.domain || 'WASH'}</span></div>
                     </div>
                   </article>
@@ -247,12 +248,12 @@ const WashPage = () => {
                       <div className="w-3 h-3 bg-blue-500 rounded-full mr-2" />
                       <span className="text-sm font-medium text-blue-600">Terminé</span>
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">{p.title}</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-2"><TitreProjet p={p} /></h3>
                     {p.excerpt && <p className="text-muted-foreground text-sm mb-4">{p.excerpt}</p>}
 
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between"><span className="text-muted-foreground">Période :</span><span className="font-medium text-right">{safeYear(p.startDate)}–{safeYear(p.endDate)}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right">{p.region || 'N/D'}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Région :</span><span className="font-medium text-right"><LiensZones regions={p.regions || []} /></span></div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Bénéficiaires :</span>
                         <span className="font-medium text-right">

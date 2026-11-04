@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 
 // données projets
-import { projetsEnCours, projetsTermines } from '../data/projetsData'
+import { projetsEnCours, projetsTermines } from '@/data/reseau'
 
 // images
 import educationSahel from '../assets/education-sahel.jpg'
@@ -13,6 +13,7 @@ import educationMali from '../assets/education-mali.jpg'
 
 // domaines canoniques
 import { hasCanon } from '@/utils/domainesCanon'
+import { LiensPartenaires, TitreProjet } from '@/components/liens/Liens'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'EDUCATION'
@@ -43,14 +44,14 @@ function ProjectCard({ p }) {
         )}
       </div>
 
-      <div className="font-medium mb-1">{p.title}</div>
+      <div className="font-medium mb-1"><TitreProjet p={p} /></div>
       {p.excerpt && <div className="text-sm text-muted-foreground line-clamp-3">{p.excerpt}</div>}
 
       <div className="mt-3 text-xs text-muted-foreground space-y-1">
         {(p.bailleur || p.donor) && (
           <div className="inline-flex items-center gap-1">
             <Building2 className="h-3 w-3" />
-            <strong>Bailleur:</strong>&nbsp;{p.bailleur || p.donor}
+            <strong>Bailleur:</strong>&nbsp;<LiensPartenaires slugs={p.bailleurs || []} />
           </div>
         )}
         {p.region && (

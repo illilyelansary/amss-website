@@ -3,7 +3,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Clock, Filter, Search, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { projetsEnCours } from '@/data/projetsData'
+import { projetsEnCours } from '@/data/reseau'
+import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
 
 if (import.meta.env.DEV) {
   // eslint-disable-next-line no-console
@@ -288,13 +289,13 @@ export default function ProjetsEnCoursPage() {
                       )}
                     </div>
 
-                    <h3 className="text-lg font-semibold text-foreground mb-3">{p.title}</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-3"><TitreProjet p={p} /></h3>
                     {p.excerpt && <p className="text-muted-foreground text-sm mb-4">{p.excerpt}</p>}
 
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Région :</span>
-                        <span className="font-medium text-right">{p.region || 'N/D'}</span>
+                        <span className="font-medium text-right"><LiensZones regions={p.regions || []} /></span>
                       </div>
                       {p.programme && (
                         <div className="flex justify-between gap-3">
@@ -304,7 +305,7 @@ export default function ProjetsEnCoursPage() {
                       )}
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Bailleur :</span>
-                        <span className="font-medium text-right">{p.donor || 'N/D'}</span>
+                        <span className="font-medium text-right"><LiensPartenaires slugs={p.bailleurs || []} /></span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Domaine :</span>

@@ -3,7 +3,8 @@ import React, { useMemo, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { GraduationCap, Heart, Droplets, Shield, Users, Wheat, Layers, Filter, Search, BarChart, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { projetsEnCours, projetsTermines } from '@/data/projetsData'
+import { projetsEnCours, projetsTermines } from '@/data/reseau'
+import { TitreProjet } from '@/components/liens/Liens'
 
 // ---------- Utils ----------
 const norm = (s) => String(s || '')
@@ -271,7 +272,7 @@ function DomainCard ({ label, icon, bg, desc, projets, nbEnCours, nbTermines, on
             {sorted.map((p, idx) => (
               <li key={idx} className="border rounded p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="text-sm font-medium">{p.title}</div>
+                  <div className="text-sm font-medium"><TitreProjet p={p} /></div>
                   <span className={`text-xs px-2 py-0.5 rounded border ${String(p.status||'').toLowerCase().includes('en cours') ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'}`}>
                     {p.status || '—'}
                   </span>

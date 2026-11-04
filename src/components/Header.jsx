@@ -30,7 +30,8 @@ const Header = () => {
         { name: 'Qui sommes-nous', href: '/a-propos#top' },
         { name: 'Notre Histoire', href: '/a-propos#historique' },
         { name: 'Vision et Mission', href: '/a-propos#mission' },
-        { name: 'Équipe', href: '/a-propos#equipe' }
+        { name: 'Équipe', href: '/a-propos#equipe' },
+        { name: 'Nos bases', href: '/bureaux' }
       ]
     },
     {
