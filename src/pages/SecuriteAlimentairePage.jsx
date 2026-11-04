@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom'
 import { Wheat, Users, TrendingUp, Package as PackageIcon, MapPin, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { projetsEnCours, projetsTermines } from '@/data/reseau'
-import amssTerrainActivites from '../assets/amss-terrain-activites.jpeg'
 import projetTablesBancs from '../assets/projet-tables-bancs-amss.jpeg'
 import { hasCanon } from '@/utils/domainesCanon'
 import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
+import ResultatsAnnuels from '@/components/ResultatsAnnuels'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'SECALIM'
@@ -172,65 +172,7 @@ const SecuriteAlimentairePage = () => {
         </div>
       </section>
 
-      {/* Image et résultats */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <img
-                  src={amssTerrainActivites}
-                  alt="Sécurité alimentaire sur le terrain"
-                  className="rounded-2xl shadow-lg w-full"
-                />
-              </div>
-
-              <div>
-                <h2 className="text-3xl font-bold text-foreground mb-6">
-                  Impact Sécurité Alimentaire 2024
-                </h2>
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-green-100 p-3 rounded-lg">
-                      <Wheat className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Assistance alimentaire</h3>
-                      <p className="text-muted-foreground">
-                        25 000+ personnes ont bénéficié d&apos;assistance alimentaire
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-yellow-100 p-3 rounded-lg">
-                      <PackageIcon className="h-6 w-6 text-yellow-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Transferts monétaires</h3>
-                      <p className="text-muted-foreground">
-                        8 500 ménages soutenus par des transferts monétaires
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-orange-100 p-3 rounded-lg">
-                      <TrendingUp className="h-6 w-6 text-orange-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Résilience renforcée</h3>
-                      <p className="text-muted-foreground">
-                        12 000 ménages avec résilience alimentaire améliorée
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ResultatsAnnuels domaine="SECALIM" />
 
       {/* Contexte Sahel */}
       <section className="py-16">
@@ -354,38 +296,6 @@ const SecuriteAlimentairePage = () => {
                 </div>
               </>
             )}
-          </div>
-        </div>
-      </section>
-
-      {/* Statistiques */}
-      <section className="py-16 bg-gradient-to-br from-green-50 to-yellow-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-foreground mb-4">
-                Impact de nos Programmes Sécurité Alimentaire
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-green-600 mb-2">45 000+</div>
-                <div className="text-sm text-muted-foreground">Personnes assistées</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-yellow-600 mb-2">8 500</div>
-                <div className="text-sm text-muted-foreground">Ménages soutenus</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-orange-600 mb-2">12 000</div>
-                <div className="text-sm text-muted-foreground">Ménages résilients</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-2">8</div>
-                <div className="text-sm text-muted-foreground">Régions couvertes</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>

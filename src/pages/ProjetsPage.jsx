@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Clock, CheckCircle, FileText, ArrowRight, Handshake, Filter, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { projetsEnCours, projetsTermines, rapports as rapportsRaw } from '@/data/reseau'
+import { projetsEnCours, projetsTermines, rapports as rapportsRaw, partenaires as partenairesReseau } from '@/data/reseau'
 import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
 
 if (import.meta.env.DEV) {
@@ -219,38 +219,6 @@ export default function ProjetsPage() {
     }
   }, [enCoursFiltered])
 
-  const partenairesInstitutionnels = [
-    'Gouvernement du Mali (ministères, collectivités territoriales)',
-    'UNHCR (HCR)',
-    'UNICEF',
-    'UNFPA',
-    'OCHA',
-  ]
-  const partenairesInternationaux = [
-    'USAID',
-    'FHI 360',
-    'Save the Children',
-    'World Vision',
-    'Fondation Stromme',
-    'EUMC (WUSC)',
-    'DDC (Coopération Suisse)',
-    'WHH',
-    'CRS',
-    'Union Européenne',
-    'Ambassade des Pays-Bas',
-    'PNUD',
-    'PAM',
-    'FBA',
-    'Oxfam',
-    'HI',
-    'Action Contre la Faim',
-    'CARE',
-    'DRC',
-    'IRC',
-    'MSF',
-    'Fonds Humanitaire Mali',
-  ]
-  const partenairesNationaux = ['PONAH', 'CAEB', 'FONGIM', 'EDUCO', 'ADEFIM', 'THINK PEACE', 'FEMAPH', 'ARGA']
 
   // Rapports (garde-fou)
   const rapports = Array.isArray(rapportsRaw) ? rapportsRaw : []
@@ -609,32 +577,16 @@ export default function ProjetsPage() {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white border border-border rounded-xl p-6 shadow-sm">
-                <h3 className="text-lg font-semibold mb-3">Institutionnels & Techniques</h3>
-                <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
-                  {partenairesInstitutionnels.map((p, i) => (
-                    <li key={i}>{p}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="bg-white border border-border rounded-xl p-6 shadow-sm">
-                <h3 className="text-lg font-semibold mb-3">Financiers & Internationaux</h3>
-                <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
-                  {partenairesInternationaux.map((p, i) => (
-                    <li key={i}>{p}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="bg-white border border-border rounded-xl p-6 shadow-sm">
-                <h3 className="text-lg font-semibold mb-3">Nationaux & ONG Locales</h3>
-                <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
-                  {partenairesNationaux.map((p, i) => (
-                    <li key={i}>{p}</li>
-                  ))}
-                </ul>
-              </div>
+              {[
+                { titre: 'Bailleurs de fonds', liste: partenairesReseau.filter((x) => x.projets.length && x.roles.includes('Bailleur')) },
+                { titre: 'Partenaires de mise en œuvre', liste: partenairesReseau.filter((x) => x.projets.length && x.roles.includes('Partenaire de mise en œuvre') && !/nationale?|F[ée]d[ée]ration|R[ée]seau|Gouvernement/.test(x.type)) },
+                { titre: 'Partenaires nationaux', liste: partenairesReseau.filter((x) => x.projets.length && /nationale?|F[ée]d[ée]ration|R[ée]seau|Gouvernement/.test(x.type)) },
+              ].map(({ titre, liste }) => (
+                <div key={titre} className="bg-white border border-border rounded-xl p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold mb-3">{titre} ({liste.length})</h3>
+                  <LiensPartenaires slugs={liste.map((x) => x.slug)} />
+                </div>
+              ))}
             </div>
 
             <div className="mt-6">

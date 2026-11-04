@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { projetsEnCours, projetsTermines } from '@/data/reseau'
 import { hasCanon } from '@/utils/domainesCanon'
 import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
+import ResultatsAnnuels from '@/components/ResultatsAnnuels'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'GOUV'
@@ -16,16 +17,11 @@ const safeYear = (value) => {
   return Number.isNaN(y.getTime()) ? 'N/D' : y.getFullYear()
 }
 
-const n = (x) => new Intl.NumberFormat('fr-FR').format(Number(x || 0))
 
 export default function GouvernancePage() {
   const govEnCours = useMemo(() => (projetsEnCours || []).filter(p => hasCanon(p, CANON_KEY)), [])
   const govTermines = useMemo(() => (projetsTermines || []).filter(p => hasCanon(p, CANON_KEY)), [])
 
-  const totalBenef = useMemo(
-    () => govEnCours.reduce((acc, p) => acc + Number(p.beneficiaries || 0), 0),
-    [govEnCours]
-  )
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,7 +46,7 @@ export default function GouvernancePage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-5xl mx-auto">
             <Stat icon={<Users className="h-5 w-5" />} label="Projets en cours" value={govEnCours.length} />
             <Stat icon={<CheckCircle className="h-5 w-5" />} label="Projets terminés" value={govTermines.length} />
-            <Stat icon={<TrendingUp className="h-5 w-5" />} label="Bénéficiaires (en cours)" value={n(totalBenef)} />
+            <Stat icon={<TrendingUp className="h-5 w-5" />} label="Régions (projets en cours)" value={new Set(govEnCours.flatMap(p => p.regions || [])).size} />
           </div>
         </div>
       </section>
@@ -115,18 +111,14 @@ export default function GouvernancePage() {
         </div>
       </section>
 
+      <ResultatsAnnuels domaine="GOUV" />
+
       {/* Approche & présence */}
       <section className="py-16 bg-white/60 border-y">
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="max-w-xl mx-auto">
             <Kpi title="Approche inclusive" icon={<Users className="h-5 w-5" />}>
               Participation des femmes et jeunes, OSC locales et leaders communautaires.
-            </Kpi>
-            <Kpi title="Zones d’intervention" icon={<MapPin className="h-5 w-5" />}>
-              Tombouctou • Gao • Mopti • Kidal • Ségou
-            </Kpi>
-            <Kpi title="Partenaires" icon={<Users className="h-5 w-5" />}>
-              PTF, Ministères, Collectivités, réseaux de paix
             </Kpi>
           </div>
 

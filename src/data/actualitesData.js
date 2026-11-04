@@ -248,8 +248,33 @@ const base = [
   contenu: "La cérémonie officielle de remise des équipements et matériels scolaires au profit des communes de Kignan, Missirikoro, Fama, Lobougoula et Tiankadi s’est tenue le 04 décembre 2025 à Sikasso dans le cadre du projet PADEM mis en œuvre par AMSS en consortium avec Save the Children, CAEB et Cordaid, grâce à l’appui financier de l’Union Européenne. L’événement, présidé par le représentant du Gouverneur, a réuni autorités administratives, services techniques, maires, DCAP, CGS, partenaires et médias. Au total, 10 800 kits scolaires, 100 malles pédagogiques, 500 tables-bancs, des matériels didactiques et des fournitures pour CDPE et SSA/P ont été remis, symbolisant un investissement majeur pour améliorer la qualité de l’éducation dans la région de Sikasso.",
   lieux: ["Sikasso", "Kignan", "Missirikoro", "Fama", "Lobougoula", "Tiankadi"],
   tags: ["Éducation", "PADEM", "KitsScolaires", "Sikasso", "UnionEuropéenne"]
-}
-
+},
+  {
+    id: 19,
+    titre: "Assemblée générale de l’AMSS du 11 octobre 2025",
+    date: "11 octobre 2025",
+    dateISO: "2025-10-11",
+    categorie: "Vie associative",
+    image: img("formation-employes-amss.jpg"),
+    excerpt: "L’assemblée générale a passé en revue les actions de l’AMSS, le travail du comité exécutif et la vie associative, et formulé des orientations pour l’avenir.",
+    contenu: "L’AMSS a tenu son assemblée générale le 11 octobre 2025. L’ordre du jour portait sur le contrôle des tâches confiées au comité exécutif, la vie associative de l’AMSS et des questions diverses. L’assemblée a permis de faire une revue de toutes les actions entreprises par l’AMSS et de formuler des suggestions pour l’avenir, à la veille du lancement du nouveau plan stratégique 2026-2030.",
+    lieux: ["Mali"],
+    tags: ["Vie associative", "Gouvernance"]
+  },
+  {
+    id: 20,
+    titre: "Rapport annuel 2025 : une quarantaine de projets exécutés malgré un contexte difficile",
+    date: "31 décembre 2025",
+    dateISO: "2025-12-31",
+    categorie: "Institutionnel",
+    image: img("terrain-sahel-activites.jpg"),
+    excerpt: "L’AMSS a remis au Ministère de l’Administration territoriale son rapport d’activités 2025 : une quarantaine de projets et programmes exécutés dans le nord, le centre, le sud et à Bamako.",
+    contenu: "Dans le cadre de son accord-cadre avec l’État (n°0026/0286MATCL), l’AMSS a remis son rapport annuel d’activités 2025. Malgré la détérioration du contexte sécuritaire et l’arrêt des financements américains, une quarantaine de projets et programmes ont été exécutés en éducation, protection et lutte contre les VBG, santé et nutrition, WASH, sécurité alimentaire, gouvernance et cohésion sociale. Parmi les résultats : 798 enfants des centres SSA/P transférés à l’école classique, 3 614 ménages agropastoraux dotés en intrants à Tombouctou et Taoudénit, 1 008 jeunes leaders formés à la gouvernance locale dans 35 communes et 874 enfants malnutris pris en charge à Gao et Ansongo. Pour 2026, l’AMSS lance son nouveau plan stratégique 2026-2030.",
+    statistiques: { projets: "40", communes: "35", enfants: "798" },
+    lieux: ["Tombouctou", "Taoudénit", "Gao", "Ménaka", "Mopti", "Ségou", "Sikasso", "Bamako"],
+    featured: true,
+    tags: ["Institutionnel", "Rapport annuel", "Projets"]
+  }
 ]
 
 // Export final avec slug

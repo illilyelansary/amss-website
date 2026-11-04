@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Heart, Users, Globe } from 'lucide-react'
+import { ArrowRight, Heart, Globe, Briefcase, Handshake } from 'lucide-react'
+import { statsGlobales, ANNEE_CREATION } from '@/data/reseau'
 import { Link, useLocation } from 'react-router-dom'
 
 const HeroSection = () => {
@@ -38,27 +39,24 @@ const HeroSection = () => {
 
           {/* Subtitle */}
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed">
-            Depuis 1991, l'AMSS œuvre pour l'amélioration des conditions de vie des populations vulnérables 
+            Depuis {ANNEE_CREATION}, l'AMSS œuvre pour l'amélioration des conditions de vie des populations vulnérables 
             du Mali à travers des solutions durables et participatives.
           </p>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <div className="flex flex-col items-center p-6 bg-white/50 backdrop-blur-sm rounded-lg border border-border/50">
-              <Users className="h-12 w-12 text-primary mb-3" />
-              <div className="text-3xl font-bold text-foreground">460+</div>
-              <div className="text-sm text-muted-foreground">Employés</div>
-            </div>
-            <div className="flex flex-col items-center p-6 bg-white/50 backdrop-blur-sm rounded-lg border border-border/50">
-              <Globe className="h-12 w-12 text-accent mb-3" />
-              <div className="text-3xl font-bold text-foreground">8</div>
-              <div className="text-sm text-muted-foreground">Régions d'intervention</div>
-            </div>
-            <div className="flex flex-col items-center p-6 bg-white/50 backdrop-blur-sm rounded-lg border border-border/50">
-              <Heart className="h-12 w-12 text-primary mb-3" />
-              <div className="text-3xl font-bold text-foreground">30+</div>
-              <div className="text-sm text-muted-foreground">Années d'expérience</div>
-            </div>
+          {/* Chiffres clés — calculés depuis le registre des projets */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-12">
+            {[
+              { icon: Heart, val: statsGlobales.anneesExperience, label: "Années d'engagement", to: '/a-propos#historique', color: 'text-primary' },
+              { icon: Globe, val: statsGlobales.regions, label: "Régions d'intervention", to: '/zones', color: 'text-accent' },
+              { icon: Briefcase, val: statsGlobales.projetsEnCours, label: 'Projets en cours', to: '/projets-en-cours', color: 'text-primary' },
+              { icon: Handshake, val: statsGlobales.partenaires, label: 'Partenaires', to: '/partenaires', color: 'text-accent' },
+            ].map(({ icon, val, label, to, color }) => { const Icone = icon; return (
+              <Link key={label} to={to} className="flex flex-col items-center p-5 bg-white/50 backdrop-blur-sm rounded-lg border border-border/50 hover:shadow-md transition-shadow">
+                <Icone className={`h-10 w-10 ${color} mb-2`} />
+                <div className="text-3xl font-bold text-foreground">{val}</div>
+                <div className="text-sm text-muted-foreground text-center">{label}</div>
+              </Link>
+            )})}
           </div>
 
           {/* Call to action buttons */}

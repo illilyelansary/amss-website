@@ -27,7 +27,7 @@ export default function DomainByCanon({ canonKey, title, intro }) {
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Stat label="Projets en cours" value={enCours.length} />
               <Stat label="Projets terminés" value={termines.length} />
-              <Stat label="Bénéficiaires (en cours)" value={n(totalBenef)} />
+              <Stat label="Régions (projets en cours)" value={new Set(enCours.flatMap(p => p.regions || [])).size} />
             </div>
             <div className="mt-6">
               <Link to={`/projets?domain=${encodeURIComponent(canonLabel(canonKey))}`}>

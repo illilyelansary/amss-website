@@ -5,15 +5,23 @@ import HeroSection from '../components/HeroSection'
 import DomainesSection from '../components/DomainesSection'
 import ZonesSection from '../components/ZonesSection'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Users, Target, Award, ListTree, MapPin } from 'lucide-react'
-import projetTerrain from '../assets/projet-terrain.jpeg'
+import { ArrowRight, ListTree, MapPin, Calendar } from 'lucide-react'
+import { actualites } from '@/data/actualitesData'
+import { projetsEnCours } from '@/data/reseau'
+import { TitreProjet, LiensZones, LiensPartenaires } from '@/components/liens/Liens'
+
+// 3 dernières actualités (les plus récentes d’abord)
+const dernieresActus = [...actualites].sort((a, b) => String(b.dateISO).localeCompare(String(a.dateISO))).slice(0, 3)
+// Projets en cours à la une : les plus récents
+const projetsUne = projetsEnCours.filter((p) => p.status === 'En cours').slice(0, 6)
+const fmtDate = (d) => (d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
 const sections = [
   { id: 'top', label: 'Haut de page' },
   { id: 'actualites', label: 'Actualités' },
   { id: 'domaines', label: 'Domaines' },
   { id: 'zones', label: 'Zones' },
-  { id: 'temoignages', label: 'Témoignages' }
+  { id: 'projets-une', label: 'Projets en cours' }
 ]
 
 const HomePage = () => {
@@ -129,58 +137,22 @@ const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <article className="bg-white rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg transition-shadow">
-              <img src={projetTerrain} alt="Projet de terrain AMSS" className="w-full h-48 object-cover" />
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-3">Du plastique recyclé aux bancs d'école</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  260 tables-bancs remis gratuitement aux écoles de Tombouctou dans le cadre du projet Green Jobs avec la
-                  Fondation Stromme.
-                </p>
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/actualites" aria-label="Lire la suite sur les actualités">
-                    Lire la suite
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </article>
-
-            <article className="bg-white rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="bg-gradient-to-br from-primary/20 to-accent/20 h-48 flex items-center justify-center">
-                <Users className="h-16 w-16 text-primary" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-3">Formation de 460 employés</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Renforcement des capacités de notre équipe pour mieux servir les communautés vulnérables du Mali.
-                </p>
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/actualites" aria-label="En savoir plus sur la formation des employés">
-                    En savoir plus
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </article>
-
-            <article className="bg-white rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="bg-gradient-to-br from-accent/20 to-primary/20 h-48 flex items-center justify-center">
-                <Target className="h-16 w-16 text-accent" />
-              </div>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-3">Extension vers 8 régions</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  L'AMSS étend sa couverture géographique pour atteindre plus de populations vulnérables à travers le Mali.
-                </p>
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/actualites" aria-label="Découvrir les détails de l’extension">
-                    Découvrir
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </article>
+            {dernieresActus.map((a) => (
+              <article key={a.slug} className="bg-white rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
+                <img src={a.image || '/placeholder-news.jpg'} alt="" loading="lazy" className="w-full h-48 object-cover" />
+                <div className="p-6 flex flex-col flex-1">
+                  <div className="text-xs text-muted-foreground mb-2 inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{fmtDate(a.dateISO)}</div>
+                  <h3 className="text-lg font-semibold text-foreground mb-3">{a.titre}</h3>
+                  {a.excerpt && <p className="text-muted-foreground text-sm mb-4 line-clamp-3">{a.excerpt}</p>}
+                  <Button variant="outline" size="sm" asChild className="mt-auto self-start">
+                    <Link to={`/actualites/${a.slug}`} aria-label={`Lire : ${a.titre}`}>
+                      Lire la suite
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </article>
+            ))}
           </div>
 
           {/* Bouton vers la page actualités */}
@@ -225,42 +197,31 @@ const HomePage = () => {
         <ZonesSection />
       </section>
 
-      {/* Section Témoignages */}
-      <section id="temoignages" className="py-16 bg-muted/30 scroll-mt-24">
+      {/* Projets en cours à la une (mis à jour automatiquement depuis le registre) */}
+      <section id="projets-une" className="py-16 bg-muted/30 scroll-mt-24">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Témoignages</h2>
-            <p className="text-xl text-muted-foreground">La parole à nos bénéficiaires et partenaires</p>
+            <h2 className="text-3xl font-bold text-foreground mb-4">Projets en cours</h2>
+            <p className="text-xl text-muted-foreground">Les projets que l’AMSS met en œuvre actuellement avec ses partenaires</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-border">
-              <div className="flex items-center mb-4">
-                <Award className="h-8 w-8 text-primary mr-3" />
-                <div>
-                  <h4 className="font-semibold text-foreground">Aminata Touré</h4>
-                  <p className="text-sm text-muted-foreground">Bénéficiaire, Tombouctou</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {projetsUne.map((p) => (
+              <article key={p.slug} className="bg-white p-6 rounded-xl shadow-sm border border-border flex flex-col">
+                <div className="text-xs text-muted-foreground mb-2">
+                  {[p.startDate?.slice(0, 4), p.endDate?.slice(0, 4)].filter(Boolean).join(' – ')}
                 </div>
-              </div>
-              <p className="text-muted-foreground italic">
-                "Grâce aux programmes d'alphabétisation de l'AMSS, j'ai pu apprendre à lire et à écrire. Aujourd'hui, je peux
-                aider mes enfants avec leurs devoirs et gérer mon petit commerce."
-              </p>
-            </div>
-
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-border">
-              <div className="flex items-center mb-4">
-                <Award className="h-8 w-8 text-accent mr-3" />
-                <div>
-                  <h4 className="font-semibold text-foreground">Dr. Ibrahim Maïga</h4>
-                  <p className="text-sm text-muted-foreground">Partenaire, UNICEF Mali</p>
+                <h3 className="font-semibold text-foreground mb-3 leading-snug"><TitreProjet p={p} /></h3>
+                <div className="mt-auto space-y-2 text-sm">
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">Zones</span><LiensZones regions={p.regions || []} icon={false} /></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">Bailleur</span><LiensPartenaires slugs={p.bailleurs} /></div>
                 </div>
-              </div>
-              <p className="text-muted-foreground italic">
-                "L'AMSS est un partenaire fiable et expérimenté. Leur approche participative et leur connaissance du terrain
-                font la différence dans nos interventions humanitaires."
-              </p>
-            </div>
+              </article>
+            ))}
+          </div>
+          <div className="text-center mt-10">
+            <Button asChild>
+              <Link to="/projets-en-cours">Voir tous les projets en cours ({projetsEnCours.length})</Link>
+            </Button>
           </div>
         </div>
       </section>

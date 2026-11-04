@@ -5,7 +5,6 @@ import { Droplets, Waves, Sparkles, Users, TrendingUp, MapPin, ArrowRight, Check
 import { Button } from '@/components/ui/button'
 
 // images “vitrine”
-import amssTerrainActivites from '../assets/amss-terrain-activites.jpeg'
 import projetTablesBancs from '../assets/projet-tables-bancs-amss.jpeg'
 
 // données projets (déjà normalisées par migrate-projets)
@@ -14,6 +13,7 @@ import { projetsEnCours, projetsTermines } from '@/data/reseau'
 // domaines canoniques
 import { hasCanon } from '@/utils/domainesCanon'
 import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
+import ResultatsAnnuels from '@/components/ResultatsAnnuels'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'WASH'
@@ -133,57 +133,7 @@ const WashPage = () => {
         </div>
       </section>
 
-      {/* Image + résultats */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <img
-                  src={amssTerrainActivites}
-                  alt="Activités WASH sur le terrain"
-                  className="rounded-2xl shadow-lg w-full"
-                />
-              </div>
-
-              <div>
-                <h2 className="text-3xl font-bold text-foreground mb-6">Réalisations WASH 2024</h2>
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-blue-100 p-3 rounded-lg">
-                      <Droplets className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Points d&apos;eau réalisés</h3>
-                      <p className="text-muted-foreground">25 forages et 15 puits réhabilités dans 8 régions</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-cyan-100 p-3 rounded-lg">
-                      <Waves className="h-6 w-6 text-cyan-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Assainissement</h3>
-                      <p className="text-muted-foreground">500 latrines familiales et 50 latrines scolaires</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-green-100 p-3 rounded-lg">
-                      <Sparkles className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Sensibilisation</h3>
-                      <p className="text-muted-foreground">15 000 personnes sensibilisées aux bonnes pratiques d&apos;hygiène</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ResultatsAnnuels domaine="WASH" />
 
       {/* Projets WASH en cours */}
       <section id="projets-wash" className="py-16">
@@ -304,36 +254,6 @@ const WashPage = () => {
                   alt="Projet communautaire AMSS"
                   className="rounded-2xl shadow-lg w-full"
                 />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Statistiques */}
-      <section className="py-16 bg-gradient-to-br from-blue-50 to-cyan-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-foreground mb-4">Impact de nos Interventions WASH</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-2">50 000+</div>
-                <div className="text-sm text-muted-foreground">Personnes avec accès à l&apos;eau</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-cyan-600 mb-2">550</div>
-                <div className="text-sm text-muted-foreground">Latrines construites</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-green-600 mb-2">40</div>
-                <div className="text-sm text-muted-foreground">Points d&apos;eau réalisés</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-purple-600 mb-2">80</div>
-                <div className="text-sm text-muted-foreground">Comités formés</div>
               </div>
             </div>
           </div>

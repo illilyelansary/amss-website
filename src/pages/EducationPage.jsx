@@ -8,12 +8,12 @@ import { Link } from 'react-router-dom'
 import { projetsEnCours, projetsTermines } from '@/data/reseau'
 
 // images
-import educationSahel from '../assets/education-sahel.jpg'
 import educationMali from '../assets/education-mali.jpg'
 
 // domaines canoniques
 import { hasCanon } from '@/utils/domainesCanon'
 import { LiensPartenaires, TitreProjet } from '@/components/liens/Liens'
+import ResultatsAnnuels from '@/components/ResultatsAnnuels'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'EDUCATION'
@@ -170,53 +170,7 @@ export default function EducationPage() {
         </div>
       </section>
 
-      {/* Image et résultats */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <img src={educationSahel} alt="Éducation au Sahel" className="rounded-2xl shadow-lg w-full" />
-              </div>
-
-              <div>
-                <h2 className="text-3xl font-bold text-foreground mb-6">Résultats 2024</h2>
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-blue-100 p-3 rounded-lg">
-                      <TrendingUp className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Taux de réussite élevé</h3>
-                      <p className="text-muted-foreground">99,01% de taux d&apos;admission en SSA/P (2021–2022)</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-green-100 p-3 rounded-lg">
-                      <Users className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Centres actifs</h3>
-                      <p className="text-muted-foreground">50+ centres SSA/P &amp; AA ouverts dans nos régions</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-purple-100 p-3 rounded-lg">
-                      <Award className="h-6 w-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">Formation professionnelle</h3>
-                      <p className="text-muted-foreground">40 jeunes S3A formés et installés avec des kits</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ResultatsAnnuels domaine="EDUCATION" />
 
       {/* Partenariat Fondation Stromme */}
       <section className="py-16">
@@ -297,36 +251,6 @@ export default function EducationPage() {
                 ))}
               </div>
             )}
-          </div>
-        </div>
-      </section>
-
-      {/* Statistiques */}
-      <section className="py-16 bg-gradient-to-br from-blue-50 to-green-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-foreground mb-4">Impact de nos Programmes Éducatifs</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-2">1 500+</div>
-                <div className="text-sm text-muted-foreground">Apprenants SSA/P</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-green-600 mb-2">200+</div>
-                <div className="text-sm text-muted-foreground">Adolescents SSA2</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-purple-600 mb-2">100+</div>
-                <div className="text-sm text-muted-foreground">Jeunes S3A formés</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-orange-600 mb-2">1 000+</div>
-                <div className="text-sm text-muted-foreground">Femmes alphabétisées</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>

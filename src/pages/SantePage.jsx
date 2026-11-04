@@ -16,7 +16,6 @@ import {
 import { Button } from '@/components/ui/button'
 
 // images vitrines
-import santeMali from '../assets/sante-mali.jpg'
 import santeNutrition from '../assets/sante-nutrition.jpg'
 
 // données projets
@@ -25,6 +24,7 @@ import { projetsEnCours, projetsTermines } from '@/data/reseau'
 // domaines canoniques
 import { hasCanon } from '@/utils/domainesCanon'
 import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
+import ResultatsAnnuels from '@/components/ResultatsAnnuels'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'SANTE'
@@ -192,45 +192,7 @@ export default function SantePage() {
         </div>
       </section>
 
-      {/* Image & résultats */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <img src={santeMali} alt="Santé au Mali" className="rounded-2xl shadow-lg w-full" />
-              </div>
-
-              <div>
-                <h2 className="text-3xl font-bold text-foreground mb-6">Impact Santé 2024</h2>
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-red-100 p-3 rounded-lg"><Heart className="h-6 w-6 text-red-600" /></div>
-                    <div>
-                      <h3 className="font-semibold">Santé maternelle</h3>
-                      <p className="text-muted-foreground">2 500+ femmes bénéficiaires de CPN</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-orange-100 p-3 rounded-lg"><Activity className="h-6 w-6 text-orange-600" /></div>
-                    <div>
-                      <h3 className="font-semibold">Nutrition infantile</h3>
-                      <p className="text-muted-foreground">1 800+ enfants traités pour MAS</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-green-100 p-3 rounded-lg"><Shield className="h-6 w-6 text-green-600" /></div>
-                    <div>
-                      <h3 className="font-semibold">Vaccination</h3>
-                      <p className="text-muted-foreground">≈85 % de couverture dans nos zones</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ResultatsAnnuels domaine="SANTE" />
 
       {/* Projets — En cours */}
       <section id="projets-sante" className="py-16">
@@ -308,23 +270,6 @@ export default function SantePage() {
               <div>
                 <img src={santeNutrition} alt="Santé et Nutrition" className="rounded-2xl shadow-lg w-full" />
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Statistiques */}
-      <section className="py-16 bg-gradient-to-br from-red-50 to-orange-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-foreground mb-4">Impact de nos Programmes Santé</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="text-center"><div className="text-4xl font-bold text-red-600 mb-2">15 000+</div><div className="text-sm text-muted-foreground">Consultations médicales</div></div>
-              <div className="text-center"><div className="text-4xl font-bold text-orange-600 mb-2">2 500+</div><div className="text-sm text-muted-foreground">Femmes suivies</div></div>
-              <div className="text-center"><div className="text-4xl font-bold text-green-600 mb-2">1 800+</div><div className="text-sm text-muted-foreground">Enfants traités</div></div>
-              <div className="text-center"><div className="text-4xl font-bold text-blue-600 mb-2">200+</div><div className="text-sm text-muted-foreground">Agents formés</div></div>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Calendar, Users, Globe, Award, Target, Heart, Quote, ListTree } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import logoAmss from '../assets/LogoAMSSFHD.png'
+import { statsGlobales } from '@/data/reseau'
 
 const sections = [
   { id: 'top', label: "Haut de page" },
@@ -10,6 +11,7 @@ const sections = [
   { id: 'mot-directeur', label: 'Mot du Directeur' },
   { id: 'mission', label: 'Mission · Vision · Valeurs' },
   { id: 'equipe', label: 'Équipe de Direction' },
+  { id: 'reseaux', label: 'Réseaux et affiliations' },
 ]
 
 export default function AboutPage() {
@@ -141,10 +143,26 @@ export default function AboutPage() {
                       </div>
                     </div>
                     <div className="flex items-start space-x-4">
+                      <Calendar className="h-6 w-6 text-primary mt-1 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-2">2025 - Une année de forte activité</h3>
+                        <p className="text-muted-foreground">Une quarantaine de projets et programmes exécutés malgré l’insécurité et l’arrêt des financements américains ; assemblée générale tenue le 11 octobre 2025.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-4">
                       <Award className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">Aujourd'hui</h3>
-                        <p className="text-muted-foreground">Présence dans 8 régions du Mali avec 460+ employés et plus de 100 projets réalisés au service des populations vulnérables.</p>
+                        <p className="text-muted-foreground">
+                          {statsGlobales.projetsEnCours} projets en cours dans {statsGlobales.regions} régions du Mali, depuis {statsGlobales.bases} bases,
+                          avec {statsGlobales.partenaires} partenaires. Lancement du nouveau plan stratégique 2026-2030.
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-3 text-sm">
+                          <Link to="/projets-en-cours" className="text-primary hover:underline">Projets en cours</Link>
+                          <Link to="/zones" className="text-primary hover:underline">Zones</Link>
+                          <Link to="/bureaux" className="text-primary hover:underline">Nos bases</Link>
+                          <Link to="/partenaires" className="text-primary hover:underline">Partenaires</Link>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -152,10 +170,10 @@ export default function AboutPage() {
                 <div className="bg-white rounded-2xl p-8 shadow-sm border border-border">
                   <h3 className="text-2xl font-semibold text-foreground mb-6 text-center">Chiffres Clés</h3>
                   <div className="grid grid-cols-2 gap-6">
-                    <div className="text-center"><div className="text-3xl font-bold text-primary mb-2">30+</div><div className="text-sm text-muted-foreground">Années d'expérience</div></div>
+                    <div className="text-center"><div className="text-3xl font-bold text-primary mb-2">{statsGlobales.anneesExperience}</div><div className="text-sm text-muted-foreground">Années d'expérience</div></div>
                     <div className="text-center"><div className="text-3xl font-bold text-accent mb-2">460+</div><div className="text-sm text-muted-foreground">Employés</div></div>
-                    <div className="text-center"><div className="text-3xl font-bold text-primary mb-2">8</div><div className="text-sm text-muted-foreground">Régions</div></div>
-                    <div className="text-center"><div className="text-3xl font-bold text-accent mb-2">200K+</div><div className="text-sm text-muted-foreground">Bénéficiaires</div></div>
+                    <div className="text-center"><div className="text-3xl font-bold text-primary mb-2">{statsGlobales.regions}</div><div className="text-sm text-muted-foreground">Régions d’intervention</div></div>
+                    <div className="text-center"><div className="text-3xl font-bold text-accent mb-2">{statsGlobales.bases}</div><div className="text-sm text-muted-foreground">Bases (siège, coordination, régions)</div></div>
                   </div>
                 </div>
               </div>
@@ -266,15 +284,43 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Réseaux et affiliations (rapport annuel 2025) */}
+      <section id="reseaux" className="py-16 outline-none scroll-mt-24">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <h2 className="text-3xl font-bold text-foreground mb-3 text-center">Réseaux et affiliations</h2>
+          <p className="text-muted-foreground text-center mb-8">L’AMSS partage ses idéaux avec d’autres organisations à travers ces cadres de concertation.</p>
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Plateforme des ONG nationales actives dans l’humanitaire (PONAH)</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Coordinations régionales des ONG de Tombouctou, Gao et Mopti</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Coordination locale des ONG de Tombouctou et Goundam</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Coalition Éducation pour Tous (EPT)</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Réseau pour la mobilisation des fonds pour la scolarisation des filles</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Plateforme de lutte contre les inégalités sociales</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Réseau de défense des droits des femmes et des filles</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Réseau pour l’abandon du mariage des enfants (REPAME)</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Partenariat mondial « Filles, pas épouses »</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">GENOVICO (gestion non violente des conflits)</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Réseau lobbying et plaidoyer (RPL) du Mali</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Membre consultatif d’INSO</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Groupe pivot Santé et Population</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Réseau mondial GNDR (réduction des risques de catastrophes)</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Clusters humanitaires (protection, éducation, santé, sécurité alimentaire, WASH, cohésion sociale…)</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Conseil d’administration du Fonds régional pour le Sahel</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">ICVA</li>
+                <li className="bg-white border rounded-lg px-4 py-3 text-sm text-muted-foreground">Forum des ONG d’Afrique de l’Ouest et du Centre</li>
+          </ul>
+        </div>
+      </section>
+
       {/* Accord cadre */}
       <section className="py-16 bg-gradient-to-br from-primary/5 to-accent/5">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-foreground mb-6">Reconnaissance Officielle</h2>
             <div className="bg-white rounded-xl p-8 shadow-sm border border-border">
-              <p className="text-lg text-muted-foreground mb-4">L'AMSS a conclu un accord cadre avec l'État Malien en décembre 1992</p>
+              <p className="text-lg text-muted-foreground mb-4">L'AMSS a conclu un premier accord-cadre avec l'État malien en décembre 1992. L'accord en vigueur est le suivant :</p>
               <div className="bg-muted/50 rounded-lg p-4 mb-6"><p className="font-mono text-sm text-foreground">Accord N°0026/0286MATCL du 03/12/2007</p></div>
-              <p className="text-muted-foreground">Cet accord officialise notre statut d'ONG nationale et notre engagement à servir les populations vulnérables du Mali en collaboration avec les autorités nationales et locales.</p>
+              <p className="text-muted-foreground">Dans ce cadre, l'AMSS remet chaque année son rapport d'activités au Ministère de l'Administration territoriale (le dernier porte sur l'année 2025). Cet accord officialise notre statut d'ONG nationale et notre engagement à servir les populations vulnérables du Mali en collaboration avec les autorités nationales et locales.</p>
             </div>
           </div>
         </div>

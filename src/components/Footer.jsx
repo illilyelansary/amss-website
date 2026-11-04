@@ -177,7 +177,7 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-sm text-muted">
-              © 2025 AMSS - Association Malienne pour la Survie au Sahel. Tous droits réservés.
+              © {new Date().getFullYear()} AMSS - Association Malienne pour la Survie au Sahel. Tous droits réservés.
             </div>
             <div className="flex space-x-6 text-sm">
               <Link to="/mentions-legales" className="text-muted hover:text-primary transition-colors">

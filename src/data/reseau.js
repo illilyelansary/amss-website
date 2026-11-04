@@ -207,3 +207,16 @@ export const projetsTermines = projetsReseau
   .filter((p) => p.status === 'Terminé')
   .sort((a, b) => String(b.endDate || '').localeCompare(String(a.endDate || '')))
 export { rapports, programmes } from './projetsData.js'
+
+/* ============ Chiffres globaux (accueil, À propos, pied de page) ============ */
+export const ANNEE_CREATION = 1991
+export const statsGlobales = {
+  anneesExperience: new Date().getFullYear() - ANNEE_CREATION,
+  regions: zones.filter((z) => z.projets.length).length,
+  projetsEnCours: projetsEnCours.length,
+  projetsTermines: projetsTermines.length,
+  projetsTotal: projetsReseau.length,
+  partenairesActifs: partenaires.filter((p) => p.projets.some((x) => x.status !== 'Terminé')).length,
+  partenaires: partenaires.filter((p) => p.projets.length).length,
+  bases: bases.length,
+}
