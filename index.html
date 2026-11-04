@@ -1,13 +1,39 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AMSS - Association Malienne pour la Survie au Sahel</title>
+    <title>AMSS – Association Malienne pour la Survie au Sahel</title>
+    <meta name="description" content="L’AMSS, ONG malienne, agit depuis le Sahel pour l’éducation, la santé, l’eau et l’assainissement, la protection, la sécurité alimentaire et la gouvernance dans 8 régions du Mali." />
+    <meta name="theme-color" content="#0f5132" />
+    <link rel="canonical" href="https://www.ong-amss.org/" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <!-- Partage Facebook / WhatsApp / LinkedIn -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="AMSS" />
+    <meta property="og:title" content="AMSS – Association Malienne pour la Survie au Sahel" />
+    <meta property="og:description" content="ONG malienne au service des populations du Sahel : éducation, santé, WASH, protection, sécurité alimentaire et gouvernance." />
+    <meta property="og:url" content="https://www.ong-amss.org/" />
+    <meta property="og:image" content="https://www.ong-amss.org/logo.png" />
+    <meta name="twitter:card" content="summary" />
   </head>
   <body>
+    <noscript>Ce site nécessite JavaScript. Contact : info@ong-amss.org</noscript>
     <div id="root"></div>
+
+    <!-- Copie statique du formulaire de contact : OBLIGATOIRE pour que
+         Netlify détecte le formulaire au déploiement (le vrai formulaire
+         est rendu par React dans ContactPage.jsx). Mêmes noms de champs. -->
+    <form name="contact" data-netlify="true" data-netlify-honeypot="bot-field" hidden>
+      <input type="text" name="bot-field" />
+      <input type="text" name="nom" />
+      <input type="email" name="email" />
+      <input type="text" name="sujet" />
+      <textarea name="message"></textarea>
+    </form>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

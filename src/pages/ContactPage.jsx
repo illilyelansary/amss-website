@@ -12,7 +12,7 @@ const ContactPage = () => {
     email: '',
     sujet: '',
     message: '',
-    website: '' // honeypot anti-spam (ne pas remplir)
+    botField: '' // honeypot anti-spam (ne pas remplir)
   })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
@@ -38,7 +38,7 @@ const ContactPage = () => {
     setStatus({ type: '', message: '' })
 
     // honeypot
-    if (formData.website) {
+    if (formData.botField) {
       setStatus({ type: 'error', message: 'Échec de l’envoi.' })
       return
     }
@@ -47,6 +47,7 @@ const ContactPage = () => {
 
     const payload = {
       'form-name': 'contact',
+      'bot-field': '',
       nom: formData.nom,
       email: formData.email,
       sujet: formData.sujet,
@@ -62,9 +63,9 @@ const ContactPage = () => {
       })
       if (!res.ok) throw new Error('HTTP ' + res.status)
       setStatus({ type: 'success', message: 'Merci pour votre message ! Nous vous répondrons dans les meilleurs délais.' })
-      setFormData({ nom: '', email: '', sujet: '', message: '', website: '' })
+      setFormData({ nom: '', email: '', sujet: '', message: '', botField: '' })
       setErrors({})
-    } catch (err) {
+    } catch {
       setStatus({ type: 'error', message: 'Une erreur est survenue lors de l’envoi. Veuillez réessayer.' })
     } finally {
       setLoading(false)
@@ -175,19 +176,18 @@ const ContactPage = () => {
                 >
                   {/* champs requis par Netlify */}
                   <input type="hidden" name="form-name" value="contact" />
-                  {/* honeypot (caché) */}
-                  <input
-                    type="text"
-                    name="website"
-                    value={formData.website}
-                    onChange={handleChange}
-                    tabIndex={-1}
-                    autoComplete="off"
-                    className="hidden"
-                    aria-hidden="true"
-                  />
-                  <p className="hidden">
-                    <label>Ne pas remplir: <input name="bot-field" onChange={handleChange} /></label>
+                  {/* honeypot anti-spam (invisible pour les humains) */}
+                  <p className="hidden" aria-hidden="true">
+                    <label>
+                      Ne pas remplir :
+                      <input
+                        name="bot-field"
+                        value={formData.botField}
+                        onChange={(e) => setFormData(prev => ({ ...prev, botField: e.target.value }))}
+                        tabIndex={-1}
+                        autoComplete="off"
+                      />
+                    </label>
                   </p>
 
                   <div>

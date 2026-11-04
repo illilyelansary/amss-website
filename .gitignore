@@ -1,0 +1,21 @@
+# Dépendances et build (régénérés automatiquement par Netlify)
+node_modules/
+dist/
+
+# Fichiers PDF.js copiés automatiquement par scripts/copy-pdfjs.js
+# (seul public/pdfjs/web/viewer.html, personnalisé, est versionné)
+public/pdfjs/build/
+public/pdfjs/web/*
+!public/pdfjs/web/viewer.html
+
+# Secrets et environnement : NE JAMAIS les mettre sur GitHub
+.env
+.env.*
+!.env.example
+
+# Divers
+.DS_Store
+Thumbs.db
+*.log
+.netlify/
+*.tmp

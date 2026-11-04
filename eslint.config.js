@@ -4,7 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  { ignores: ['dist'] },
+  { ignores: ['dist', 'public/pdfjs'] },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
@@ -29,5 +29,10 @@ export default [
         { allowConstantExport: true },
       ],
     },
+  },
+  // Scripts Node (build, migration, sitemap) : variables Node autorisées
+  {
+    files: ['scripts/**/*.js', 'vite.config.js'],
+    languageOptions: { globals: { ...globals.node } },
   },
 ]

@@ -3,6 +3,19 @@ import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Heart, CreditCard, Phone, Gift, Building2, Mail, ArrowRight } from 'lucide-react'
 
+/* ============================================================
+   COORDONNÉES DE DON — à remplir par l'AMSS uniquement.
+   Tant qu'un champ est vide, il n'est PAS affiché sur le site
+   (plus de « à compléter » visible par les donateurs).
+   ============================================================ */
+const COORDONNEES_DON = {
+  banque: '',        // ex. 'BDM-SA, agence de Bamako'
+  iban: '',          // ex. 'ML00 0000 0000 0000 0000 0000 000'
+  bic: '',           // ex. 'BDMAMLBA'
+  orangeMoney: '',   // ex. '+223 00 00 00 00'
+  moovAfrica: '',    // ex. '+223 00 00 00 00'
+}
+
 export default function DonPage() {
   const { hash } = useLocation()
 
@@ -55,10 +68,18 @@ export default function DonPage() {
                   <h3 className="text-xl font-semibold">Virement bancaire</h3>
                 </div>
                 <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="flex items-start gap-2"><Building2 className="h-4 w-4 mt-0.5" /><span><strong>Banque :</strong> <em>(à compléter)</em></span></div>
+                  {COORDONNEES_DON.banque && (
+                    <div className="flex items-start gap-2"><Building2 className="h-4 w-4 mt-0.5" /><span><strong>Banque :</strong> {COORDONNEES_DON.banque}</span></div>
+                  )}
                   <div className="flex items-start gap-2"><Mail className="h-4 w-4 mt-0.5" /><span><strong>Titulaire :</strong> Association Malienne pour la Survie au Sahel (AMSS)</span></div>
-                  <div className="flex items-start gap-2"><CreditCard className="h-4 w-4 mt-0.5" /><span><strong>IBAN / RIB :</strong> <em>(à compléter)</em></span></div>
-                  <div className="flex items-start gap-2"><CreditCard className="h-4 w-4 mt-0.5" /><span><strong>BIC / SWIFT :</strong> <em>(à compléter)</em></span></div>
+                  {COORDONNEES_DON.iban ? (
+                    <div className="flex items-start gap-2"><CreditCard className="h-4 w-4 mt-0.5" /><span><strong>IBAN / RIB :</strong> {COORDONNEES_DON.iban}</span></div>
+                  ) : (
+                    <div className="flex items-start gap-2"><CreditCard className="h-4 w-4 mt-0.5" /><span>Les coordonnées bancaires sont envoyées sur demande à <a className="underline" href="mailto:info@ong-amss.org">info@ong-amss.org</a>.</span></div>
+                  )}
+                  {COORDONNEES_DON.bic && (
+                    <div className="flex items-start gap-2"><CreditCard className="h-4 w-4 mt-0.5" /><span><strong>BIC / SWIFT :</strong> {COORDONNEES_DON.bic}</span></div>
+                  )}
                   <div className="flex items-start gap-2"><ArrowRight className="h-4 w-4 mt-0.5" /><span><strong>Motif :</strong> Don AMSS – <em>Votre Nom</em></span></div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-3">
@@ -73,8 +94,11 @@ export default function DonPage() {
                   <h3 className="text-xl font-semibold">Mobile Money</h3>
                 </div>
                 <div className="space-y-2 text-sm text-muted-foreground">
-                  <div><strong>Orange Money :</strong> <em>(numéro à compléter)</em></div>
-                  <div><strong>Moov Africa :</strong> <em>(numéro à compléter)</em></div>
+                  {COORDONNEES_DON.orangeMoney && <div><strong>Orange Money :</strong> {COORDONNEES_DON.orangeMoney}</div>}
+                  {COORDONNEES_DON.moovAfrica && <div><strong>Moov Africa :</strong> {COORDONNEES_DON.moovAfrica}</div>}
+                  {!COORDONNEES_DON.orangeMoney && !COORDONNEES_DON.moovAfrica && (
+                    <div>Les numéros Orange Money et Moov Africa sont communiqués sur demande à <a className="underline" href="mailto:info@ong-amss.org">info@ong-amss.org</a>.</div>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-3">
                   Après le transfert, envoyez le code de confirmation à <a className="underline" href="mailto:info@ong-amss.org">info@ong-amss.org</a>.

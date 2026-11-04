@@ -4,22 +4,29 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  PNPM_FLAGS = "--no-frozen-lockfile"
+  # Lockfile figé : Netlify installe EXACTEMENT les versions validées dans
+  # pnpm-lock.yaml (plus de mises à jour silencieuses à chaque déploiement).
+  PNPM_FLAGS = "--frozen-lockfile"
   SKIP_MIGRATION = "1"
 
-# --- EXCEPTIONS A LA SPA : servir les fichiers statiques tels quels ---
-# PDF.js viewer
+# --- EXCEPTIONS À LA SPA : servir les fichiers statiques tels quels ---
 [[redirects]]
   from = "/pdfjs/*"
   to = "/pdfjs/:splat"
   status = 200
   force = true
 
-# Tes PDF
 [[redirects]]
   from = "/docs/*"
   to = "/docs/:splat"
   status = 200
+  force = true
+
+# L'ancienne interface /admin (Netlify CMS) est supprimée : on renvoie vers l'accueil.
+[[redirects]]
+  from = "/admin/*"
+  to = "/"
+  status = 301
   force = true
 
 # --- Catch-all SPA EN DERNIER ---
@@ -28,33 +35,34 @@
   to = "/index.html"
   status = 200
 
-# --- HEADERS ---
-# L’admin reste protégée
-[[headers]]
-  for = "/admin/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
+# ===================== EN-TÊTES DE SÉCURITÉ =====================
+# Remarque : la politique CSP des pages du site est dans index.html
+# (<meta http-equiv="Content-Security-Policy">), afin de ne pas entrer en
+# conflit avec le lecteur PDF.js qui a besoin d'un script intégré.
 
-# Autoriser le viewer PDF.js à être chargé en iframe depuis le même site
-[[headers]]
-  for = "/pdfjs/*"
-  [headers.values]
-    X-Frame-Options = "SAMEORIGIN"
-    Content-Security-Policy = "frame-ancestors 'self';"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-
-# Autoriser l’affichage des PDFs par le viewer du même site
-[[headers]]
-  for = "/docs/*"
-  [headers.values]
-    Content-Security-Policy = "frame-ancestors 'self';"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-
-# En-têtes par défaut (⚠️ surtout PAS DENY au global)
 [[headers]]
   for = "/*"
   [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
     X-Frame-Options = "SAMEORIGIN"
-    X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Cross-Origin-Opener-Policy = "same-origin"
+
+# Lecteur PDF.js et documents : affichables uniquement dans le site lui-même
+[[headers]]
+  for = "/pdfjs/*"
+  [headers.values]
+    Content-Security-Policy = "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+
+[[headers]]
+  for = "/docs/*"
+  [headers.values]
+    Content-Security-Policy = "frame-ancestors 'self'"
+
+# --- CACHE : fichiers générés par Vite (nom avec empreinte) = cache 1 an ---
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

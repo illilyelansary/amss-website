@@ -1,12 +1,12 @@
 # Site Web AMSS - Association Malienne pour la Survie au Sahel
 
-Site web moderne et responsive pour l'AMSS, développé avec React, Tailwind CSS et Netlify CMS pour la gestion de contenu.
+Site web moderne et responsive pour l'AMSS, développé avec React, Tailwind CSS et des fichiers de données (src/data) pour la gestion de contenu.
 
 ## 🌟 Fonctionnalités
 
 - **Design moderne et responsive** - Compatible mobile et desktop
 - **Navigation intuitive** - Menus et sous-menus organisés
-- **Gestion de contenu (CMS)** - Interface d'administration via Netlify CMS
+- **Gestion de contenu** - Actualités, projets et recrutements dans `src/data/*.js`
 - **Pages dynamiques** - Actualités, projets, partenaires, équipe
 - **Optimisé SEO** - Structure et métadonnées optimisées
 - **Performance** - Chargement rapide et optimisé
@@ -15,7 +15,6 @@ Site web moderne et responsive pour l'AMSS, développé avec React, Tailwind CSS
 
 - **Frontend** : React 19, Vite, Tailwind CSS
 - **Routing** : React Router DOM
-- **CMS** : Netlify CMS
 - **Déploiement** : Netlify
 - **Gestion de version** : Git/GitHub
 
@@ -87,7 +86,7 @@ pnpm run build
 
 ## 📝 Gestion de Contenu (CMS)
 
-Le site utilise Netlify CMS pour la gestion de contenu. L'interface d'administration est accessible à `/admin/`.
+Le site utilise des fichiers de données (src/data) pour la gestion de contenu. L'interface d'administration est accessible à `/admin/`.
 
 ### Collections disponibles :
 - **Actualités** - Articles et nouvelles
@@ -144,3 +143,16 @@ Ce projet est développé pour l'AMSS - Association Malienne pour la Survie au S
 
 **AMSS** - Pour la Survie et le Développement au Sahel depuis 1991
 
+
+
+## 🔒 Sécurité (à respecter)
+
+- **Générateur de badges** : la page `/badge-employe` n'est **jamais** publiée sur le site public.
+  Pour l'utiliser, lancez le site en local (`pnpm dev`) puis ouvrez `http://localhost:5173/badge-employe`.
+- **Dépendances** : Netlify installe exactement les versions de `pnpm-lock.yaml` (`--frozen-lockfile`).
+  Après toute modification de `package.json`, lancez `pnpm install` en local et envoyez aussi `pnpm-lock.yaml`.
+  Dependabot propose chaque semaine les mises à jour de sécurité : relisez-les avant de les fusionner.
+- **CSP** : la liste des services externes autorisés est dans `vite.config.js`. Ajoutez-y tout nouveau domaine intégré.
+- **Photos** : retirez les métadonnées (position GPS) des photos avant de les publier.
+- **Secrets** : ne jamais mettre de mot de passe, clé ou fichier `.env` dans le dépôt.
+- **Coordonnées de don** : à renseigner dans `COORDONNEES_DON` en haut de `src/pages/DonPage.jsx`.

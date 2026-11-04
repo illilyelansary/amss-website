@@ -1,0 +1,17 @@
+# Dependabot propose automatiquement (par Pull Request, sans rien modifier
+# seul) les mises à jour de sécurité des dépendances. Vous relisez et validez.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      dependances-mineures:
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

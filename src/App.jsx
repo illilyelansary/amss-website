@@ -1,4 +1,5 @@
 // src/App.jsx
+import { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import './App.css'
 
@@ -10,32 +11,37 @@ import HashContactRedirect from './components/HashContactRedirect'
 
 // Pages
 import HomePage from './pages/HomePage'
-import AboutPage from './pages/AboutPage'
-import EducationPage from './pages/EducationPage'
-import SantePage from './pages/SantePage'
-import WashPage from './pages/WashPage'
-import ProtectionPage from './pages/ProtectionPage'
-import SecuriteAlimentairePage from './pages/SecuriteAlimentairePage'
-import GouvernancePage from './pages/GouvernancePage'
-import ProjetsEnCoursPage from './pages/ProjetsEnCoursPage'
-import ProjetsTerminesPage from './pages/ProjetsTerminesPage'
-import RapportsPage from './pages/RapportsPage'
-import ContactPage from './pages/ContactPage'
-import DomainesPage from './pages/DomainesPage'
-import ProjetsPage from './pages/ProjetsPage'
-import ZonesPage from './pages/ZonesPage'
-import PartenairesPage from './pages/PartenairesPage.jsx'
-import ActualitesPage from './pages/ActualitesPage'
-import ActualiteDetailPage from './pages/ActualiteDetailPage'
-import RecrutementPage from './pages/RecrutementPage.jsx'
-import DonPage from './pages/DonPage'
-import MentionsLegalesPage from './pages/MentionsLegalesPage'
-import PolitiqueConfidentialitePage from './pages/PolitiqueConfidentialitePage'
-import TransparencePage from './pages/TransparencePage'
-import BadgeEmployePage from './pages/BadgeEmployePage'
+const AboutPage = lazy(() => import('./pages/AboutPage'))
+const EducationPage = lazy(() => import('./pages/EducationPage'))
+const SantePage = lazy(() => import('./pages/SantePage'))
+const WashPage = lazy(() => import('./pages/WashPage'))
+const ProtectionPage = lazy(() => import('./pages/ProtectionPage'))
+const SecuriteAlimentairePage = lazy(() => import('./pages/SecuriteAlimentairePage'))
+const GouvernancePage = lazy(() => import('./pages/GouvernancePage'))
+const ProjetsEnCoursPage = lazy(() => import('./pages/ProjetsEnCoursPage'))
+const ProjetsTerminesPage = lazy(() => import('./pages/ProjetsTerminesPage'))
+const RapportsPage = lazy(() => import('./pages/RapportsPage'))
+const ContactPage = lazy(() => import('./pages/ContactPage'))
+const DomainesPage = lazy(() => import('./pages/DomainesPage'))
+const ProjetsPage = lazy(() => import('./pages/ProjetsPage'))
+const ZonesPage = lazy(() => import('./pages/ZonesPage'))
+const PartenairesPage = lazy(() => import('./pages/PartenairesPage.jsx'))
+const ActualitesPage = lazy(() => import('./pages/ActualitesPage'))
+const ActualiteDetailPage = lazy(() => import('./pages/ActualiteDetailPage'))
+const RecrutementPage = lazy(() => import('./pages/RecrutementPage.jsx'))
+const DonPage = lazy(() => import('./pages/DonPage'))
+const MentionsLegalesPage = lazy(() => import('./pages/MentionsLegalesPage'))
+const PolitiqueConfidentialitePage = lazy(() => import('./pages/PolitiqueConfidentialitePage'))
+const TransparencePage = lazy(() => import('./pages/TransparencePage'))
+// SÉCURITÉ : le générateur de badges n'est JAMAIS inclus dans le site public.
+// Il n'est disponible qu'en local (pnpm dev) ou dans un build interne
+// explicitement lancé avec VITE_ENABLE_BADGE=1. Ainsi, personne sur Internet
+// ne peut fabriquer un faux badge AMSS.
+const BADGE_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ENABLE_BADGE === '1'
+const BadgeEmployePage = BADGE_ENABLED ? lazy(() => import('./pages/BadgeEmployePage')) : null
 
 // ⬇️ NEW
-import DetailsBureauPage from './pages/DetailsBureauPage'
+const DetailsBureauPage = lazy(() => import('./pages/DetailsBureauPage'))
 
 // Données (pour redirection legacy id -> slug)
 import { actualites } from './data/actualitesData'
@@ -57,6 +63,9 @@ function App() {
       <div className="min-h-screen bg-background">
         <Header />
         <main>
+          {/* Les pages sont chargées à la demande : le visiteur ne télécharge
+              que la page qu'il consulte (beaucoup plus rapide en 3G/4G). */}
+          <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" />}>
           <Routes>
             {/* Accueil & À propos */}
             <Route path="/" element={<HomePage />} />
@@ -97,7 +106,12 @@ function App() {
             <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
             <Route path="/politique-confidentialite" element={<PolitiqueConfidentialitePage />} />
             <Route path="/transparence" element={<TransparencePage />} />
-            <Route path="/badge-employe" element={<BadgeEmployePage />} />
+            {BADGE_ENABLED && (
+              <Route
+                path="/badge-employe"
+                element={<BadgeEmployePage />}
+              />
+            )}
 
             {/* ⬇️ NEW: fiche détails bureau */}
             <Route path="/bureaux/:slug" element={<DetailsBureauPage />} />
@@ -105,6 +119,7 @@ function App() {
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </main>
         <Footer />
       </div>
