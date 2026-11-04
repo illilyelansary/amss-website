@@ -4,6 +4,7 @@ import { Menu, X, ChevronDown, Facebook, Twitter, Linkedin, Youtube } from 'luci
 import { Button } from '@/components/ui/button'
 import { Link, useLocation } from 'react-router-dom'
 import logoAmss from '../assets/LogoAMSSFHD.png'
+import { zonesMenu } from '@/data/zonesMenu'
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -58,12 +59,9 @@ const Header = () => {
       name: "Zones d'Intervention",
       href: '/zones',
       dropdown: [
-        { name: 'Tombouctou', href: '/zones#zone-tombouctou' },
-        { name: 'Gao', href: '/zones#zone-gao' },
-        { name: 'Ménaka', href: '/zones#zone-menaka' },
-        { name: 'Mopti', href: '/zones#zone-mopti' },
-        { name: 'Ségou', href: '/zones#zone-segou' },
-        { name: 'Sikasso', href: '/zones#zone-sikasso' }
+        // Liste générée depuis le registre des projets (toutes les régions d'intervention)
+        { name: 'Toutes les zones', href: '/zones' },
+        ...zonesMenu.map((z) => ({ name: z.label, href: `/zones#zone-${z.key}` }))
       ]
     },
     {
@@ -192,7 +190,7 @@ const Header = () => {
                 </Link>
 
                 {item.dropdown && activeDropdown === index && (
-                  <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-border rounded-md shadow-lg py-2 z-50">
+                  <div className="absolute top-full left-0 mt-1 w-64 max-h-[70vh] overflow-y-auto bg-white border border-border rounded-md shadow-lg py-2 z-50">
                     {item.dropdown.map((dropdownItem, dropdownIndex) => (
                       <Link
                         key={dropdownIndex}

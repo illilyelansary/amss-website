@@ -19,3 +19,6 @@ Thumbs.db
 *.log
 .netlify/
 *.tmp
+
+# Cache Node local (ne pas versionner)
+node-compile-cache/

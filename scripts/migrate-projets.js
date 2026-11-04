@@ -279,6 +279,17 @@ export default { projets, projetsEnCours, projetsTermines, programmes, rapports 
 `
   fs.mkdirSync(path.dirname(output), { recursive: true })
   fs.writeFileSync(output, header + body, 'utf8')
+
+  // Menu « Zones d'intervention » de l'en-tête : toutes les régions ayant au moins un projet publié
+  const zoneKey = (label) => norm(label).replace(/[^a-z]/g, '')
+  const zonesMenu = REGIONS.filter((r) => projets.some((p) => p.regions.includes(r)))
+    .map((label) => ({ key: zoneKey(label), label }))
+  const menuFile = path.join(path.dirname(output), 'zonesMenu.js')
+  fs.writeFileSync(menuFile, `// Auto-généré par scripts/migrate-projets.js – NE PAS ÉDITER À LA MAIN
+// Régions affichées dans le menu « Zones d'intervention » (ordre géographique, nord → sud)
+export const zonesMenu = ${JSON.stringify(zonesMenu, null, 2)}
+`, 'utf8')
+  console.log(`✅ ${menuFile} : ${zonesMenu.length} régions dans le menu`)
   console.log(`✅ ${output} : ${projets.length} projets publiés (sur ${rows.length} fiches du registre)`)
   warnings.forEach((w) => console.warn('⚠️ ', w))
 }
