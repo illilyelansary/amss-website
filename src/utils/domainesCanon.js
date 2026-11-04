@@ -20,7 +20,8 @@ const RULES = [
   ]},
   { canon: 'SECALIM', tokens: [
     'securite alimentaire','sécurité alimentaire','moyens d’existence','moyens d\'existence',
-    'cash','transfert','vivres','agri','agricole','elevage','résilience','resilience','intrants'
+    'cash','transfert','vivres','agri','agricole','elevage','résilience','resilience','intrants',
+    'entrepreneuriat','emploi','epargne','épargne','moyens d’existence'
   ]},
   { canon: 'WASH', tokens: [
     'wash','eau','assainissement','latrine','hygiene','hygiène','chloration','forage','adduction'

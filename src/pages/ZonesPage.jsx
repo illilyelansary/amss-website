@@ -34,6 +34,8 @@ const extractDomainTokens = (label) => String(label || '').split(/[,/|;]+/).map(
 const splitMulti = (label) => String(label || '').split(/[\/,;|]+/).map(s => s.trim()).filter(Boolean)
 
 // ========== Zones + carte ==========
+// Découpage administratif en vigueur (régions créées en 2023 incluses).
+// Les projets portent leurs régions dans `p.regions`, calculées depuis le registre officiel.
 const zones = [
   { key: 'tombouctou', label: 'Tombouctou' },
   { key: 'taoudenit',  label: 'Taoudénit' },
@@ -41,43 +43,42 @@ const zones = [
   { key: 'menaka',     label: 'Ménaka' },
   { key: 'kidal',      label: 'Kidal' },
   { key: 'mopti',      label: 'Mopti' },
+  { key: 'bandiagara', label: 'Bandiagara' },
+  { key: 'douentza',   label: 'Douentza' },
   { key: 'segou',      label: 'Ségou' },
+  { key: 'san',        label: 'San' },
   { key: 'sikasso',    label: 'Sikasso' },
-  { key: 'koulikoro',  label: 'Koulikoro' },   // ✅ ajouté
-  { key: 'bamako',     label: 'Bamako' },      // ✅ ajouté
+  { key: 'koutiala',   label: 'Koutiala' },
+  { key: 'bougouni',   label: 'Bougouni' },
+  { key: 'koulikoro',  label: 'Koulikoro' },
+  { key: 'bamako',     label: 'Bamako' },
 ]
 
-// Centroides approximatifs (lat, lng) pour clics sur la carte
+// Centroïdes approximatifs (lat, lng) des chefs-lieux
 const REGION_CENTROIDS = {
   tombouctou: [16.77, -3.00],
   taoudenit:  [22.67, -3.98],
   gao:        [16.27, -0.04],
   kidal:      [18.44,  1.41],
-  menaka:     [15.90,  2.40],
+  menaka:     [15.92,  2.40],
   mopti:      [14.49, -4.20],
+  bandiagara: [14.35, -3.61],
+  douentza:   [15.00, -2.95],
   segou:      [13.44, -6.26],
+  san:        [13.30, -4.90],
   sikasso:    [11.32, -5.67],
-  koulikoro:  [12.86, -7.56], // ✅ ajouté
-  bamako:     [12.65, -8.00], // ✅ ajouté
+  koutiala:   [12.39, -5.46],
+  bougouni:   [11.42, -7.48],
+  koulikoro:  [12.86, -7.56],
+  bamako:     [12.65, -8.00],
 }
 
-// Appartenance d’un projet à une zone (via p.region en texte)
-const aliases = {
-  tombouctou: ['tombouctou','timbuktu','diré','dire','goundam','niafunké','niafunke','gourma'],
-  taoudenit:  ['taoudénit','taoudenit'],
-  gao:        ['gao','ansongo','bourem'],
-  kidal:      ['kidal','tessalit','abéibara','abeibara'],
-  menaka:     ['ménaka','menaka'],
-  mopti:      ['mopti','bankass','bandiagara','djenné','djene','douentza','tenenkou','ténénkou','koro'],
-  segou:      ['ségou','segou','san'],
-  sikasso:    ['sikasso','koutiala','bougouni','yanfolila','kolondiéba','kolondieba'],
-  koulikoro:  ['koulikoro','kati','dioïla','dioila','banamba','kolokani','nara'],         // ✅ ajouté
-  bamako:     ['bamako','district de bamako'],                                            // ✅ ajouté
-}
-const matchesRegion = (regionField, zoneKey) => {
-  const hay = normalize(regionField)
-  if (!hay) return false
-  return (aliases[zoneKey] || []).some((t) => hay.includes(normalize(t)))
+// Appartenance d’un projet à une zone : liste `regions` du registre, sinon repli texte
+const labelByKey = Object.fromEntries(zones.map((z) => [z.key, z.label]))
+const matchesRegion = (project, zoneKey) => {
+  if (Array.isArray(project?.regions)) return project.regions.includes(labelByKey[zoneKey])
+  const hay = normalize(project?.region)
+  return Boolean(hay) && hay.split(/\s*,\s*/).includes(normalize(labelByKey[zoneKey]))
 }
 
 // ========== UI ==========
@@ -145,8 +146,8 @@ export default function ZonesPage() {
     const out = {}
     zones.forEach((z) => {
       const full = [
-        ...allEnCours.filter(p => matchesRegion(p.region, z.key)),
-        ...allTermines.filter(p => matchesRegion(p.region, z.key)),
+        ...allEnCours.filter(p => matchesRegion(p, z.key)),
+        ...allTermines.filter(p => matchesRegion(p, z.key)),
       ]
       const filtered = full.filter(passesFilters)
       out[z.key] = { full, filtered }

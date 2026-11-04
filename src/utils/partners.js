@@ -38,7 +38,7 @@ export function partnersForBureau(bureau, projetsEnCours = [], projetsTermines =
   const allProjects = [...(projetsEnCours || []), ...(projetsTermines || [])]
 
   for (const p of allProjects) {
-    const regionNorm = normalize(p.region || p.zones || '')
+    const regionNorm = normalize(`${p.region || ''} ${p.zoneDetail || p.zones || ''}`)
     if (!regionNorm) continue
 
     // S'il y a recouvrement région ↔ zones du bureau → on prend les bailleurs du projet

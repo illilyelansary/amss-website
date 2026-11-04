@@ -9,12 +9,12 @@
   "scripts": {
     "prepare": "corepack enable",
     "dev": "vite",
-    "prebuild": "node -e \"process.exit(process.env.SKIP_MIGRATION?0:1)\" || node scripts/migrate-projets.js data/Cartographie_Projets_AMSS.xlsx src/data/projetsData.js",
+    "prebuild": "node -e \"process.exit(process.env.SKIP_MIGRATION?0:1)\" || node scripts/migrate-projets.js data/AMSS_Modele_Officiel_Programmes.xlsx src/data/projetsData.js",
     "build": "vite build",
     "postbuild": "node scripts/generate-sitemap.js",
     "lint": "eslint .",
     "preview": "vite preview",
-    "migrate:projets": "node scripts/migrate-projets.js data/Cartographie_Projets_AMSS.xlsx src/data/projetsData.js",
+    "migrate:projets": "node scripts/migrate-projets.js data/AMSS_Modele_Officiel_Programmes.xlsx src/data/projetsData.js",
     "postinstall": "node scripts/copy-pdfjs.js"
   },
   "dependencies": {

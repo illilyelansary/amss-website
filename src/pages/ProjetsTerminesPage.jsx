@@ -244,6 +244,12 @@ export default function ProjetsTerminesPage() {
                         <span className="text-muted-foreground">Région :</span>
                         <span className="font-medium text-right">{p.region || 'N/D'}</span>
                       </div>
+                      {p.programme && (
+                        <div className="flex justify-between gap-3">
+                          <span className="text-muted-foreground">Programme :</span>
+                          <span className="font-medium text-right">{p.programme}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Période :</span>
                         <span className="font-medium text-right">

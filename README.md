@@ -6,7 +6,7 @@ Site web moderne et responsive pour l'AMSS, développé avec React, Tailwind CSS
 
 - **Design moderne et responsive** - Compatible mobile et desktop
 - **Navigation intuitive** - Menus et sous-menus organisés
-- **Gestion de contenu** - Actualités, projets et recrutements dans `src/data/*.js`
+- **Gestion de contenu** - Projets issus du registre officiel `data/AMSS_Modele_Officiel_Programmes.xlsx` ; actualités et recrutements dans `src/data/*.js`
 - **Pages dynamiques** - Actualités, projets, partenaires, équipe
 - **Optimisé SEO** - Structure et métadonnées optimisées
 - **Performance** - Chargement rapide et optimisé
@@ -156,3 +156,17 @@ Ce projet est développé pour l'AMSS - Association Malienne pour la Survie au S
 - **Photos** : retirez les métadonnées (position GPS) des photos avant de les publier.
 - **Secrets** : ne jamais mettre de mot de passe, clé ou fichier `.env` dans le dépôt.
 - **Coordonnées de don** : à renseigner dans `COORDONNEES_DON` en haut de `src/pages/DonPage.jsx`.
+
+## 📊 Mettre à jour les projets
+
+Les projets du site proviennent **uniquement** du registre officiel (même fichier que Power BI).
+
+1. Mettre à jour le registre dans SharePoint et vérifier que l’onglet `02_CONTROLES` affiche « OK ».
+2. Remplacer `data/AMSS_Modele_Officiel_Programmes.xlsx` par la nouvelle version.
+3. Lancer `pnpm run migrate:projets`, lire les avertissements, puis envoyer sur GitHub
+   `data/AMSS_Modele_Officiel_Programmes.xlsx` **et** `src/data/projetsData.js`.
+
+Règles : seuls les statuts Actif, Clôture en cours, Suspendu et Clôturé sont publiés ; les fiches
+« À qualifier » ou « Archivé » restent invisibles. Les composantes s’affichent avec leur programme
+parent. Un projet dont la date de fin est dépassée passe automatiquement dans « Terminés ».
+Les régions suivent le découpage administratif en vigueur (Bandiagara, Douentza, San, Koutiala, Bougouni…).

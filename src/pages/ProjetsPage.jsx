@@ -202,7 +202,7 @@ export default function ProjetsPage() {
     const communesSet = new Set()
     let communesNumeric = 0
     enCoursFiltered.forEach((p) => {
-      const { names, countHint } = extractCommunes(p.region)
+      const { names, countHint } = extractCommunes(p.zoneDetail || p.region)
       names.forEach((n) => communesSet.add(n.toLowerCase()))
       communesNumeric += Number(countHint || 0)
     })
@@ -421,14 +421,14 @@ export default function ProjetsPage() {
                   <article key={index} className="bg-white rounded-xl p-6 shadow-sm border border-border">
                     <div className="flex items-center mb-4">
                       <div
-                        className={`w-3 h-3 rounded-full mr-2 ${p.usaidNote ? 'bg-red-500' : 'bg-green-500'}`}
+                        className={`w-3 h-3 rounded-full mr-2 ${p.usaidNote || p.status === 'Suspendu' ? 'bg-red-500' : 'bg-green-500'}`}
                       />
-                      <span className={`text-sm font-medium ${p.usaidNote ? 'text-red-600' : 'text-green-600'}`}>
+                      <span className={`text-sm font-medium ${p.usaidNote || p.status === 'Suspendu' ? 'text-red-600' : 'text-green-600'}`}>
                         {p.status || 'En cours'}
                       </span>
                       {p.usaidNote && (
                         <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 border border-red-200">
-                          Suspendu (USAID)
+                          Arrêt des fonds USAID
                         </span>
                       )}
                     </div>
@@ -441,6 +441,12 @@ export default function ProjetsPage() {
                         <span className="text-muted-foreground">Région :</span>
                         <span className="font-medium text-right">{p.region || 'N/D'}</span>
                       </div>
+                      {p.programme && (
+                        <div className="flex justify-between gap-3">
+                          <span className="text-muted-foreground">Programme :</span>
+                          <span className="font-medium text-right">{p.programme}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Bailleur :</span>
                         <span className="font-medium text-right">{p.donor || 'N/D'}</span>
@@ -495,6 +501,12 @@ export default function ProjetsPage() {
                         <span className="text-muted-foreground">Région :</span>
                         <span className="font-medium text-right">{p.region || 'N/D'}</span>
                       </div>
+                      {p.programme && (
+                        <div className="flex justify-between gap-3">
+                          <span className="text-muted-foreground">Programme :</span>
+                          <span className="font-medium text-right">{p.programme}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Période :</span>
                         <span className="font-medium text-right">
