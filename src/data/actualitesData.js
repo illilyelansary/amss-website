@@ -316,6 +316,7 @@ const base = [
     contenu: "Dans le cadre de la campagne des 16 jours d’activisme pour l’élimination des violences basées sur le genre (VBG), les activités se poursuivent à Ménaka avec les associations récipiendaires des fonds pour les Activités Génératrices de Revenus (AGR) et la lutte contre les VBG. Ces associations ont bénéficié de paiements effectués par AMSS, avec l’appui de son partenaire HCR.\n\nAprès une première séance de sensibilisation organisée au profit de l’Association des Femmes Yada sur le thème de l’édition 2025, l’équipe AMSS et HCR, rejointe par d’autres acteurs dont UNFPA, a poursuivi les actions auprès de l’Association Temette.\n\nCette rencontre a permis de sensibiliser plus de 30 femmes leaders autour du thème :\n\n« L’utilisation responsable des réseaux sociaux, gage de la promotion des valeurs des femmes et des filles ».\n\nDes messages clairs et engageants ont été partagés par les acteurs présents. À l’issue de la séance, les femmes leaders ont pris l’engagement de relayer ces messages auprès de leurs sœurs, filles, mais aussi des hommes alliés, afin de toucher l’ensemble de leur communauté.\n\nEnsemble, poursuivons la mobilisation pour des communautés plus sûres, respectueuses et égalitaires.",
     lieux: ["Ménaka"],
     partenaires: ["UNHCR"],
+    projet: "MONPROT-UNHCR",
     source: 'Facebook',
     tags: ["Protection", "Ménaka"]
   },
@@ -345,6 +346,7 @@ const base = [
     contenu: "Le 11 décembre 2025, une cérémonie de remise de 600 kits scolaires s’est tenue au CAP de Ménaka, dans le cadre de la mise en œuvre du projet de monitoring de protection et de protection à base communautaire.\n\nCette activité s’est déroulée en présence des partenaires HCR, CNCR ainsi que du Comité Régional des Réfugiés. Conformément à un planning établi avec chaque établissement scolaire, ces 600 kits seront distribués aux enfants réfugiés, aux personnes déplacées internes (PDI) et aux enfants des communautés hôtes (CH).\n\nCette initiative s’inscrit dans une série d’actions menées par l’AMSS, en partenariat avec le HCR, en faveur des personnes déplacées de force, afin de promouvoir leur protection et l’accès à l’éducation.",
     lieux: ["Ménaka"],
     partenaires: ["UNHCR"],
+    projet: "MONPROT-UNHCR",
     source: 'Facebook',
     tags: ["Éducation", "Ménaka"]
   },
@@ -388,6 +390,8 @@ const base = [
     contenu: "Bamako, 30 janvier 2026 — L’Association Malienne pour la Survie au Sahel (AMSS) a procédé ce jour au lancement officiel de son Plan Stratégique 2026–2030, à l’occasion d’un atelier de haut niveau tenu à l’hôtel AZALAÏ de Bamako, sous la présidence du Secrétaire Général du Ministère de la Santé et du Développement Social.\n\nCette rencontre a rassemblé les partenaires techniques et financiers, les représentants des départements ministériels, les acteurs de la société civile ainsi que les équipes de l’AMSS, témoignant d’un engagement collectif fort en faveur de l’avenir du Sahel.\n\nDans son discours d’ouverture, le Directeur des Programmes de l’AMSS, Dr Elmehdi AG WAKINA, a salué la forte mobilisation des partenaires, la qualifiant de « témoignage éclatant de notre engagement commun au service des populations ».\n\nIl a rappelé que ce nouveau plan est bien plus qu’un document de programmation :\n\n« C’est notre pacte renouvelé avec l’avenir. Une promesse d’engagement, d’excellence et d’impact pour les communautés sahéliennes. »\n\nPrésidant la cérémonie, le Secrétaire Général du Ministère de la Santé et du Développement Social, M. Abdoulaye GUINDO, a félicité l’AMSS pour la qualité du processus et la pertinence de sa vision, tout en réaffirmant le soutien du Gouvernement à la mise en œuvre de ce plan stratégique, en parfaite cohérence avec les priorités nationales de développement, de protection et de cohésion sociale.\n\nLe Plan Stratégique 2026–2030 repose sur une vision claire et partagée :\n\n« D’ici 2030, chaque communauté du Sahel est résiliente, pacifiée et actrice de son propre développement, dans le respect de l’égalité des droits et des chances pour les femmes, les hommes et les jeunes. »\n\nPour concrétiser cette vision, le plan s’articule autour de 5 axes stratégiques majeurs :\n\n1⃣ Sécurité humaine, protection, paix et gouvernance\n\n2⃣ Résilience climatique et économie durable\n\n3⃣ Accès équitable aux services sociaux de base\n\n4⃣ Influence, plaidoyer et innovation\n\n5⃣ Durabilité institutionnelle et développement du capital humain\n\nChiffres clés :\n\n25,4 milliards FCFA de budget prévisionnel sur 5 ans\n\nPlus de 2 millions de bénéficiaires ciblés\n\n16 régions du Mali couvertes\n\n15 % d’autonomie financière visée pour l’AMSS\n\nLes échanges ont été enrichis par de nombreux témoignages de partenaires, saluant unanimement :\n\nl’ancrage communautaire solide de l’AMSS,\n\nla qualité de la mise en œuvre des programmes,\n\nles relations de confiance sur le terrain construites au fil des années.\n\nPlusieurs partenaires ont réaffirmé leur engagement à poursuivre et renforcer leur collaboration, certains annonçant déjà la continuité de leur soutien financier et technique dans le cadre de ce nouveau cycle stratégique.\n\nEn clôture, le Dr Elmehdi AG WAKINA a lancé un appel mobilisateur :\n\n« Ce plan stratégique est une invitation ouverte : à unir nos forces, nos talents et nos ressources pour co-construire un avenir de paix, de prospérité et de dignité pour toutes les communautés de nos zones d’intervention. »\n\nAvec ce Plan Stratégique 2026–2030, l’AMSS et ses partenaires réaffirment leur engagement commun pour un Sahel plus résilient, plus inclusif et durablement pacifié.\n\n@followers\n\n@everyone",
     lieux: ["Bamako"],
     partenaires: [],
+    priorite: 1,
+    featured: true,
     source: 'Facebook',
     tags: ["Institutionnel", "Bamako"]
   },
@@ -446,6 +450,7 @@ const base = [
     contenu: "Dans le cadre d’une mission d’assistance humanitaire, des activités de réponse d’urgence ont été menées à Niono et Molodo au profit des populations déplacées internes.\n\nÀ la suite de l’évaluation multisectorielle rapide conduite du 19 au 22 janvier 2026, 52 ménages de PDIs, originaires de Magnalé et Chi-wèrè, ont été identifiés comme étant en situation de vulnérabilité accrue.\n\nGrâce au projet A1BK, AMSS – Association Malienne pour la Survie au Sahel, en partenariat avec ACTION CONTRE LA FAIM, a organisé une distribution de vivres et de farine enrichie destinée aux enfants de 06 à 23 mois, du 04 au 06 février 2026, afin de répondre aux besoins urgents de ces ménages.\n\nCette action vise à améliorer la sécurité alimentaire et nutritionnelle des ménages affectés par les déplacements, en particulier celle des jeunes enfants, les plus exposés aux risques de malnutrition.\n\nActivité réalisée avec le financement de l’Union européenne à travers ECHO.\n\nCi-joint, quelques images illustrant cette mission sur le terrain.",
     lieux: ["Niono", "Ségou"],
     partenaires: ["Action contre la Faim", "DG ECHO"],
+    projet: "A1BK",
     source: 'Facebook',
     tags: ["Humanitaire", "Niono", "Ségou"]
   },
@@ -474,6 +479,7 @@ const base = [
     contenu: "À Tombouctou, dans la commune urbaine de la région de Tombouctou, une campagne de sensibilisation sur la Loi d’Orientation Agricole et la Charte Pastorale a mobilisé les communautés locales afin de prévenir les conflits liés aux ressources naturelles et de renforcer la cohésion entre agriculteurs et éleveurs.\n\nDans le cadre du projet Sécurité Humaine, l’Association Malienne pour la Survie au Sahel (AMSS), en collaboration avec les autorités communales, les services techniques, le préfet, les chefs de quartiers et le Conseil communal des jeunes, a organisé une campagne de vulgarisation des principaux textes régissant les activités agricoles et pastorales au Mali.\n\nCette initiative vise à favoriser une meilleure compréhension des droits et devoirs des acteurs du monde rural, dans un contexte où l’accès à la terre, à l’eau et aux pâturages constitue parfois une source de tensions.\n\nDes supports accessibles pour une meilleure appropriation\n\nPour faciliter l’assimilation des textes juridiques, des brochures traduites en six langues locales, des dépliants et des autocollants ont été distribués aux participants. Ces supports pédagogiques ont permis d’expliquer de manière claire et adaptée les dispositions de la LOA et de la Charte Pastorale, tout en insistant sur les mécanismes de prévention et de gestion pacifique des conflits.\n\nUne initiative saluée par les communautés\n\nLes bénéficiaires ont exprimé leur satisfaction face à cette démarche inclusive, soulignant l’importance de l’information et du dialogue pour consolider la coexistence harmonieuse entre communautés agropastorales. Pour beaucoup, la vulgarisation de ces textes constitue un levier essentiel pour renforcer la paix sociale et la résilience locale.\n\nUn appui international pour la sécurité humaine\n\nL’activité a bénéficié de l’appui du HCR, de l’UNESCO et du Fonds d’affectation spéciale des Nations Unies pour la sécurité humaine (UNTFHS), grâce au financement du Gouvernement du Japon.\n\nÀ travers cette action, les partenaires réaffirment leur engagement en faveur de la promotion des droits humains, de la gestion durable des ressources naturelles et du développement inclusif dans la région de Tombouctou.",
     lieux: ["Tombouctou", "Goundam", "Tonka"],
     partenaires: [],
+    projet: "SECU-HUMAINE",
     source: 'Facebook',
     tags: ["Gouvernance & Paix", "Tombouctou", "Goundam"]
   },
@@ -488,6 +494,7 @@ const base = [
     contenu: "Le 26 février, dans la région de Tombouctou, cercle et commune urbaine de Tombouctou, s’est tenu le peuplement de la cité AL-AMAL, située à la sortie Est de la ville.\n\nCette étape importante marque un tournant pour les ménages bénéficiaires, grâce à l’accompagnement du service du développement social et à l’appui déterminant du Haut-Commissariat des Nations Unies pour les réfugiés(UNHCR) ainsi que de ses partenaires.\n\nLa cérémonie s’est déroulée en présence des autorités administratives et communales, notamment le CAEF, le Président de la délégation spéciale de la mairie de Tombouctou, le Directeur régional du développement social, le Chef de bureau du HCR, ainsi que plusieurs partenaires humanitaires et de développement : UNICEF, Organisation internationale pour les migrations, FAO, Bureau de la coordination des affaires humanitaires, Fonds des Nations Unies pour la population, Programme alimentaire mondial, AMSS, STOP SAHEL, CIAUD CANADA, ARIC SAHEL et d’autres acteurs engagés.\n\nÀ noter que cent (100) habitations ont été construites par le HCR afin d’offrir un abri digne et sécurisé aux familles bénéficiaires, contribuant ainsi au renforcement de la protection, de la stabilité et de la cohésion sociale dans la commune.",
     lieux: ["Tombouctou"],
     partenaires: ["UNHCR"],
+    projet: "MONPROT-PBC-2026",
     source: 'Facebook',
     tags: ["Humanitaire", "Tombouctou"]
   },
@@ -502,6 +509,7 @@ const base = [
     contenu: "Ce 4 avril 2026, une activité de commémoration s’est tenue à Gao, au quartier Château, à l’initiative de l’association Tcherediyen, bénéficiaire de la formation des formateurs en éducation aux risques des engins explosifs organisée par AMSS.\n\nCette session de sensibilisation, organisée au profit de la communauté, a réuni plusieurs acteurs clés : AMSS, AMSOD, la CNPAL, ainsi que des leaders communautaires.\n\nLes échanges ont porté sur :\n\nL’identification des engins explosifs\n\nLe marquage des zones à risque\n\nLes comportements sûrs à adopter\n\nLe système d’information et d’alerte\n\nCette mobilisation démontre l’importance que les communautés accordent à cette thématique essentielle qui sauve des vies.\n\nRecommandations issues des communautés\n\nÀ l’issue des échanges, plusieurs recommandations ont été formulées :\n\nRenforcer les capacités des membres déjà formés\n\nÉtendre les formations à un plus grand nombre d’acteurs communautaires\n\nSoutenir les initiatives locales de sensibilisation\n\nAccroître les interventions dans les zones contaminées\n\nAssurer une meilleure prise en charge médicale des victimes\n\nPromouvoir leur réinsertion socio-économique\n\nEn cette journée symbolique, l’ONG AMSS réaffirme sa volonté de poursuivre et re nforcer ses actions en faveur de la protection des populations.\n\nInvestir dans la lutte antimines, c’est investir dans la paix, la sécurité et l’avenir des communautés.\n\nEnsemble, engageons-nous pour un environnement plus sûr.",
     lieux: ["Gao"],
     partenaires: ["UNHCR"],
+    projet: "MONPROT-PBC-2026",
     source: 'Facebook',
     tags: ["Protection", "Gao"]
   },
@@ -517,6 +525,7 @@ const base = [
     lieux: ["Bamako", "Barouéli"],
     partenaires: ["Affaires mondiales Canada", "EUMC"],
     projet: "PASCOFI",
+    featured: true,
     source: 'Facebook',
     tags: ["Éducation", "Bamako", "Barouéli"]
   },
@@ -576,6 +585,7 @@ const base = [
     contenu: "Aujourd'hui, l'AMSS célèbre aux côtés de notre partenaire UNHCR Mali, ainsi que des associations et groupements de réfugiés, la Journée Internationale du Réfugié au Palais des Pionniers de Bamako.\n\nLe thème de cette année résonne fortement avec notre engagement quotidien :\n\n« Jusqu'à ce que tout le monde soit protégé »\n\nCet événement est l'occasion de mettre en lumière le travail mené sans relâche par l'AMSS et l'UNHCR dans le monitoring et la protection des personnes réfugiées et déplacées au Mali. Chaque jour, nos équipes œuvrent pour garantir dignité, sécurité et accès aux droits fondamentaux pour les populations vulnérables.\n\nMerci à tous nos partenaires, aux associations et groupements de réfugiés présents, ainsi qu'à toutes les personnes mobilisées pour que cette protection devienne une réalité pour tous.\n\nEnsemble, continuons à œuvrer pour un Mali solidaire et protecteur !\n\nPalais des Pionniers, Bamako",
     lieux: ["Bamako"],
     partenaires: ["UNHCR"],
+    projet: "MONPROT-PBC-2026",
     source: 'Facebook',
     tags: ["Protection", "Bamako"]
   },
@@ -590,6 +600,8 @@ const base = [
     contenu: "Du 02 au 05 juillet 2026, l’ONG AMSS, dans le cadre de la mise en œuvre du projet PROSEM en partenariat avec Ayuda en Accion dont le bailleur est l’AECID, a organisé quatre (04) dialogues communautaires consacrés à la promotion de la cohésion sociale , à la prévention des violences basées sur le genre (VBG) et au renforcement des mécanismes communautaires de protection .\n\nCes rencontres ont été tenues dans les localités de :\n\n* Konobougou\n\n* Barouéli (chef-lieu)\n\n* Cinzana Gare\n\n* Cinzana Village\n\nParticipation\n\nAu total, 128 participants (32 par dialogue) ont pris part à ces échanges, notamment :\n\n* Autorités locales (maires, chefs de village)\n\n* Comités de Protection Communautaire\n\n* Leaders religieux\n\n* Conseil Communal de la Jeunesse (CCJ)\n\n* CAFO\n\n* Services techniques de la Promotion de la Femme et du Développement Social\n\n* Points focaux du projet PROSEM\n\n* Femmes, jeunes et autres acteurs communautaires\n\nPrincipaux résultats des échanges\n\nLes participants ont été renforcés sur :\n\n* Les mécanismes communautaires de prévention et de gestion des conflits\n\n* Les VBG et leurs conséquences sur les individus et la communauté\n\n* Les services de protection disponibles dans les localités\n\n* Le circuit de référencement des cas de VBG\n\n* L’orientation des survivant(e)s vers les services spécialisés\n\nImpact\n\nCes dialogues ont permis de :\n\n* Renforcer l’engagement des acteurs locaux pour le vivre-ensemble\n\n* Consolider la culture de la paix et de la cohésion sociale\n\n* Améliorer la protection des personnes vulnérables\n\n* Favoriser une meilleure coordination communautaire face aux conflits et aux VBG\n\nÀ suivre\n\nRevivez les moments forts de ces activités à travers quelques images.",
     lieux: ["Ségou"],
     partenaires: ["Ayuda en Acción", "AECID"],
+    projet: "PROSEM",
+    featured: true,
     source: 'Facebook',
     tags: ["Gouvernance & Paix", "Ségou"]
   },
@@ -647,6 +659,7 @@ const base = [
     contenu: "Le Dr Elmehdi Ag Wakina, Directeur des Programmes de l’ONG AMSS, a pris part à la célébration du 50e anniversaire de la Fondation Strømme au Mali, en qualité de représentant des partenaires de mise en œuvre.\n\nDans son intervention, il a salué cinq décennies d’engagement au service des communautés. Il a souligné l’importance d’un développement qui place les personnes au cœur de l’action, à travers l’autonomisation des communautés, l’accompagnement des jeunes et le soutien aux personnes vulnérables.\n\nCette célébration a été l’occasion de reconnaître le chemin parcouru et de renouveler les engagements en faveur de communautés plus autonomes, résilientes et solidaires.\n\nL’ONG AMSS adresse ses félicitations à la Fondation Strømme pour ce jubilé et réaffirme son engagement à poursuivre leur collaboration au service des populations.",
     lieux: ["Bamako"],
     partenaires: ["Fondation Strømme"],
+    featured: true,
     source: 'Facebook',
     tags: ["Institutionnel", "Bamako"]
   },
@@ -676,6 +689,8 @@ const base = [
     contenu: "Du 29 septembre au 1er octobre 2026, les équipes de l’AMSS et d’EDUCO se sont réunies à l’hôtel SARATA de Ségou pour un atelier d’appropriation du projet LEARN et de planification annuelle des activités.\n\nCes trois jours de travail ont permis de renforcer leur compréhension des objectifs du projet, des indicateurs de suivi, des résultats attendus et des enjeux contextuels dans les 25 communes d’intervention.\n\nLes échanges ont également permis de construire une vision commune et de préparer la mise en œuvre des activités.\n\nLes deux équipes ressortent de cet atelier avec une énergie renouvelée, prêtes à passer à l’action et à relever ensemble les défis du projet LEARN !",
     lieux: ["Ségou"],
     partenaires: ["EDUCO"],
+    projet: "LEARN",
+    featured: true,
     source: 'Facebook',
     tags: ["Éducation", "Ségou"]
   },
@@ -706,6 +721,7 @@ const base = [
     lieux: ["Tiankadi", "Kignan", "Sikasso"],
     partenaires: ["Union européenne"],
     projet: "PADEM",
+    featured: true,
     source: 'Facebook',
     tags: ["Éducation", "Tiankadi", "Kignan"]
   },
@@ -720,13 +736,31 @@ const base = [
     contenu: "Depuis janvier 2026, les équipes de l’AMSS ont partagé plus de 77 comptes rendus d’activités de monitoring de protection sur la page Facebook de l’organisation. Ces activités sont menées avec l’appui de la Coopération suisse et de l’UNHCR auprès des personnes réfugiées, déplacées et des communautés hôtes.\n\nLes séances de sensibilisation, causeries et réunions de cadrage ont touché de nombreuses localités : Tombouctou, Tonka, Goundam, Douékiré, Rharous, Gossi, Diré, Léré, Ansongo, Gao, Mopti, Sio, Socoura, Fakala, Sofara, Djenné, Bankass, Koro, Kani-Bonzon.\n\nLes thèmes abordés sont notamment : mariage d’enfants, risques des engins explosifs, documentation civile et actes de naissance, cohésion sociale, prise en charge des violences sexuelles, droit à l’éducation. Les moniteurs documentent aussi les incidents de protection et orientent les personnes vers les services de prise en charge.",
     lieux: ["Tombouctou", "Gao", "Mopti", "Bandiagara"],
     partenaires: ["Coopération suisse", "UNHCR"],
+    projet: "MONPROT-PBC-2026",
+    featured: true,
     source: 'Facebook',
     tags: ["Protection", "Tombouctou", "Gao"]
   }
 ]
 
 // Export final avec slug
-export const actualites = base.map(a => ({
-  ...a,
-  slug: `${a.dateISO}-${slugify(a.titre)}`
-}))
+// Toujours du plus récent au plus ancien
+export const actualites = base
+  .map(a => ({ ...a, slug: `${a.dateISO}-${slugify(a.titre)}` }))
+  .sort((a, b) => String(b.dateISO).localeCompare(String(a.dateISO)) || (b.id || 0) - (a.id || 0))
+
+// « À la une » : événements majeurs (priorite: 1) et articles importants (featured)
+// des 12 derniers mois, complétés par les plus récents ; 4 au maximum, du plus récent au plus ancien.
+export function articlesALaUne(max = 4) {
+  const limite = new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10)
+  const recents = actualites.filter(a => String(a.dateISO) >= limite)
+  // 1) les événements majeurs (priorite: 1), 2) les articles importants les plus récents
+  const majeurs = recents.filter(a => a.priorite === 1)
+  const importants = recents.filter(a => a.featured && a.priorite !== 1)
+  const liste = [...majeurs, ...importants].slice(0, max)
+  for (const a of actualites) {
+    if (liste.length >= max) break
+    if (!liste.includes(a)) liste.push(a)
+  }
+  return liste.sort((a, b) => String(b.dateISO).localeCompare(String(a.dateISO)))
+}

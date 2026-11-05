@@ -43,6 +43,7 @@ export const CATALOGUE = [
   P('aics', 'AICS', 'Agence italienne pour la coopération au développement', 'Bailleur', ['aics', 'agence italienne']),
   P('fonds-italien', 'Fonds italien', 'Fonds italien (via UNHCR)', 'Bailleur', ['fonds italien']),
   P('aacid', 'AACID', 'Agence andalouse de coopération internationale au développement', 'Bailleur', ['aacid']),
+  P('accd', 'ACCD', 'Agence catalane de coopération au développement', 'Bailleur', ['accd', 'agence catalane']),
   P('aecid', 'AECID', 'Agence espagnole de coopération internationale au développement', 'Bailleur', ['aecid']),
   P('fondation-hilton', 'Fondation Hilton', 'Fondation Conrad N. Hilton', 'Bailleur', ['hilton'], { website: 'https://www.hiltonfoundation.org/' }),
   P('fondation-stromme', 'Fondation Strømme', 'Fondation Strømme Afrique de l’Ouest', 'Partenaire de mise en œuvre', ['stromme', 'strømme'], { logo: '/assets/partenaires/stromme.png', website: 'https://strommefoundation.org/' }),

@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, ArrowRight, Users, MapPin, Heart, Share2 } from 'lucide-react'
-import { actualites } from '../data/actualitesData'
+import { actualites, articlesALaUne } from '../data/actualitesData'
 
 // ====== Constantes flux & placeholder ======
 const PLACEHOLDER = '/placeholder-news.jpg' // déposez le fichier dans /public
@@ -46,7 +46,7 @@ const ActualitesPage = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = filteredActualites.slice(indexOfFirstItem, indexOfLastItem)
   const totalPages = Math.ceil(filteredActualites.length / itemsPerPage)
-  const featuredActualites = (actualites || []).filter(a => a.featured)
+  const featuredActualites = articlesALaUne(4)
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber)
 

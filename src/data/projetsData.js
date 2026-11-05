@@ -1,6 +1,6 @@
 // Auto-généré par scripts/migrate-projets.js depuis AMSS_Modele_Officiel_Programmes.xlsx – NE PAS ÉDITER À LA MAIN
 // Pour corriger un projet : modifier le registre officiel puis relancer « pnpm run migrate:projets ».
-// Généré le 2026-11-04 — 45 projets publiés.
+// Généré le 2026-11-05 — 52 projets publiés.
 
 const PROJETS = [
   {
@@ -394,7 +394,7 @@ const PROJETS = [
     "title": "Projet Malnutrition and Protection for Life saving in Emergencies (MAPLE)",
     "statutRegistre": "Clôturé",
     "startDate": "2025-06-01",
-    "endDate": "2025-12-30",
+    "endDate": "2026-02-28",
     "region": "Tombouctou",
     "regions": [
       "Tombouctou"
@@ -1205,9 +1205,9 @@ const PROJETS = [
     "projectId": "AMSS-PRJ-044",
     "code": "PROTECT-TBK",
     "title": "Projet d’amélioration de l’environnement de protection des populations civiles dans les régions du Mali touchées par le conflit (Soutien aux initiatives communautaires de protection)",
-    "statutRegistre": "Clôturé",
+    "statutRegistre": "Actif",
     "startDate": "2023-10-01",
-    "endDate": "2025-12-31",
+    "endDate": null,
     "region": "Tombouctou",
     "regions": [
       "Tombouctou"
@@ -1228,6 +1228,37 @@ const PROJETS = [
     "programme": null,
     "programmeId": null,
     "usaid": true
+  },
+  {
+    "id": 45,
+    "projectId": "AMSS-PRJ-045",
+    "code": "MONPROT-DDC",
+    "title": "Projet de contribution aux activités de monitoring de protection dans les régions de Sikasso, Mopti et Tombouctou",
+    "statutRegistre": "Actif",
+    "startDate": "2024-05-01",
+    "endDate": "2027-04-30",
+    "region": "Tombouctou, Mopti, Sikasso",
+    "regions": [
+      "Tombouctou",
+      "Mopti",
+      "Sikasso"
+    ],
+    "zoneDetail": "Région de Sikasso — Région de Mopti — Région de Tombouctou",
+    "secteur": "Protection",
+    "domaine": "Protection & VBG",
+    "bailleur": "Coopération suisse (DDC) / Ambassade des Pays-Bas",
+    "donor": "Coopération suisse (DDC) / Ambassade des Pays-Bas",
+    "partenaires": "AMSS",
+    "budget": "317 165 684 FCFA",
+    "budgetMontant": 317165684,
+    "budgetDevise": "XOF",
+    "beneficiaries": null,
+    "beneficiairesTexte": "Populations affectées par les conflits et les mouvements forcés; élus; survivantes de violences",
+    "excerpt": "Monitoring de protection, système intégré de protection, gestion des cas",
+    "description": null,
+    "programme": null,
+    "programmeId": null,
+    "usaid": false
   },
   {
     "id": 46,
@@ -1350,6 +1381,185 @@ const PROJETS = [
     "programme": null,
     "programmeId": null,
     "usaid": true
+  },
+  {
+    "id": 52,
+    "projectId": "AMSS-PRJ-052",
+    "code": "MONPROT-PBC-2026",
+    "title": "Monitoring de protection, promotion de la cohésion sociale et lutte contre les VBG, et protection à base communautaire — accord UNHCR 2026",
+    "statutRegistre": "Actif",
+    "startDate": "2026-01-01",
+    "endDate": "2026-12-31",
+    "region": "Tombouctou, Gao, Ménaka, Mopti, Bandiagara, Bamako",
+    "regions": [
+      "Tombouctou",
+      "Gao",
+      "Ménaka",
+      "Mopti",
+      "Bandiagara",
+      "Bamako"
+    ],
+    "zoneDetail": "Région de Tombouctou: Tombouctou, Goundam, Tonka, Douékiré, Diré, Léré, Rharous, Gossi — Région de Gao: Gao, Ansongo, Gounzoureye — Région de Ménaka: Ménaka — Région de Mopti: Mopti, Sio, Socoura, Fakala (Sofara), Djenné — Région de Bandiagara: Bankass, Koro, Kani-Bonzon — District de Bamako",
+    "secteur": "Protection",
+    "domaine": "Protection & VBG ; Éducation ; Cohésion sociale & Paix",
+    "bailleur": "UNHCR / Coopération suisse (DDC)",
+    "donor": "UNHCR / Coopération suisse (DDC)",
+    "partenaires": "UNHCR",
+    "budget": "N/D",
+    "budgetMontant": null,
+    "budgetDevise": null,
+    "beneficiaries": null,
+    "beneficiairesTexte": null,
+    "excerpt": "Monitoring de protection, protection à base communautaire, cohésion sociale, prévention des VBG, documentation civile, éducation aux risques des engins explosifs",
+    "description": null,
+    "programme": null,
+    "programmeId": null,
+    "usaid": false
+  },
+  {
+    "id": 53,
+    "projectId": "AMSS-PRJ-053",
+    "code": "PROSEM",
+    "title": "Projet PROSEM — Promotion de la cohésion sociale, prévention des VBG et renforcement des mécanismes communautaires de protection",
+    "statutRegistre": "Actif",
+    "startDate": "2026-07-01",
+    "endDate": null,
+    "region": "Ségou",
+    "regions": [
+      "Ségou"
+    ],
+    "zoneDetail": "Région de Ségou: cercle de Ségou (Cinzana Gare, Cinzana Village); cercle de Barouéli (Barouéli, Konobougou)",
+    "secteur": "Cohésion sociale et consolidation de la paix",
+    "domaine": "Cohésion sociale & Paix ; Protection & VBG",
+    "bailleur": "AECID",
+    "donor": "AECID",
+    "partenaires": "Ayuda en Acción",
+    "budget": "N/D",
+    "budgetMontant": null,
+    "budgetDevise": null,
+    "beneficiaries": null,
+    "beneficiairesTexte": null,
+    "excerpt": "Dialogues communautaires, cohésion sociale, prévention des VBG, comités de protection communautaire",
+    "description": null,
+    "programme": null,
+    "programmeId": null,
+    "usaid": false
+  },
+  {
+    "id": 54,
+    "projectId": "AMSS-PRJ-054",
+    "code": "LEARN",
+    "title": "Projet LEARN (AMSS – EDUCO)",
+    "statutRegistre": "Actif",
+    "startDate": "2026-09-29",
+    "endDate": null,
+    "region": "Ségou",
+    "regions": [
+      "Ségou"
+    ],
+    "zoneDetail": "Région de Ségou: 25 communes d’intervention",
+    "secteur": "Éducation",
+    "domaine": "Éducation",
+    "bailleur": "N/D",
+    "donor": "N/D",
+    "partenaires": "EDUCO",
+    "budget": "N/D",
+    "budgetMontant": null,
+    "budgetDevise": null,
+    "beneficiaries": null,
+    "beneficiairesTexte": null,
+    "excerpt": "Éducation",
+    "description": null,
+    "programme": null,
+    "programmeId": null,
+    "usaid": false
+  },
+  {
+    "id": 55,
+    "projectId": "AMSS-PRJ-055",
+    "code": "A1BK",
+    "title": "Projet A1BK — Réponse d’urgence en sécurité alimentaire et nutrition pour les personnes déplacées (Niono et Molodo)",
+    "statutRegistre": "Clôturé",
+    "startDate": "2026-02-01",
+    "endDate": "2026-02-28",
+    "region": "Ségou",
+    "regions": [
+      "Ségou"
+    ],
+    "zoneDetail": "Région de Ségou: cercle de Niono (Niono, Molodo)",
+    "secteur": "Urgence humanitaire",
+    "domaine": "Urgence humanitaire",
+    "bailleur": "Commission européenne — DG ECHO",
+    "donor": "Commission européenne — DG ECHO",
+    "partenaires": "Action contre la Faim",
+    "budget": "N/D",
+    "budgetMontant": null,
+    "budgetDevise": null,
+    "beneficiaries": null,
+    "beneficiairesTexte": "52 ménages de personnes déplacées internes",
+    "excerpt": "Distribution de vivres, farine enrichie pour les enfants de 6 à 23 mois",
+    "description": null,
+    "programme": null,
+    "programmeId": null,
+    "usaid": false
+  },
+  {
+    "id": 56,
+    "projectId": "AMSS-PRJ-056",
+    "code": "SECU-HUMAINE",
+    "title": "Projet de Sécurité humaine — Goundam, Tonka, Alafia et Tombouctou",
+    "statutRegistre": "Clôturé",
+    "startDate": "2025-04-01",
+    "endDate": "2026-02-28",
+    "region": "Tombouctou",
+    "regions": [
+      "Tombouctou"
+    ],
+    "zoneDetail": "Région de Tombouctou: cercle de Goundam (Goundam, Tonka); cercle de Tombouctou (Tombouctou, Alafia)",
+    "secteur": "Cohésion sociale et consolidation de la paix",
+    "domaine": "Cohésion sociale & Paix ; Protection & VBG ; Sécurité alimentaire & Moyens d’existence",
+    "bailleur": "UNESCO",
+    "donor": "UNESCO",
+    "partenaires": "UNESCO",
+    "budget": "N/D",
+    "budgetMontant": null,
+    "budgetDevise": null,
+    "beneficiaries": null,
+    "beneficiairesTexte": null,
+    "excerpt": "Comités locaux de protection civile, gestion des risques, vulgarisation de la Loi d’orientation agricole et de la Charte pastorale",
+    "description": null,
+    "programme": null,
+    "programmeId": null,
+    "usaid": false
+  },
+  {
+    "id": 57,
+    "projectId": "AMSS-PRJ-057",
+    "code": "KORO-ACCD",
+    "title": "Réponse humanitaire multisectorielle urgente en faveur des populations réfugiées dans la commune de Koro",
+    "statutRegistre": "Clôturé",
+    "startDate": "2026-02-01",
+    "endDate": "2026-03-31",
+    "region": "Bandiagara",
+    "regions": [
+      "Bandiagara"
+    ],
+    "zoneDetail": "Région de Bandiagara: cercle de Koro (Koro, site de réfugiés de Kenewe)",
+    "secteur": "Protection",
+    "domaine": "Protection & VBG",
+    "bailleur": "ACCD (Agence catalane de coopération au développement)",
+    "donor": "ACCD (Agence catalane de coopération au développement)",
+    "partenaires": "Oxfam",
+    "budget": "N/D",
+    "budgetMontant": null,
+    "budgetDevise": null,
+    "beneficiaries": null,
+    "beneficiairesTexte": null,
+    "excerpt": "Protection communautaire des réfugiés, sensibilisation",
+    "description": null,
+    "programme": null,
+    "programmeId": null,
+    "usaid": false
   }
 ]
 
