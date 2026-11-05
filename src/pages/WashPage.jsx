@@ -14,6 +14,7 @@ import { projetsEnCours, projetsTermines } from '@/data/reseau'
 import { hasCanon } from '@/utils/domainesCanon'
 import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
 import ResultatsAnnuels from '@/components/ResultatsAnnuels'
+import { benefAffiche } from '@/utils/beneficiaires'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'WASH'
@@ -207,7 +208,7 @@ const WashPage = () => {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Bénéficiaires :</span>
                         <span className="font-medium text-right">
-                          {typeof p.beneficiaries === 'number' ? p.beneficiaries.toLocaleString('fr-FR') : 'N/D'}
+                          {benefAffiche(p)}
                         </span>
                       </div>
                     </div>

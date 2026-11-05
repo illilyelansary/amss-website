@@ -5,6 +5,7 @@ import { CheckCircle, Filter, Search, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { projetsTermines } from '@/data/reseau'
 import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
+import { benefAffiche, totalBenefAffiche, nbRenseignes } from '@/utils/beneficiaires'
 
 if (import.meta.env.DEV) {
   // eslint-disable-next-line no-console
@@ -37,12 +38,6 @@ const splitDonors = (label) =>
     .map((s) => s.trim())
     .filter(Boolean)
 
-const toNumber = (v) => {
-  if (typeof v === 'number' && Number.isFinite(v)) return v
-  if (v == null) return 0
-  const n = parseFloat(String(v).replace(/[^\d.-]/g, ''))
-  return Number.isFinite(n) ? n : 0
-}
 
 const safeYear = (value) => {
   if (!value) return 'N/D'
@@ -134,10 +129,9 @@ export default function ProjetsTerminesPage() {
 
   // Compteurs
   const counters = useMemo(() => {
-    const totalBenef = filtered.reduce((acc, p) => acc + toNumber(p.beneficiaries), 0)
     return {
       nb: filtered.length,
-      totalBenef: new Intl.NumberFormat('fr-FR').format(totalBenef),
+      totalBenef: totalBenefAffiche(filtered),
     }
   }, [filtered])
 
@@ -159,7 +153,7 @@ export default function ProjetsTerminesPage() {
                 <div className="text-3xl font-semibold mt-1">{counters.nb}</div>
               </div>
               <div className="rounded-2xl bg-white p-5 shadow-sm border">
-                <div className="text-sm text-muted-foreground">Bénéficiaires (cumulés)</div>
+                <div className="text-sm text-muted-foreground">Bénéficiaires (projets renseignés : {nbRenseignes(filtered)}/{filtered.length})</div>
                 <div className="text-3xl font-semibold mt-1">{counters.totalBenef}</div>
               </div>
             </div>
@@ -266,7 +260,7 @@ export default function ProjetsTerminesPage() {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Bénéficiaires :</span>
                         <span className="font-medium text-right">
-                          {toNumber(p.beneficiaries).toLocaleString('fr-FR')}
+                          {benefAffiche(p)}
                         </span>
                       </div>
                     </div>

@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar, Wallet, Users, Layers, MapPin, Handshake, Building
 import { projetsBySlug, programmeDe, partenairesBySlug } from '@/data/reseau'
 import { LiensZones, LiensPartenaires, LiensBases, ListeProjets, TitreProjet } from '@/components/liens/Liens'
 import { CANON_LABELS, projectToCanonKeys } from '@/utils/domainesCanon'
+import { benefAffiche } from '@/utils/beneficiaires'
 
 const PAGE_DOMAINE = { EDUCATION: '/education', SANTE: '/sante', SECALIM: '/securite-alimentaire', WASH: '/wash', PROTECTION: '/protection', GOUV: '/gouvernance' }
 const fmtDate = (d) => (d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : null)
@@ -64,7 +65,7 @@ export default function ProjetDetailPage() {
             )}
             {p.beneficiairesTexte && (
               <div>
-                <h2 className="text-xl font-semibold mb-2 flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> Bénéficiaires</h2>
+                <h2 className="text-xl font-semibold mb-2 flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> Bénéficiaires ciblés</h2>
                 <p className="text-muted-foreground leading-relaxed">{p.beneficiairesTexte}</p>
               </div>
             )}
@@ -104,6 +105,7 @@ export default function ProjetDetailPage() {
                   : <span>{p.domaine || 'N/D'}</span>}
               </span>
             </Row>
+            <Row icon={Users} label="Bénéficiaires">{benefAffiche(p)}</Row>
             <Row icon={Wallet} label="Budget">{p.budget || 'N/D'}</Row>
             {prog && <Row icon={Layers} label="Programme"><TitreProjet p={{ title: prog.title }} /></Row>}
           </aside>

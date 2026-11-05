@@ -14,13 +14,12 @@ import educationMali from '../assets/education-mali.jpg'
 import { hasCanon } from '@/utils/domainesCanon'
 import { LiensPartenaires, TitreProjet } from '@/components/liens/Liens'
 import ResultatsAnnuels from '@/components/ResultatsAnnuels'
+import { benefAffiche } from '@/utils/beneficiaires'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'EDUCATION'
 
 // Utils d'affichage
-const isNum = (v) => typeof v === 'number' && Number.isFinite(v)
-const fmt = (n) => (isNum(n) ? n.toLocaleString('fr-FR') : 'N/D')
 
 function ProjectCard({ p }) {
   const status = String(p.status || '').toLowerCase()
@@ -60,12 +59,10 @@ function ProjectCard({ p }) {
             {p.region}
           </div>
         )}
-        {p.beneficiaries !== undefined && (
-          <div className="inline-flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            {fmt(p.beneficiaries)} bénéficiaires
-          </div>
-        )}
+        <div className="inline-flex items-center gap-1">
+          <Users className="h-3 w-3" />
+          Bénéficiaires : {benefAffiche(p)}
+        </div>
       </div>
     </div>
   )

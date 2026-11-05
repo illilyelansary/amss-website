@@ -5,6 +5,7 @@ import { Clock, Filter, Search, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { projetsEnCours } from '@/data/reseau'
 import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
+import { totalBenefAffiche, nbRenseignes } from '@/utils/beneficiaires'
 
 if (import.meta.env.DEV) {
   // eslint-disable-next-line no-console
@@ -37,12 +38,6 @@ const splitDonors = (label) =>
     .map((s) => s.trim())
     .filter(Boolean)
 
-const toNumber = (v) => {
-  if (typeof v === 'number' && Number.isFinite(v)) return v
-  if (v == null) return 0
-  const n = parseFloat(String(v).replace(/[^\d.-]/g, ''))
-  return Number.isFinite(n) ? n : 0
-}
 
 // Essaie d’estimer les communes à partir du champ `region` (approximatif).
 const extractCommunes = (regionStr) => {
@@ -157,7 +152,6 @@ export default function ProjetsEnCoursPage() {
 
   // Compteurs
   const counters = useMemo(() => {
-    const totalBenef = filtered.reduce((acc, p) => acc + toNumber(p.beneficiaries), 0)
     const communesSet = new Set()
     let communesNumeric = 0
     filtered.forEach((p) => {
@@ -167,7 +161,7 @@ export default function ProjetsEnCoursPage() {
     })
     return {
       nb: filtered.length,
-      totalBenef: new Intl.NumberFormat('fr-FR').format(totalBenef),
+      totalBenef: totalBenefAffiche(filtered),
       totalCommunes: new Intl.NumberFormat('fr-FR').format(communesSet.size + communesNumeric),
     }
   }, [filtered])
@@ -190,7 +184,7 @@ export default function ProjetsEnCoursPage() {
                 <div className="text-3xl font-semibold mt-1">{counters.nb}</div>
               </div>
               <div className="rounded-2xl bg-white p-5 shadow-sm border">
-                <div className="text-sm text-muted-foreground">Bénéficiaires (cumulés)</div>
+                <div className="text-sm text-muted-foreground">Bénéficiaires (projets renseignés : {nbRenseignes(filtered)}/{filtered.length})</div>
                 <div className="text-3xl font-semibold mt-1">{counters.totalBenef}</div>
               </div>
               <div className="rounded-2xl bg-white p-5 shadow-sm border">

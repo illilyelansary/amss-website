@@ -11,6 +11,8 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
+import { statsGlobales, projetsReseau } from '@/data/reseau'
+import { totalBenefAffiche } from '@/utils/beneficiaires'
 
 const DomainesSection = () => {
   const domaines = [
@@ -197,19 +199,19 @@ const DomainesSection = () => {
               </h4>
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <div className="text-3xl font-bold text-primary mb-2">50+</div>
-                  <div className="text-sm text-muted-foreground">Projets réalisés</div>
+                  <div className="text-3xl font-bold text-primary mb-2">{statsGlobales.projetsTotal}</div>
+                  <div className="text-sm text-muted-foreground">Projets récents au registre</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-accent mb-2">100K+</div>
-                  <div className="text-sm text-muted-foreground">Bénéficiaires</div>
+                  <div className="text-3xl font-bold text-accent mb-2">{totalBenefAffiche(projetsReseau)}</div>
+                  <div className="text-sm text-muted-foreground">Bénéficiaires (projets renseignés)</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-primary mb-2">20+</div>
+                  <div className="text-3xl font-bold text-primary mb-2">{statsGlobales.partenaires}</div>
                   <div className="text-sm text-muted-foreground">Partenaires</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-accent mb-2">8</div>
+                  <div className="text-3xl font-bold text-accent mb-2">{statsGlobales.regions}</div>
                   <div className="text-sm text-muted-foreground">Régions</div>
                 </div>
               </div>

@@ -25,13 +25,12 @@ import { projetsEnCours, projetsTermines } from '@/data/reseau'
 import { hasCanon } from '@/utils/domainesCanon'
 import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
 import ResultatsAnnuels from '@/components/ResultatsAnnuels'
+import { benefAffiche, totalBenefAffiche } from '@/utils/beneficiaires'
 
 // Clé canon unique (déclarée une seule fois, scope module)
 const CANON_KEY = 'SANTE'
 
 // helpers
-const isNum = (v) => typeof v === 'number' && Number.isFinite(v)
-const fmt = (n) => (isNum(n) ? n.toLocaleString('fr-FR') : 'N/D')
 const safeYear = (value) => {
   if (!value) return 'N/D'
   const y = new Date(value)
@@ -67,12 +66,10 @@ function ProjectCard({ p, ended = false }) {
           <span className="text-muted-foreground">Bailleur :</span>
           <span className="font-medium text-right"><LiensPartenaires slugs={p.bailleurs || []} /></span>
         </div>
-        {'beneficiaries' in p && (
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Bénéficiaires :</span>
-            <span className="font-medium text-right">{fmt(p.beneficiaries)}</span>
-          </div>
-        )}
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Bénéficiaires :</span>
+          <span className="font-medium text-right">{benefAffiche(p)}</span>
+        </div>
         {(p.domaine || p.domain) && (
           <div className="flex justify-between">
             <span className="text-muted-foreground">Domaine :</span>
@@ -95,10 +92,6 @@ export default function SantePage() {
     []
   )
 
-  const totalBenefEnCours = useMemo(
-    () => santeEnCours.reduce((acc, p) => acc + (Number(p.beneficiaries || 0) || 0), 0),
-    [santeEnCours]
-  )
 
   return (
     <div className="min-h-screen bg-background">
@@ -147,7 +140,7 @@ export default function SantePage() {
             <div className="bg-white rounded-xl p-5 shadow-sm border">
               <div className="text-sm text-muted-foreground">Bénéficiaires (en cours)</div>
               <div className="text-2xl font-semibold mt-1 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" /> {fmt(totalBenefEnCours)}
+                <TrendingUp className="h-5 w-5" /> {totalBenefAffiche(santeEnCours)}
               </div>
             </div>
           </div>

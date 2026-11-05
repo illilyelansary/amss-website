@@ -5,6 +5,7 @@ import { GraduationCap, Heart, Droplets, Shield, Users, Wheat, Layers, Filter, S
 import { Button } from '@/components/ui/button'
 import { projetsEnCours, projetsTermines } from '@/data/reseau'
 import { TitreProjet } from '@/components/liens/Liens'
+import {  } from '@/utils/beneficiaires'
 
 // ---------- Utils ----------
 const norm = (s) => String(s || '')
@@ -100,7 +101,7 @@ export default function DomainesPage () {
     const totalDomains = domainesRaw.length
     const totalProjects = domainesRaw.reduce((acc, d) => acc + d.projets.length, 0)
     const totalBenef = domainesRaw.reduce((acc, d) => acc + d.benefEnCours, 0)
-    return { totalDomains, totalProjects, totalBenef: n(totalBenef) }
+    return { totalDomains, totalProjects, totalBenef: totalBenef > 0 ? n(totalBenef) : 'N/A' }
   }, [domainesRaw])
 
   // Filtres

@@ -5,6 +5,7 @@ import { Clock, CheckCircle, FileText, ArrowRight, Handshake, Filter, Search } f
 import { Button } from '@/components/ui/button'
 import { projetsEnCours, projetsTermines, rapports as rapportsRaw, partenaires as partenairesReseau } from '@/data/reseau'
 import { LiensPartenaires, LiensZones, TitreProjet } from '@/components/liens/Liens'
+import { benefAffiche, totalBenefAffiche, nbRenseignes } from '@/utils/beneficiaires'
 
 if (import.meta.env.DEV) {
   // eslint-disable-next-line no-console
@@ -43,19 +44,6 @@ const safeYear = (value) => {
   return Number.isNaN(y.getTime()) ? 'N/D' : y.getFullYear()
 }
 
-// Parse “bénéficiaires” en nombre, sinon 0 (évite NaN)
-const toNumber = (v) => {
-  if (typeof v === 'number' && Number.isFinite(v)) return v
-  if (v == null) return 0
-  const n = parseFloat(String(v).replace(/[^\d.-]/g, ''))
-  return Number.isFinite(n) ? n : 0
-}
-// Bénéficiaires plausibles uniquement (seuil ajustable)
-const asBenef = (v) => {
-  const n = toNumber(v)
-  if (!Number.isFinite(n) || n <= 0) return 0
-  return n <= 500_000 ? n : 0 // ignore les valeurs aberrantes
-}
 
 // Essaie d’estimer les communes à partir du champ `region` (approximatif).
 const extractCommunes = (regionStr) => {
@@ -199,7 +187,6 @@ export default function ProjetsPage() {
 
   // --- Compteurs dynamiques (EN COURS filtrés) ---
   const counters = useMemo(() => {
-    const totalBenef = enCoursFiltered.reduce((acc, p) => acc + asBenef(p.beneficiaries), 0)
     const communesSet = new Set()
     let communesNumeric = 0
     enCoursFiltered.forEach((p) => {
@@ -212,7 +199,7 @@ export default function ProjetsPage() {
     const nbSuspendusUSAID = enCoursFiltered.filter((p) => p.usaidNote === true).length
 
     return {
-      totalBenef: new Intl.NumberFormat('fr-FR').format(totalBenef),
+      totalBenef: totalBenefAffiche(enCoursFiltered),
       totalCommunes: new Intl.NumberFormat('fr-FR').format(totalCommunes),
       nbEnCours,
       nbSuspendusUSAID,
@@ -237,7 +224,7 @@ export default function ProjetsPage() {
             {/* Stats clés (EN COURS filtrés) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-8">
               <div className="rounded-2xl bg-white p-5 shadow-sm border">
-                <div className="text-sm text-muted-foreground">Bénéficiaires (projets en cours)</div>
+                <div className="text-sm text-muted-foreground">Bénéficiaires (projets en cours renseignés : {nbRenseignes(enCoursFiltered)}/{enCoursFiltered.length})</div>
                 <div className="text-3xl font-semibold mt-1">{counters.totalBenef}</div>
               </div>
               <div className="rounded-2xl bg-white p-5 shadow-sm border">
@@ -485,7 +472,7 @@ export default function ProjetsPage() {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Bénéficiaires :</span>
                         <span className="font-medium text-right">
-                          {toNumber(p.beneficiaries).toLocaleString('fr-FR')}
+                          {benefAffiche(p)}
                         </span>
                       </div>
                     </div>

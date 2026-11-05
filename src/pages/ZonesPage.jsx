@@ -361,7 +361,7 @@ export default function ZonesPage() {
                           <div className="rounded-xl bg-white border p-4"><div className="text-xs text-muted-foreground">En cours</div><div className="text-2xl font-semibold">{stats.enCours}</div></div>
                           <div className="rounded-xl bg-white border p-4"><div className="text-xs text-muted-foreground">Terminés</div><div className="text-2xl font-semibold">{stats.termines}</div></div>
                           <div className="rounded-xl bg-white border p-4"><div className="text-xs text-muted-foreground">Bailleurs</div><div className="text-2xl font-semibold">{stats.donors.length}</div></div>
-                          <div className="rounded-xl bg-white border p-4"><div className="text-xs text-muted-foreground">Bénéficiaires (≈)</div><div className="text-2xl font-semibold">{fmt(stats.benef)}</div></div>
+                          <div className="rounded-xl bg-white border p-4"><div className="text-xs text-muted-foreground">Bénéficiaires (≈)</div><div className="text-2xl font-semibold">{stats.benef > 0 ? fmt(stats.benef) : 'N/A'}</div></div>
                         </div>
 
                         {/* Base(s) AMSS couvrant la zone */}
@@ -431,12 +431,10 @@ export default function ZonesPage() {
                                       <div><span className="text-muted-foreground">Régions :</span> <LiensZones regions={p.regions || []} icon={false} /></div>
                                       {domains && <div><span className="text-muted-foreground">Domaine :</span> {domains}</div>}
                                       {p.bailleurs?.length > 0 && <div><span className="text-muted-foreground">Bailleur(s) :</span> <LiensPartenaires slugs={p.bailleurs} /></div>}
-                                      {b > 0 && (
-                                        <div className="inline-flex items-center gap-1">
+                                      <div className="inline-flex items-center gap-1">
                                           <Users className="h-3 w-3" />
-                                          {b.toLocaleString('fr-FR')} bénéficiaires
+                                          {b > 0 ? `${b.toLocaleString('fr-FR')} bénéficiaires` : 'Bénéficiaires : N/A'}
                                         </div>
-                                      )}
                                     </div>
                                   </article>
                                 )
