@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import { Calendar, Tag, MapPin, Share2, ChevronLeft, ArrowLeft, ArrowRight, Copy, Check, Home } from 'lucide-react'
 import { actualites } from '../data/actualitesData'
+import { trouverPartenaires, projetParCode, zonesByLabel } from '@/data/reseau'
+import { LiensPartenaires, TitreProjet, lienZone } from '@/components/liens/Liens'
 
 // Routes cibles pour les tags (JS pur, immuable)
 const TAG_ROUTE_MAP = Object.freeze({
@@ -291,20 +293,35 @@ const ActualiteDetailPage = () => {
               </div>
             )}
 
-            {(Array.isArray(actu.lieux) && actu.lieux.length > 0) || (Array.isArray(actu.partenaires) && actu.partenaires.length > 0) ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
+            {(Array.isArray(actu.lieux) && actu.lieux.length > 0) || (Array.isArray(actu.partenaires) && actu.partenaires.length > 0) || actu.projet ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6 p-4 rounded-xl border bg-muted/30">
                 {Array.isArray(actu.lieux) && actu.lieux.length > 0 && (
                   <div className="text-sm">
                     <div className="font-semibold mb-1 flex items-center">
                       <MapPin className="h-4 w-4 mr-2" /> Lieux
                     </div>
-                    <div className="text-muted-foreground">{actu.lieux.join(', ')}</div>
+                    <div className="text-muted-foreground">
+                      {actu.lieux.map((l, i) => (
+                        <span key={l}>
+                          {i > 0 && ', '}
+                          {zonesByLabel.has(l) ? <Link to={lienZone(l)} className="text-primary hover:underline">{l}</Link> : l}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {Array.isArray(actu.partenaires) && actu.partenaires.length > 0 && (
                   <div className="text-sm">
                     <div className="font-semibold mb-1">Partenaires</div>
-                    <div className="text-muted-foreground">{actu.partenaires.join(', ')}</div>
+                    {trouverPartenaires(actu.partenaires).length > 0
+                      ? <div className="text-left"><LiensPartenaires slugs={trouverPartenaires(actu.partenaires)} /></div>
+                      : <div className="text-muted-foreground">{actu.partenaires.join(', ')}</div>}
+                  </div>
+                )}
+                {projetParCode(actu.projet) && (
+                  <div className="text-sm">
+                    <div className="font-semibold mb-1">Projet</div>
+                    <TitreProjet p={projetParCode(actu.projet)} className="text-primary" />
                   </div>
                 )}
               </div>

@@ -220,3 +220,14 @@ export const statsGlobales = {
   partenaires: partenaires.filter((p) => p.projets.length).length,
   bases: bases.length,
 }
+
+/** Slugs des partenaires reconnus dans un nom ou une liste de noms (actualités, textes libres) */
+export function trouverPartenaires(noms = []) {
+  const slugs = new Set()
+  ;[].concat(noms).forEach((n) => partnersInText(n).forEach((r) => {
+    if (typeof r === 'string' && partenairesBySlug.has(r)) slugs.add(r)
+  }))
+  return [...slugs]
+}
+/** Projet par code du registre (ex. « PADEM ») */
+export const projetParCode = (code) => projetsReseau.find((p) => String(p.code || '').toUpperCase() === String(code || '').toUpperCase()) || null

@@ -139,7 +139,7 @@ const HomePage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {dernieresActus.map((a) => (
               <article key={a.slug} className="bg-white rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
-                <img src={a.image || '/placeholder-news.jpg'} alt="" loading="lazy" className="w-full h-48 object-cover" />
+                <img src={a.image || '/placeholder-news.jpg'} alt="" loading="lazy" className="w-full h-48 object-cover" onError={(e) => { e.currentTarget.src = '/placeholder-news.jpg' }} />
                 <div className="p-6 flex flex-col flex-1">
                   <div className="text-xs text-muted-foreground mb-2 inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{fmtDate(a.dateISO)}</div>
                   <h3 className="text-lg font-semibold text-foreground mb-3">{a.titre}</h3>
