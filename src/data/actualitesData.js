@@ -287,6 +287,7 @@ const base = [
     contenu: "Aujourd’hui, nous avons partagé un moment riche et inspirant autour du thème : “Confiance – Être confiante”.\n\nLa séance a débuté par un chaleureux mot de bienvenue, suivi d’une révision de la dernière rencontre et du cercle d’histoire. L’animatrice et les mentors ont ensuite introduit le thème de la confiance en soi.\n\nLes participantes ont défini la confiance selon leurs propres mots et ont partagé des expériences personnelles. Ensemble, nous avons identifié les causes du manque de confiance : moqueries, harcèlement, échec scolaire, rejet, violences, comparaison...\n\nNous avons également exploré des moyens concrets pour renforcer l’estime de soi :\n\nSe fixer de petits objectifs\n\nS’entourer de personnes positives\n\nApprendre de ses erreurs\n\nPrendre soin de soi\n\nActivité phare : le “micro magique”\n\nChaque fille a pris la parole pour dire qui elle est et ce qu’elle souhaite devenir. Elles ont ensuite inscrit leur rêve sur un papier accroché au mur de confiance : devenir présidente, docteure, policière, femme d’affaires, infirmière... Des ambitions fortes et inspirantes !\n\nLa séance s’est terminée par une belle animation de danses traditionnelles Dogon, Haoussa et Tamasheq, un moment de joie et de cohésion.\n\nUne matinée pleine de confiance, de rêves et d’énergie positive !",
     lieux: ["Bamako"],
     partenaires: [],
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1147041190974546",
     source: 'Facebook',
     tags: ["Protection", "Bamako"]
   },
@@ -302,6 +303,7 @@ const base = [
     lieux: ["Bamako"],
     partenaires: ["Union européenne", "Save the Children", "CAEB", "Cordaid"],
     projet: "PADEM",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1149311474080851",
     source: 'Facebook',
     tags: ["Éducation", "Bamako"]
   },
@@ -317,6 +319,7 @@ const base = [
     lieux: ["Ménaka"],
     partenaires: ["UNHCR"],
     projet: "MONPROT-UNHCR",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1150711027274229",
     source: 'Facebook',
     tags: ["Protection", "Ménaka"]
   },
@@ -332,6 +335,7 @@ const base = [
     lieux: ["Gao", "Anchawadji", "Gounzoureye"],
     partenaires: ["UNHCR"],
     projet: "PBC",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1150722527273079",
     source: 'Facebook',
     tags: ["Protection", "Gao", "Anchawadji"]
   },
@@ -347,6 +351,7 @@ const base = [
     lieux: ["Ménaka"],
     partenaires: ["UNHCR"],
     projet: "MONPROT-UNHCR",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1152377833774215",
     source: 'Facebook',
     tags: ["Éducation", "Ménaka"]
   },
@@ -362,6 +367,7 @@ const base = [
     lieux: ["Gao"],
     partenaires: ["UNHCR"],
     projet: "PBC",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1155914350087230",
     source: 'Facebook',
     tags: ["Autonomisation", "Gao"]
   },
@@ -376,6 +382,7 @@ const base = [
     contenu: "Les 8 et 9 janvier 2026 à Bamako, l’Association Malienne pour la Survie au Sahel (AMSS) a marqué un tournant historique dans son parcours de plus de trois décennies au service des communautés sahéliennes, à l’occasion de l’atelier de validation technique du Plan Stratégique 2026–2030,\n\nCet atelier, qui a réuni les cadres et équipes de l’AMSS venus de l’ensemble de ses régions d’intervention, a constitué un espace de réflexion stratégique, de partage d’expériences et d’engagement collectif autour de l’avenir de l’organisation.\n\nUn regard lucide sur le chemin parcouru (2021–2025)\n\nLa première phase des travaux a été consacrée à l’analyse approfondie du bilan du Plan Stratégique 2021–2025. Les échanges ont permis de mettre en lumière des résultats majeurs, fruits de l’engagement et de la résilience des équipes sur le terrain :\n\nplus de 650 000 bénéficiaires directs,\n\n9,2 milliards FCFA mobilisés,\n\n92 % de taux d’exécution,\n\ndes audits sans réserve, gages de transparence et de crédibilité institutionnelle.\n\nCes résultats ont également permis d’identifier avec lucidité les défis à relever, afin de bâtir une stratégie plus robuste, plus innovante et davantage ancrée dans les besoins réels des communautés.\n\nUne vision renouvelée pour le Sahel\n\nS’appuyant sur ces enseignements, les participants ont validé une vision ambitieuse :\n\n« Transformer les défis en opportunités pour un Sahel durable et pacifié »,\n\nLe Plan Stratégique 2026–2030 s’articule autour de cinq axes stratégiques structurants :\n\n1⃣ Sécurité humaine, protection, paix et gouvernance\n\n2⃣ Résilience climatique et économie durable\n\n3⃣ Accès équitable aux services sociaux de base\n\n4⃣ Capital humain et excellence organisationnelle\n\n5⃣ Autonomie financière et modèle économique durable\n\nUn moment fort : la déclaration de l’Année de l’Audace et de l’Excellence\n\nLors du discours de clôture, le Directeur des Programmes, Dr. Elmehdi Ag Wakina, a livré une allocution forte et mobilisatrice, marquée par une déclaration solennelle :\n\n« Si 2025 fut le temps de la résistance, je décrète 2026 comme l’année de l’Audace et de l’Excellence. »\n\nCette vision repose sur trois piliers fondamentaux :\n\nL’ancrage communautaire absolu, en travaillant avec et pour les communautés ;\n\nL’innovation sociale, pour répondre à des crises en constante mutation ;\n\nLa rigueur de l’excellence, fondée sur la performance, la transparence et la redevabilité.\n\nLes travaux ont abouti à l’adoption unanime de la Résolution N001/AMSS/2026, consacrant le Plan Stratégique 2026–2030 comme le cadre officiel de référence pour la planification, la mise en œuvre, le suivi et l’évaluation de l’ensemble des programmes et projets de l’AMSS pour les cinq prochaines années.\n\nLa cérémonie de clôture s’est déroulée dans une atmosphère chaleureuse et fédératrice. Elle a été marquée par :\n\nla remise d’attestations de reconnaissance aux membres du staff, en hommage à leur engagement, leur professionnalisme et leur contribution aux résultats de l’organisation ;\n\nles vœux de nouvelle année adressés par le Directeur des Programmes, appelant à l’unité, à la détermination et à l’appropriation collective du nouveau plan ;\n\nun méchoui offert par la Direction, moment de partage et de convivialité venant renforcer l’esprit d’équipe et la cohésion au sein de l’AMSS.\n\nPlus qu’un atelier, cet événement a été un moment de communion institutionnelle, confirmant la volonté de l’AMSS de se projeter vers l’avenir avec audace, rigueur et humanité.\n\nEnsemble, transformons les défis du Sahel en opportunités durables.\n\nVive l’AMSS ! Vive le Mali !",
     lieux: ["Bamako"],
     partenaires: [],
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1170665651945433",
     source: 'Facebook',
     tags: ["Institutionnel", "Bamako"]
   },
@@ -392,6 +399,7 @@ const base = [
     partenaires: [],
     priorite: 1,
     featured: true,
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1186469817031683",
     source: 'Facebook',
     tags: ["Institutionnel", "Bamako"]
   },
@@ -406,6 +414,7 @@ const base = [
     contenu: "Ce matin, Dr Elmehdi Ag Wakina, Directeur des Programmes de l’ONG AMSS et Président de PONAH, a pris part au lancement officiel du Plan de Réponse Humanitaire (PRH) du Mali 2026, organisé par le Bureau de la Coordination des Affaires Humanitaires des Nations Unies (OCHA).\n\nLa cérémonie s’est déroulée à l’Hôtel Radisson Collection de Bamako, sous la présidence de Madame la Ministre de la Santé et du Développement Social, Colonel Major Assa Badiallo Touré, en présence des acteurs humanitaires nationaux et internationaux, des partenaires techniques et financiers, ainsi que des représentants des institutions publiques.\n\nCe lancement marque une étape clé dans la mobilisation collective en faveur des populations les plus vulnérables, dans un contexte marqué par des défis humanitaires persistants liés à l’insécurité, aux déplacements forcés, aux chocs climatiques et à l’accès limité aux services sociaux de base.\n\nÀ travers sa participation, l’ONG AMSS réaffirme son engagement aux côtés de l’État malien, du système des Nations Unies et de l’ensemble des partenaires humanitaires, pour une réponse coordonnée, inclusive et centrée sur les besoins réels des communautés, en particulier les femmes, les enfants et les personnes déplacées.\n\nEnsemble, renforçons la solidarité et l’action humanitaire pour un Mali plus résilient.",
     lieux: ["Bamako"],
     partenaires: ["OCHA"],
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1191781316500533",
     source: 'Facebook',
     tags: ["Plaidoyer", "Bamako"]
   },
@@ -421,6 +430,7 @@ const base = [
     lieux: ["Niafunké", "Tombouctou"],
     partenaires: ["Save the Children", "Affaires mondiales Canada"],
     projet: "MAPLE",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1191792256499439",
     source: 'Facebook',
     tags: ["Santé & Nutrition", "Niafunké", "Tombouctou"]
   },
@@ -436,6 +446,7 @@ const base = [
     lieux: ["Gao", "Gounzoureye"],
     partenaires: ["UNHCR"],
     projet: "PBC",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1191808996497765",
     source: 'Facebook',
     tags: ["Sécurité Alimentaire", "Gao", "Gounzoureye"]
   },
@@ -451,6 +462,7 @@ const base = [
     lieux: ["Niono", "Ségou"],
     partenaires: ["Action contre la Faim", "DG ECHO"],
     projet: "A1BK",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1193171723028159",
     source: 'Facebook',
     tags: ["Humanitaire", "Niono", "Ségou"]
   },
@@ -465,6 +477,7 @@ const base = [
     contenu: "Cette semaine, le Dr Emehdi Ag Wakina, Président de la Plateforme des ONG Nationales Actives Humanitaires au Mali (PONAH) et Directeur des programmes de l’Association Malienne pour la Survie au Sahel (AMSS), a pris part à la retraite des forums d’ONG d’Afrique de l’Ouest et Centrale à Dakar. Cet événement crucial, organisé par le FONGA du 9 au 13 février 2026, a été une plateforme d’échanges de haut niveau sur l’avenir de l’action humanitaire dans la région.\n\nAu cœur des discussions : la localisation. Comme l’a souligné le Dr Wakina dans son discours de clôture, « la localisation n’est plus un slogan, ni une aspiration lointaine. Elle est un impératif stratégique et éthique. Elle est l’expression d’un leadership africain assumé. »\n\nCette retraite a permis de renforcer la conviction que les organisations nationales et locales sont les piliers centraux des réponses humanitaires et des dynamiques de développement. Les débats ont porté sur le renforcement des capacités institutionnelles, l’accès équitable aux financements et la consolidation d’une voix collective pour un impact durable au profit des communautés.\n\nUn grand merci au FONGA pour avoir créé ce cadre de convergence et de co-construction. Nous repartons de Dakar avec la responsabilité collective de transformer ces engagements en changements tangibles.",
     lieux: ["Dakar"],
     partenaires: [],
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1198968779115120",
     source: 'Facebook',
     tags: ["Plaidoyer", "Dakar"]
   },
@@ -480,6 +493,7 @@ const base = [
     lieux: ["Tombouctou", "Goundam", "Tonka"],
     partenaires: [],
     projet: "SECU-HUMAINE",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1203338348678163",
     source: 'Facebook',
     tags: ["Gouvernance & Paix", "Tombouctou", "Goundam"]
   },
@@ -495,6 +509,7 @@ const base = [
     lieux: ["Tombouctou"],
     partenaires: ["UNHCR"],
     projet: "MONPROT-PBC-2026",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1209084358103562",
     source: 'Facebook',
     tags: ["Humanitaire", "Tombouctou"]
   },
@@ -510,6 +525,7 @@ const base = [
     lieux: ["Gao"],
     partenaires: ["UNHCR"],
     projet: "MONPROT-PBC-2026",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1240132411665423",
     source: 'Facebook',
     tags: ["Protection", "Gao"]
   },
@@ -526,6 +542,7 @@ const base = [
     partenaires: ["Affaires mondiales Canada", "EUMC"],
     projet: "PASCOFI",
     featured: true,
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1246930057652325",
     source: 'Facebook',
     tags: ["Éducation", "Bamako", "Barouéli"]
   },
@@ -541,6 +558,7 @@ const base = [
     lieux: ["Missirikoro", "Sikasso"],
     partenaires: ["Union européenne"],
     projet: "PADEM",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1276969894648341",
     source: 'Facebook',
     tags: ["Éducation", "Missirikoro", "Sikasso"]
   },
@@ -556,6 +574,7 @@ const base = [
     lieux: ["Sikasso", "Bamako"],
     partenaires: ["Union européenne", "Save the Children", "CAEB", "Cordaid"],
     projet: "PADEM",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1296518042693526",
     source: 'Facebook',
     tags: ["Éducation", "Sikasso", "Bamako"]
   },
@@ -571,6 +590,7 @@ const base = [
     lieux: ["Missirikoro", "Sikasso"],
     partenaires: ["Union européenne"],
     projet: "PADEM",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1301156182229712",
     source: 'Facebook',
     tags: ["WASH", "Missirikoro", "Sikasso"]
   },
@@ -586,6 +606,7 @@ const base = [
     lieux: ["Bamako"],
     partenaires: ["UNHCR"],
     projet: "MONPROT-PBC-2026",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1302908092054521",
     source: 'Facebook',
     tags: ["Protection", "Bamako"]
   },
@@ -602,6 +623,7 @@ const base = [
     partenaires: ["Ayuda en Acción", "AECID"],
     projet: "PROSEM",
     featured: true,
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1320346613644002",
     source: 'Facebook',
     tags: ["Gouvernance & Paix", "Ségou"]
   },
@@ -617,6 +639,7 @@ const base = [
     lieux: ["Tombouctou"],
     partenaires: ["Education Cannot Wait", "UNHCR"],
     projet: "CAPPR-II",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1341639154848081",
     source: 'Facebook',
     tags: ["Éducation", "Tombouctou"]
   },
@@ -631,6 +654,7 @@ const base = [
     contenu: "Dans le cadre du partenariat entre le HCR et l’ONG AMSS, M. Elmehdi Ag Wakina, Directeur des Programmes de l’AMSS, a effectué une visite de terrain à la Maison des Jeunes de Bamako.\n\nCette visite a permis de découvrir les différentes activités mises en œuvre par le HCR, en collaboration avec ses partenaires, en faveur de l’autonomisation et du renforcement des capacités des réfugiés.\n\nAu programme : des formations pratiques en gastronomie africaine, notamment autour de la préparation du poulet flambé, en beauté (maquillage et coiffure), ainsi qu’en informatique, avec l’appui du CAIRE – Centre pour l’Autonomisation et l’Innovation des Réfugiés.\n\nLa visite s’est également poursuivie à la boutique des réfugiés et à la salle informatique, où sont notamment organisées des séances d’initiation des élèves réfugiés aux outils informatiques, contribuant ainsi au développement de leurs compétences et à leur inclusion numérique.\n\nLa journée s’est achevée par une visite de la formation des animateurs pédagogiques sur la SSA-P, organisée dans le cadre du projet PADEM, illustrant l’engagement constant de l’AMSS en faveur du renforcement des capacités, de l’éducation, de l’autonomisation et de la résilience des communautés.\n\nÀ travers ces différentes initiatives, l’AMSS réaffirme son engagement aux côtés de ses partenaires pour promouvoir des solutions durables et renforcer les opportunités offertes aux communautés vulnérables et aux réfugiés.",
     lieux: ["Bamako"],
     partenaires: ["UNHCR"],
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1376871651324831",
     source: 'Facebook',
     tags: ["Institutionnel", "Bamako"]
   },
@@ -645,6 +669,7 @@ const base = [
     contenu: "Dans le cadre du renforcement des capacités des acteurs locaux de la protection de l’enfance, un atelier de formation de trois (03) jours sur le Mécanisme de Surveillance et de Communication de l’Information sur les six (06) graves violations commises contre les enfants – MRM a été organisé à Sévaré.\n\nLa formation a réuni des moniteurs et acteurs locaux de la protection intervenant dans les régions de Mopti, Bandiagara et Douentza, engagés dans la promotion et la protection des droits de l’enfant.\n\nObjectif global :\n\nRenforcer les capacités des moniteurs de protection afin de leur permettre de mieux identifier, documenter, collecter et rapporter les incidents liés aux graves violations commises contre les enfants, en vue de leur participation effective au MRM.\n\nAu cours de l’atelier, les participants ont notamment été amenés à :\n\nComprendre le contexte, les objectifs et le fonctionnement du MRM ;\n\nIdentifier les différents types de graves violations commises contre les enfants ;\n\nMaîtriser les principes éthiques, de confidentialité et de sécurité applicables à la collecte d’informations ;\n\nRenforcer leurs connaissances sur les outils et techniques de collecte et de documentation des incidents ;\n\nSavoir comment, quand et où rapporter les incidents documentés, conformément aux procédures établies ;\n\nContribuer à la prévention, au référencement et à la mise en place de réponses adaptées aux violations graves commises contre les enfants.\n\nCette formation constitue une étape importante dans le renforcement du système de surveillance et de communication de l’information, ainsi que dans l’amélioration de la qualité de la documentation des violations affectant les enfants.\n\nProtéger les enfants, c’est prévenir les violations, documenter les incidents et renforcer les mécanismes de réponse.",
     lieux: ["Sévaré", "Mopti", "Bandiagara", "Douentza"],
     partenaires: [],
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1382377830774213",
     source: 'Facebook',
     tags: ["Protection", "Sévaré", "Mopti"]
   },
@@ -660,6 +685,7 @@ const base = [
     lieux: ["Bamako"],
     partenaires: ["Fondation Strømme"],
     featured: true,
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1389053733439956",
     source: 'Facebook',
     tags: ["Institutionnel", "Bamako"]
   },
@@ -675,6 +701,7 @@ const base = [
     lieux: ["Sikasso", "Bamako"],
     partenaires: ["Union européenne", "Save the Children", "CAEB", "Cordaid"],
     projet: "PADEM",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1392285023116827",
     source: 'Facebook',
     tags: ["Éducation", "Sikasso", "Bamako"]
   },
@@ -691,6 +718,7 @@ const base = [
     partenaires: ["EDUCO"],
     projet: "LEARN",
     featured: true,
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1392872066391456",
     source: 'Facebook',
     tags: ["Éducation", "Ségou"]
   },
@@ -706,6 +734,7 @@ const base = [
     lieux: ["Mountougoula", "Koulikoro"],
     partenaires: ["Fondation Strømme"],
     projet: "FS-EDU-KLK",
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1397730395905623",
     source: 'Facebook',
     tags: ["Éducation", "Mountougoula", "Koulikoro"]
   },
@@ -722,6 +751,7 @@ const base = [
     partenaires: ["Union européenne"],
     projet: "PADEM",
     featured: true,
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1424506073228055",
     source: 'Facebook',
     tags: ["Éducation", "Tiankadi", "Kignan"]
   },
@@ -738,6 +768,7 @@ const base = [
     partenaires: ["Coopération suisse", "UNHCR"],
     projet: "MONPROT-PBC-2026",
     featured: true,
+    facebookUrl: "https://www.facebook.com/photo/?fbid=1424747303203932",
     source: 'Facebook',
     tags: ["Protection", "Tombouctou", "Gao"]
   }

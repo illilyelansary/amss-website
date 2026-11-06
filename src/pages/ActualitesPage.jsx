@@ -275,7 +275,7 @@ const ActualitesPage = () => {
                 </div>
                 <FacebookFeed
                   pageUrl={FACEBOOK_PAGE_URL}
-                  dernieres={actualites.filter((a) => a.source === 'Facebook').slice(0, 5)}
+                  publications={actualites.filter((a) => a.source === 'Facebook' && a.facebookUrl)}
                 />
               </div>
 

@@ -5,12 +5,37 @@
 // Si le navigateur bloque Facebook (bloqueur de pub, protection contre le pistage),
 // un message et les dernières publications reprises sur le site s'affichent à la place.
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
+import FacebookDefilant from '@/components/FacebookDefilant'
 
 const clamp = (n, min, max) => Math.max(min, Math.min(max, Math.floor(n)))
 
-export default function FacebookFeed({ pageUrl, height = 650, dernieres = [] }) {
+export default function FacebookFeed({ pageUrl, height = 650, publications = [] }) {
+  // Onglet par défaut : les publications qui défilent ; le fil officiel ne se charge qu'à la demande
+  const [onglet, setOnglet] = useState(publications.length ? 'defilement' : 'fil')
+  return (
+    <div>
+      {publications.length > 0 && (
+        <div className="flex gap-2 mb-3" role="tablist">
+          {[['defilement', 'Publications'], ['fil', 'Fil Facebook officiel']].map(([k, label]) => (
+            <button
+              key={k} type="button" role="tab" aria-selected={onglet === k} onClick={() => setOnglet(k)}
+              className={`px-3 py-1.5 rounded-full text-sm border ${onglet === k ? 'bg-primary text-white border-primary' : 'bg-white text-muted-foreground hover:text-primary'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+      {onglet === 'defilement'
+        ? <FacebookDefilant publications={publications} hauteur={height} />
+        : <FilOfficiel pageUrl={pageUrl} height={height} />}
+    </div>
+  )
+}
+
+/** Fil officiel (Page Plugin Facebook) à la largeur du conteneur */
+function FilOfficiel({ pageUrl, height }) {
   const boxRef = useRef(null)
   const [width, setWidth] = useState(0)
   const [charge, setCharge] = useState(false)
@@ -81,20 +106,6 @@ export default function FacebookFeed({ pageUrl, height = 650, dernieres = [] }) 
         </p>
       )}
 
-      {dernieres.length > 0 && (
-        <div className="mt-4 border-t pt-3">
-          <div className="text-sm font-medium mb-2">Dernières publications reprises sur le site</div>
-          <ul className="space-y-1 text-sm">
-            {dernieres.map((a) => (
-              <li key={a.slug}>
-                <Link to={`/actualites/${a.slug}`} className="hover:text-primary hover:underline">
-                  <span className="text-muted-foreground">{a.date} · </span>{a.titre}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   )
 }
