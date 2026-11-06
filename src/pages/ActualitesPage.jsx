@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, ArrowRight, Users, MapPin, Heart, Share2 } from 'lucide-react'
 import { actualites, articlesALaUne } from '../data/actualitesData'
+import FacebookFeed from '@/components/FacebookFeed'
 
 // ====== Constantes flux & placeholder ======
 const PLACEHOLDER = '/placeholder-news.jpg' // déposez le fichier dans /public
@@ -272,19 +273,10 @@ const ActualitesPage = () => {
                     Voir la page
                   </a>
                 </div>
-                <div className="rounded-lg overflow-hidden">
-                  <iframe
-                    title="Flux Facebook AMSS"
-                    src={`https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FACEBOOK_PAGE_URL)}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true`}
-                    width="100%"
-                    height="600"
-                    style={{ border: 'none', overflow: 'hidden' }}
-                    scrolling="no"
-                    frameBorder="0"
-                    loading="lazy"
-                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                  />
-                </div>
+                <FacebookFeed
+                  pageUrl={FACEBOOK_PAGE_URL}
+                  dernieres={actualites.filter((a) => a.source === 'Facebook').slice(0, 5)}
+                />
               </div>
 
               {/* YouTube (playlist "Uploads" auto-actualisée) */}

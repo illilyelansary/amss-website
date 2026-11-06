@@ -17,7 +17,7 @@ const CSP = [
   "font-src 'self' data:",
   "connect-src 'self'",
   "worker-src 'self' blob:",
-  "frame-src 'self' https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com https://www.facebook.com",
+  "frame-src 'self' https://www.google.com https://www.youtube-nocookie.com https://www.youtube.com https://www.facebook.com https://web.facebook.com https://*.facebook.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
